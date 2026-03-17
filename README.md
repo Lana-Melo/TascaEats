@@ -1,93 +1,99 @@
-# TascaEats
+# Sobre o projeto modelo
+
+O projeto modelo apresenta uma estrutura de pacotes indicativa. Apesar de não ser obrigatória, é recomendada para simplificar o desenvolvimento desta fase e das posteriores. A equipa tem liberdade de alterar qualquer ficheiro do projeto durante o seu desenvolvimento.
 
 
+# Contextualização
 
-## Getting started
+A consultoria espanhola **Compadres Sempre Saciados (CSS)** identificou uma oportunidade no mercado de entregas ao domicílio em Portugal e decidiu criar o **TascaEats**, um sistema de delivery de comida. O objetivo é desenvolver uma plataforma robusta que conecte clientes, restaurantes e entregadores.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Um utilizador pode interagir com o sistema com diferentes perfis: como **Cliente**, como **Administrador do Restaurante** ou como **Entregador**. Todos partilham dados base de autenticação e identificação, mas têm permissões e papéis distintos. Para já, um cliente terá só uma morada (no futuro poderá ter várias). O sistema deve permitir o registo, a atualização e a remoção de utilizadores, bem como a autenticação.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Para a gestão de restaurantes, o sistema permite a um administrador criar e gerir estabelecimentos (nome, NIF e morada). O restaurante possui um cardápio composto por vários produtos (nome, descrição, preço e estado de disponibilidade) e pode abrir e fechar para receber pedidos. 
 
-## Add your files
+No processo de compra, o cliente seleciona produtos e cria um pedido (associado a data/hora, valor total, endereço de entrega e estado atual). É obrigatório que cada pedido tenha um pagamento associado (Multibanco, MBWay, Dinheiro, etc.). Por fim, a plataforma gere a logística: aloca entregadores disponíveis a pedidos prontos e mantém o registo das entregas (entregador, pedido e horários de retirada e entrega).
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+Nesta **Fase 1**, o foco será o desenvolvimento do backend como um sistema monolítico, expondo a lógica de negócio exclusivamente através de uma API REST.
 
-```
-cd existing_repo
-git remote add origin https://git.alunos.di.fc.ul.pt/css000/tascaeats.git
-git branch -M main
-git push -uf origin main
-```
+# Casos de Uso
 
-## Integrate with your tools
+- A. **Login com autenticação:** Vamos fazer *mock*. Qualquer palavra-passe será aceite contanto que o utilizador seja válido.
+- B. **Registo de utilizadores:** Criação de perfis de Clientes, Administradores e Entregadores.
+- C. **Gerir utilizadores:** Verificar, remover e atualizar utilizadores.
+- D. **Buscar restaurantes:** Pesquisa por nome ou cidade.
+- E. **Gestão de restaurantes:** Criação de restaurantes e gestão do seu estado (aberto/fechado).
+- F. **Gestão de cardápio:** Adicionar, remover e atualizar produtos no cardápio de um restaurante.
+- G. **Buscar produtos:** Listar os produtos de um restaurante.
+- H. **Criação de pedido:** Efetuar um pedido no sistema.
+- I. **Processar pagamento:** Registo e processamento do pagamento associado a um pedido.
+- J. **Atualizar pedido:** Atualização do estado do pedido (ex: Criado, Pago, Em preparo, etc.).
+- K. **Alocação logística:** Atribuição de um entregador a um pedido.
+- L. **Cancelar pedido:** Cancelamento de um pedido existente (mediante regras de negócio).
 
-- [ ] [Set up project integrations](https://git.alunos.di.fc.ul.pt/css000/tascaeats/-/settings/integrations)
+# Requisitos Não Funcionais
 
-## Collaborate with your team
+O projeto tem ainda os seguintes requisitos:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+- O projeto deve ser desenvolvido por grupos de **no máximo três alunos**.
+- A autenticação poderá ser feita via *mock* (futura integração com sistema real).
+- Toda a informação deverá ser armazenada numa **base de dados relacional**.
+- A plataforma deverá ser implementada em **Spring Boot**, usando Java. A camada de dados será implementada utilizando **JPA/Spring Data**.
+- A aplicação deverá lidar com **pedidos concorrentes**, sem criar inconsistências.
+- A camada de negócios deverá usar um **Domain Model rico** e fazer o uso correto de anotações JPA (incluindo herança e composição onde aplicável) para facilitar o mapeamento.
+- A implementação deve utilizar os conceitos vistos em aula (ex., camadas, DTOs, controllers, testes, etc.) e seguir as boas práticas de desenvolvimento de software.
+- A interface será através de *endpoints REST*. Deve ser possível aceder diretamente a esses *endpoints* através do **Swagger** (`https://swagger.io/`). Não haverá desenvolvimento de interface gráfica (HTML/GUI) nesta fase.
+- O repositório deve aceitar apenas código com o nível de qualidade aceite pela equipa (ex.: *pre-commit*, testes unitários/integração com 80% de cobertura mínima recomendada).
+- O projeto correrá **sempre num ambiente Docker**.
 
-## Test and Deploy
+# Tarefas da Fase 1
 
-Use the built-in continuous integration in GitLab.
+A equipa deverá:
+- Fazer fork do repositório original (`https://git.alunos.di.fc.ul.pt/css000/tascaeats`), para a conta de um dos elementos do grupo.
+- Dar acesso a todos membros do grupo, como *Maintainer*.
+- Dar acesso à conta css000, como *Reporter*.
+- Implementar os *endpoints REST* necessários (com acesso através do Swagger) para os casos de uso exigidos.
+- **Gravar um pequeno vídeo** demonstrando os casos de uso a funcionar. A demonstração deve ser feita consumindo a API REST via Swagger (mostrando o envio do JSON de requisição e a resposta/alteração na base de dados).
+- Alterar o ficheiro `README.md` para identificar a equipa e **incluir os links para o(s) vídeo(s) demonstrativo(s)** (Google Drive, YouTube ou no próprio repositório).
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Validação e Regras de Negócio
+Devem garantir que as regras de negócio da aplicação estão implementadas e demonstradas nos vídeos. Exemplos:
+- Um pedido não pode ser cancelado se já estiver em preparo.
+- Um produto associado a um pedido antigo não pode ser completamente removido do cardápio (soft-delete).
+- Não é possível fazer pedido a restaurantes fechados.
+- Não devem permitir adicionar um produto ao pedido se estiver esgotado.
+- Não devem associar uma entrega a um entregador que não está disponível.
 
-***
+Para validar o funcionamento e a modelação, a base de dados gerada deve ser capaz de responder a questões de negócio como:
+1. Quais os restaurantes que possuem o maior volume de vendas em euros?
+2. Qual é a morada do restaurante com mais vendas? E do cliente com mais pedidos?
+3. Em média, quantos pedidos um cliente realiza por mês?
+4. Quais os produtos mais vendidos da plataforma?
+5. Qual é o método de pagamento mais utilizado pelos clientes?
+6. Quais os clientes que se registaram mas ainda não realizaram nenhuma compra?
 
-# Editing this README
+# Como Entregar
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Para entregar o trabalho, basta criar uma tag chamada *fase1* e enviá-la para o repositório. O repositório deverá conter o código-fonte do projeto, o ficheiro `docker-compose.yml` necessário para correr a aplicação e a base de dados, e o ficheiro `README.md` devidamente atualizado com os links dos vídeos.
 
-## Suggestions for a good README
+    git tag fase1
+    git push origin fase1
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Deve-se confirmar que o vosso projeto está acessível à conta CSS000 na tag fase1. Caso contrário, terão 0 nesta entrega. É importante garantir que o ambiente de execução possa ser reproduzido pela equipa docente sem erros de compilação. O projeto **obrigatoriamente** deverá correr num ambiente Docker. Falhas em **EXECUTAR** o projeto, num ambiente Docker, pela equipa docente, resultarão em **grave penalização nesta entrega**. Casos de uso não apresentados ou com falhas de execução serão considerados como não implementados.
 
-## Name
-Choose a self-explaining name for your project.
+*Nota sobre IA e Plágio: É permitido o uso de IA (ChatGPT, Copilot, DeepSeek, etc.), mas todos os membros devem ser capazes de compreender e explicar o projeto na sua totalidade. Código não explicável será considerado plágio.*
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+# Critérios de Avaliação
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Esta entrega corresponde a **35% da nota do projeto**. Segue uma lista de critérios que serão avaliados:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## Processo de Desenvolvimento e Demonstração
+- Granularidade e frequência dos *commits*. Todos os membros do grupo devem contribuir de forma equitativa. *Disparidades significativas serão penalizadas*.
+- Qualidade das mensagens de *commit*.
+- Clareza na demonstração em vídeo, funcionamento real da API REST apresentada e capacidade de explicação do trabalho desenvolvido pelo grupo.
+- Quantidade e qualidade das regras de negócio implementadas e demonstradas nos vídeos.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Requisitos e Implementação
+- Em que medida os requisitos funcionais e não funcionais são abrangidos pela modelação do *Domain Model*.
+- Implementação da REST API com os *endpoints* adequados e boas práticas (status codes, verbos HTTP corretos).
+- Uso correto de anotações JPA, herança e relações de cardinalidade.
+- Inclusão de testes unitários e de integração que validem a lógica de negócio e os cenários de exceção.
