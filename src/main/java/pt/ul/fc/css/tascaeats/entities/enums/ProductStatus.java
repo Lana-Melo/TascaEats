@@ -1,5 +1,5 @@
 package pt.ul.fc.css.tascaeats.entities.enums;
 
-public class ProductStatus {
-    
+public enum ProductStatus {
+    AVAILABLE, SOLD_OUT
 }

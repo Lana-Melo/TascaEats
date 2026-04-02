@@ -1,5 +1,5 @@
 package pt.ul.fc.css.tascaeats.entities.enums;
 
-public class RestaurantStatus {
-    
+public enum RestaurantStatus {
+    OPEN, CLOSED
 }

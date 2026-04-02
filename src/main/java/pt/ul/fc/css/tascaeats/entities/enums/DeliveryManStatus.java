@@ -1,5 +1,5 @@
 package pt.ul.fc.css.tascaeats.entities.enums;
 
-public class DeliveryManStatus {
-    
+public enum DeliveryManStatus {
+    AVAILABLE, BUSY
 }

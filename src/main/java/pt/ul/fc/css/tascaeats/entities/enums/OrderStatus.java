@@ -1,5 +1,5 @@
 package pt.ul.fc.css.tascaeats.entities.enums;
 
-public class OrderStatus {
-    
+public enum OrderStatus {
+    CREATED, PAID, PREPARING, CANCELLED, DELIVERED
 }
