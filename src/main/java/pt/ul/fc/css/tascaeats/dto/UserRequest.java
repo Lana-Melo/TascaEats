@@ -5,7 +5,7 @@ public class UserRequest {
     private String name;
     private String phoneNumber;
     private String NIF;
-    private String role; // client, admin ou deliveryMan por agora fiac string mas eventualmente podiamos ter enum pra iso
+    private String role; // client, admin ou deliveryMan por agora fica string mas eventualmente podiamos ter enum pra isto
                         //vai depender tbm de como vamos representar a herança nas tabelas (single table, joined, table per class lalalala )
 
     public UserRequest() {}
