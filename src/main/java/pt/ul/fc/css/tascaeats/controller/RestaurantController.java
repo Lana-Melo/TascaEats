@@ -3,11 +3,12 @@ package pt.ul.fc.css.tascaeats.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.annotations.ApiOperation;
+import pt.ul.fc.css.tascaeats.dto.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.RestaurantResponse;
+import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 
 public class RestaurantController {
     /**
@@ -20,6 +21,7 @@ public class RestaurantController {
      * DELETE /api/restaurants/{id}/products/{produtoid}  remover produto (caso de uso F)
      */
 
+    //GET    /api/restaurants -> buscar por restaurante por nome ou cidade (caso de uso D)
     @GetMapping
     @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered by name or city.")
     public ResponseEntity<List<RestaurantResponse>> searchRestaurant(@RequestParam String filter, @RequestParam String type) { // type se é name ou city
@@ -28,4 +30,24 @@ public class RestaurantController {
         return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
     }
 
+    //POST   /api/restaurants -> criar restaurante (caso de uso E)
+    @PostMapping
+    @ApiOperation(value = "Create restaurant", notes = "Creates a new restaurant.")
+    public ResponseEntity<RestaurantResponse> createRestaurant(@RequestBody RestaurantRequest request) {
+        RestaurantResponse restaurant = null; // chamo func createRestaurant(request) do RestaurantService / handler
+        return restaurant != null ? ResponseEntity.ok(restaurant) : ResponseEntity.badRequest().build();
+    }
+
+
+    //PATCH  /api/restaurants/{id}/status -> abrir/fechar restaurante (caso de uso E) (é só um campo por isso patch ao inves de put)
+    @PatchMapping("/{id}/status")
+    @ApiOperation(value = "Update restaurant status", notes = "Opens or closes a restaurant.")
+    public ResponseEntity<RestaurantResponse> updateStatus(@PathVariable Long id, @RequestParam RestaurantStatus status) { // passar a string OPEN ou CLOSED
+        RestaurantResponse restaurant = null; // chamo func changeStatus(id, status) do RestaurantService / handler (changeStatus(id, status))
+        //evetualmente teria de ver se quem ta a tentar mudar o status é admin do restaurante mas n sei enfim 
+        return restaurant != null ? ResponseEntity.ok(restaurant) : ResponseEntity.notFound().build();
+    } 
+
+    //POST   /api/restaurants/{id}/products -> adicionar produto (caso de uso F)
+    
 }
