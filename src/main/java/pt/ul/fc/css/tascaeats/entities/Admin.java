@@ -1,8 +1,10 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import java.util.List;
-import java.util.ArrayList;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class Admin extends AUser {
@@ -10,7 +12,7 @@ public class Admin extends AUser {
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
     private List<Restaurant> restaurants;
 
-    public Admin() {}
+    protected Admin() {}
 
     public List<Restaurant> getRestaurants() {
         return restaurants;

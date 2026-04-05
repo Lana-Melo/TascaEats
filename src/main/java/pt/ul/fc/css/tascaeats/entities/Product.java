@@ -1,8 +1,15 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
-
-import jakarta.persistence.*;
 
 @Entity
 public class Product {
@@ -31,7 +38,7 @@ public class Product {
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
 
-    public Product() {}
+    protected Product() {}
 
     public Product(String code, double price, String description, String designation, Restaurant restaurant) {
         this.code = code;

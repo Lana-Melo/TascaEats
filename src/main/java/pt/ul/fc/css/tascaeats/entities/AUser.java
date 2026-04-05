@@ -2,7 +2,6 @@ package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,9 +32,6 @@ public abstract class AUser {
 
     @Column(unique = true, nullable = false)
     private String nif;
-
-    @Embedded
-    private Address address;
 
     protected AUser() {}
 
@@ -83,13 +79,5 @@ public abstract class AUser {
 
     public String getNif() {
         return nif;
-    }
-
-    public Address getAddress() {
-        return address;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
     }
 }

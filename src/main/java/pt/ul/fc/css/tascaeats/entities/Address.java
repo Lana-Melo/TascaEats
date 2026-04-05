@@ -22,7 +22,7 @@ public class Address {
     @Column(unique = true, nullable = false)
     private String zipCode;
 
-    public Address() {}
+    protected Address() {}
 
     public Address(String street, String city, String zipCode) {
         this.street = street;

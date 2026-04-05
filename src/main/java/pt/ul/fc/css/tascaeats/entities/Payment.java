@@ -31,7 +31,7 @@ public abstract class Payment {
     @OneToOne
     private Order order;
 
-    public Payment() {}
+    protected Payment() {}
 
     public Payment(String code, double amount, PaymentType type, Order order) {
         this.code = code;

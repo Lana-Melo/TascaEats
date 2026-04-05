@@ -61,7 +61,7 @@ public class Order {
     @JoinColumn(name = "payment_id") // tirei o nullable a false pq o pagamento é feito depois
     private Payment payment;
 
-    public Order() {}
+    protected Order() {}
 
     public Order(String code, Client client, List<Product> products) {
         this.code = code;

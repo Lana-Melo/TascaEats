@@ -42,7 +42,7 @@ public class Restaurant {
     @JoinColumn(name = "admin_id")
     private Admin admin;
 
-    public Restaurant() {}
+    protected Restaurant() {}
 
     public Restaurant(String designation, Address address, Admin admin) {
         this.designation = designation;

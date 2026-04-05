@@ -13,10 +13,10 @@ public class DeliveryPerson extends AUser {
     @Column(nullable = false)
     private DeliveryPersonStatus status;
     
-    public DeliveryPerson() {}
+    protected DeliveryPerson() {}
 
-    public DeliveryPerson(String userName, String name, String phoneNumber, String nif) {
-        super(userName, name, phoneNumber, nif);
+    public DeliveryPerson(String userName, String password, String name, String phoneNumber, String nif) {
+        super(userName, password, name, phoneNumber, nif);
         this.status = DeliveryPersonStatus.AVAILABLE;
     }
 
