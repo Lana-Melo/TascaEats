@@ -1,6 +1,8 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,6 +12,7 @@ import jakarta.persistence.InheritanceType;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name="user_type") // nome da coluna com o tipo do usuário
 public abstract class AUser {
     
     @Id
@@ -20,6 +23,9 @@ public abstract class AUser {
     private String username;
 
     @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
     private String name;
 
     @Column(unique = true, nullable = false)
@@ -28,13 +34,18 @@ public abstract class AUser {
     @Column(unique = true, nullable = false)
     private String nif;
 
-    public AUser() {}
+    @Embedded
+    private Address address;
 
-    public AUser(String userName, String name, String phoneNumber, String nif) {
+    protected AUser() {}
+
+    public AUser(String userName, String password, String name, String phoneNumber, String nif, Address address) {
         this.username = userName;
+        this.password = password;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.nif = nif;
+        this.address = address;
     }
 
     /**
@@ -73,5 +84,13 @@ public abstract class AUser {
 
     public String getNif() {
         return nif;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 }
