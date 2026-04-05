@@ -1,37 +1,92 @@
 package pt.ul.fc.css.tascaeats.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
+
+import jakarta.persistence.*;
 
 @Entity
 public class Product {
-    
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)    
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String code;
 
     @Column(nullable = false)
-    private String designation;
+    private double price;
 
     @Column(nullable = false)
     private String description;
-
+    
     @Column(nullable = false)
-    private Double price;
+    private String designation;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Enumerated(jakarta.persistence.EnumType.STRING)
-    private ProductStatus status;
+    private ProductStatus availability;
 
-    // relation with restaurant, orders??
-    // Constructors, getters, and setters   
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
 
+    public Product() {}
+
+    public Product(String code, double price, String description, String designation, Restaurant restaurant) {
+        this.code = code;
+        this.price = price;
+        this.description = description;
+        this.designation = designation;
+        this.availability = ProductStatus.AVAILABLE;
+        this.restaurant = restaurant;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getDesignation() {
+        return designation;
+    }
+
+    public void setDesignation(String designation) {
+        this.designation = designation;
+    }
+
+    public ProductStatus getProductStatus() {
+        return availability;
+    }
+
+    public void setProductStatus (ProductStatus availability) {
+        this.availability = availability;
+    }
+
+    public Restaurant getRestaurant() {
+        return restaurant;
+    }
+
+    public void setRestaurant (Restaurant restaurant) {
+        this.restaurant = restaurant;
+    }
 }
