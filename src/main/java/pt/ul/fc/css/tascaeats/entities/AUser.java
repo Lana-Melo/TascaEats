@@ -37,6 +37,20 @@ public abstract class AUser {
         this.nif = nif;
     }
 
+    /**
+     * Factory method to create a user based on the role.
+     * @param role The role of the user (e.g., "ADMIN", "EDITOR", "CUSTOMER")
+     * @return AUser instance corresponding to the role
+     */
+    public static AUser create(String role) {
+        return switch (role) {
+            case "ADMIN" -> new Admin();
+            case "EDITOR" -> new Client();
+            case "CUSTOMER" -> new DeliveryPerson();
+            default -> throw new IllegalArgumentException("Invalid role: " + role);
+        };
+    }
+
     public Long getId() {
         return id;
     }
