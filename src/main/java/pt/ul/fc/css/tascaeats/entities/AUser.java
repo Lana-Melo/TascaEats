@@ -39,13 +39,12 @@ public abstract class AUser {
 
     protected AUser() {}
 
-    public AUser(String userName, String password, String name, String phoneNumber, String nif, Address address) {
+    public AUser(String userName, String password, String name, String phoneNumber, String nif) {
         this.username = userName;
         this.password = password;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.nif = nif;
-        this.address = address;
     }
 
     /**

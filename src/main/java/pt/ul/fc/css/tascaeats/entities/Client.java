@@ -11,9 +11,8 @@ public class Client extends AUser {
 
     public Client() {}
 
-    public Client(String userName, String name, String phoneNumber, String nif, Address address) {
-        super(userName, name, phoneNumber, nif);
-        this.address = address;
+    public Client(String userName, String password, String name, String phoneNumber, String nif) {
+        super(userName, password, name, phoneNumber, nif);
     }
 
     public Address getAddress() {
