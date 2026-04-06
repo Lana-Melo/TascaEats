@@ -1,6 +1,6 @@
 package pt.ul.fc.css.tascaeats.dto.users;
 
-public record AdminResponse (
+public record UserResponse (
     Long id, //aquele gerado pelo spring 
     String userName,
     String name,
