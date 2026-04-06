@@ -5,5 +5,6 @@ public record RestaurantResponse(
     Long id, //aquele gerado pelo spring 
     String designation,
     String status,
-    String nif
+    String nif,
+    String city
 ) {}

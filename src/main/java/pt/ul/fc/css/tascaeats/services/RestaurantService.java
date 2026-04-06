@@ -51,12 +51,19 @@ public class RestaurantService {
     }
 
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
-        RestaurantResponse response = new RestaurantResponse();
+        /*RestaurantResponse response = new RestaurantResponse();
         response.setId(restaurant.getId());
         response.setDesignation(restaurant.getDesignation());
         response.setStatus(restaurant.getStatus().toString());
         response.setCity(restaurant.getAddress().getCity());
-        return response;
+        return response;*/
+        return new RestaurantResponse(
+            restaurant.getId(),
+            restaurant.getDesignation(),
+            restaurant.getStatus().toString(),
+            restaurant.getNif(),
+            restaurant.getAddress().getCity()
+        );
     }
     
 }
