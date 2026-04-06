@@ -6,7 +6,7 @@ public record UserResponse(
     String username,
     String name,
     String phoneNumber,
-    String NIF,
+    String nif,
     String role
 ) {}
 
