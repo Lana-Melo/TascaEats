@@ -6,5 +6,9 @@ public record RestaurantResponse(
     String designation,
     String status,
     String nif,
-    String city
+    String adminName,
+    String street,
+    String city,
+    String postalCode
+    // menu e orders vao estar aqui?
 ) {}

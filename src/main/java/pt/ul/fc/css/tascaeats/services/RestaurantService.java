@@ -19,18 +19,33 @@ public class RestaurantService {
         this.restaurantRepository = restaurantRepository;
     }
 
-    // vou mudar dps para receber o dto do request
-    public RestaurantListResponse getRestaurants(String designation, String city) {
-        Optional<List<Restaurant>> restaurants = restaurantRepository.findByDesignationContainingOrAddressCityContaining(designation, city);
-        return new RestaurantListResponse(restaurants.map(rs -> 
-                                                        rs.stream()
-                                                        .map(this::mapRestaurantToRestaurantResponse)
-                                                        .toList())
-                                                        .orElse(null));
+    public RestaurantListResponse searchByDesignationOrCity(String designation, String city) {
+        if (designation == null && city == null) { // se n for passado nenhum filtro, retorna todos os restaurantes
+            return new RestaurantListResponse(restaurantRepository
+                                                .findAll()
+                                                .stream()
+                                                .map(this::mapRestaurantToRestaurantResponse)
+                                                .toList());
+        }
+        
+        Optional<List<Restaurant>> rs;
+        if (designation != null && city != null) {
+            rs = restaurantRepository.findByDesignationContainingOrAddressCityContaining(designation, city);
+
+        }
+        else if (city != null) {
+            rs = restaurantRepository.findByAddressCityContaining(city);
+        }
+        else {
+            rs = restaurantRepository.findByDesignationContaining(designation);
+        }
+        return new RestaurantListResponse(rs.map(rss -> 
+                                                    rss.stream()
+                                                    .map(this::mapRestaurantToRestaurantResponse)
+                                                    .toList())
+                                                    .orElse(null));
     }
 
-    
-    // vou mudar dps para receber o dto do request
     /**
      * Creates a new restaurant with the provided data. 
      * The restaurant is associated with the admin mentioned in the restaurant parameter.
@@ -41,7 +56,7 @@ public class RestaurantService {
     public RestaurantResponse createRestaurant(Restaurant restaurant) {
         // assumir que é o dto e nao um Restaurant
         Address address = new Address(restaurant.getAddress().getCity(), restaurant.getAddress().getStreet(), restaurant.getAddress().getPostalCode());
-        Admin admin = new Admin(); //mudar dto pra ter o id d user q vai ser admin do restaurant 
+        Admin admin = new Admin();
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
 
         admin.getRestaurants().add(r);
@@ -50,21 +65,13 @@ public class RestaurantService {
         return mapRestaurantToRestaurantResponse(saved);
     }
 
-
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
-        /*RestaurantResponse response = new RestaurantResponse();
+        RestaurantResponse response = new RestaurantResponse();
         response.setId(restaurant.getId());
         response.setDesignation(restaurant.getDesignation());
         response.setStatus(restaurant.getStatus().toString());
         response.setCity(restaurant.getAddress().getCity());
-        return response;*/
-        return new RestaurantResponse(
-            restaurant.getId(),
-            restaurant.getDesignation(),
-            restaurant.getStatus().toString(),
-            restaurant.getNif(),
-            restaurant.getAddress().getCity()
-        );
+        return response;
     }
     
 }
