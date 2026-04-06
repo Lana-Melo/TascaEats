@@ -14,5 +14,5 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     Optional<List<Restaurant>> findByDesignationContaining(String name);
     Optional<List<Restaurant>> findByStatus(String city);
     Optional<List<Restaurant>> findByDesignationContainingOrAddressCityContaining(String designation, String city);
-
+    Optional<List<Restaurant>> findByAddressCityContaining(String city);
 }

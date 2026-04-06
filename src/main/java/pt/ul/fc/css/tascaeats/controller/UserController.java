@@ -1,12 +1,16 @@
 package pt.ul.fc.css.tascaeats.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties.Admin;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import pt.ul.fc.css.tascaeats.dto.users.ClientRequest;
+import pt.ul.fc.css.tascaeats.dto.users.ClientResponse;
+import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
+import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.dto.users.LoginRequest;
 import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
 import pt.ul.fc.css.tascaeats.dto.users.ClientResponse;
@@ -61,27 +65,24 @@ public class UserController {
     //POST   /api/users/register/delivery -> registo de delivery person (caso de uso B)
     @PostMapping("/register/delivery")
     @ApiOperation(value = "Register delivery person", notes = "Register a new delivery person")
-    public ResponseEntity<ClientResponse> registerDelivery(@RequestBody UserRequest request) {
-        ClientResponse user = userHandler.registerNewDeliveryPerson(request);
+    public ResponseEntity<UserResponse> registerDelivery(@RequestBody UserRequest request) {
+        UserResponse user = userHandler.registerNewDeliveryPerson(request);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
     }
 
     //GET    /api/users/{id} -> verificar (caso de uso C)
     @GetMapping("/{id}")
     @ApiOperation(value = "Get user by id", notes = "Returns a user given its id.")
-    public ResponseEntity<ClientResponse> getUser(@PathVariable Long id) {
-        ClientResponse user = userHandler.getUserById(id); 
+    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
+        UserResponse user = userHandler.getUserById(id); 
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
-    
-
-    
 
     //PUT    /api/users/{id} -> atualizar (caso de uso C)
     @PutMapping("/{id}")
     @ApiOperation(value = "Update user", notes = "Updates an existing user.")
-    public ResponseEntity<ClientResponse> updateUser(@PathVariable Long id, @RequestBody UserRequest request) {
-        ClientResponse user = userHandler.updateUser(id, request);
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UserRequest request) {
+        UserResponse user = userHandler.updateUser(id, request);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 

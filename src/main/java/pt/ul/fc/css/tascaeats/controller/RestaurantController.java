@@ -4,13 +4,21 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import io.swagger.annotations.ApiOperation;
 import pt.ul.fc.css.tascaeats.dto.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.RestaurantResponse;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
+import pt.ul.fc.css.tascaeats.services.RestaurantService;
+import pt.ul.fc.css.tascaeats.dto.RestaurantListResponse;
 
+@RestController
+@RequestMapping("/api/restaurants")
 public class RestaurantController {
+
+    @Autowired
+    private RestaurantService restaurantHandler;
+
     /**
      * GET    /api/restaurants              buscar por restaurante por nome ou cidade (caso de uso D)
      * POST   /api/restaurants              criar restaurante (caso de uso E)
@@ -22,11 +30,10 @@ public class RestaurantController {
      */
 
     //GET    /api/restaurants -> buscar por restaurante por nome ou cidade (caso de uso D)
-    @GetMapping
+    @GetMapping("/search")
     @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered by name or city.")
-    public ResponseEntity<List<RestaurantResponse>> searchRestaurant(@RequestParam String filter, @RequestParam String type) { // type se é name ou city
-    //a pessoa q chama a api é q decide se quer pesquisar por cidade ou por nome e depois dentro do service / handler é q consoante o filtro chama filterByName ou filterByCity
-        List<RestaurantResponse> restaurants = null; // chamo func searchRestaurant(filter, type) do RestaurantService / handler
+    public ResponseEntity<RestaurantListResponse> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city) {
+        RestaurantListResponse restaurants = restaurantHandler.searchByDesignationOrCity(designation, city); // chamo func searchByDesignationOrCity(designation, city) do RestaurantService / handler
         return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
     }
 
