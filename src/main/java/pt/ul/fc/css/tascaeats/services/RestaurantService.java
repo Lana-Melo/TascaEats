@@ -1,44 +1,50 @@
 package pt.ul.fc.css.tascaeats.services;
 
-import org.springframework.stereotype.Service;
-import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import java.util.List;
 import java.util.Optional;
 
-import pt.ul.fc.css.tascaeats.entities.Restaurant;
+import org.springframework.stereotype.Service;
+
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantListResponse;
+import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
+import pt.ul.fc.css.tascaeats.entities.Restaurant;
+import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
+import pt.ul.fc.css.tascaeats.repository.UserRepository;
 
 @Service
 public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
 
-    public RestaurantService(RestaurantRepository restaurantRepository) {
+    private RestaurantService(RestaurantRepository restaurantRepository, UserRepository userRepository) {
         this.restaurantRepository = restaurantRepository;
+        this.userRepository = userRepository;
     }
 
     public RestaurantListResponse searchByDesignationOrCity(String designation, String city) {
-        if (designation == null && city == null) { // se n for passado nenhum filtro, retorna todos os restaurantes
-            return new RestaurantListResponse(restaurantRepository
-                                                .findAll()
-                                                .stream()
-                                                .map(this::mapRestaurantToRestaurantResponse)
+        if ((designation == null || designation.isEmpty()) && (city == null || city.isEmpty())) { // se n for passado nenhum filtro, retorna todos os restaurantes
+                System.out.println("EEEEEE");
+                return new RestaurantListResponse(restaurantRepository
+                                                    .findAll()
+                                                    .stream()
+                                                    .map(this::mapRestaurantToRestaurantResponse)
                                                 .toList());
         }
         
         Optional<List<Restaurant>> rs;
         if (designation != null && city != null) {
-            rs = restaurantRepository.findByDesignationContainingOrAddressCityContaining(designation, city);
+            rs = restaurantRepository.findByDesignationContainingIgnoreCaseOrAddressCityContainingIgnoreCase(designation, city);
 
         }
         else if (city != null) {
-            rs = restaurantRepository.findByAddressCityContaining(city);
+            rs = restaurantRepository.findByAddressCityContainingIgnoreCase(city);
         }
         else {
-            rs = restaurantRepository.findByDesignationContaining(designation);
+            rs = restaurantRepository.findByDesignationContainingIgnoreCase(designation);
         }
         return new RestaurantListResponse(rs.map(rss -> 
                                                     rss.stream()
@@ -54,27 +60,33 @@ public class RestaurantService {
      * @return a RestaurantResponse representing the created restaurant
      * 
      */
-    public RestaurantResponse createRestaurant(Restaurant restaurant) {
-        // assumir que é o dto e nao um Restaurant
-        Address address = new Address(restaurant.getAddress().getCity(), restaurant.getAddress().getStreet(), restaurant.getAddress().getPostalCode());
-        Admin admin = new Admin();
+    public RestaurantResponse createRestaurant(RestaurantRequest restaurant) {
+        if(restaurant.getAdminId() == null) {
+            throw new IllegalArgumentException("Admin ID must be provided to create a restaurant");
+        }
+        Address address = new Address(restaurant.getCity(), restaurant.getStreet(), restaurant.getPostalCode());
+        Admin admin = userRepository.findById(restaurant.getAdminId())
+                            .filter(a -> a instanceof Admin)
+                            .map(a -> (Admin) a)
+                            .orElseThrow(() -> new IllegalArgumentException("Admin with id " + restaurant.getAdminId() + " not found"));
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
-
-        admin.getRestaurants().add(r);
-        Restaurant saved = restaurantRepository.save(r);
         
+        admin.addRestaurant(r);
+        Restaurant saved = restaurantRepository.save(r);
         return mapRestaurantToRestaurantResponse(saved);
     }
 
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
-        return null;
-        /* 
-        RestaurantResponse response = new RestaurantResponse();
-        response.setId(restaurant.getId());
-        response.setDesignation(restaurant.getDesignation());
-        response.setStatus(restaurant.getStatus().toString());
-        response.setCity(restaurant.getAddress().getCity());
-        return response;*/
+        return new RestaurantResponse(
+            restaurant.getId(),
+            restaurant.getDesignation(),
+            restaurant.getStatus().toString(),
+            restaurant.getNif(),
+            restaurant.getAdmin().getName(),
+            restaurant.getAddress().getStreet(),
+            restaurant.getAddress().getCity(),
+            restaurant.getAddress().getPostalCode()
+        );
     }
     
 }

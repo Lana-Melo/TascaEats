@@ -9,6 +9,8 @@ public class RestaurantListResponse {
         this.restaurants = restaurants;
     }
 
-
+    public List<RestaurantResponse> getRestaurants() {
+        return restaurants;
+    }
 }
 
