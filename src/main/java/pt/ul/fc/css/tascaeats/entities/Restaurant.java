@@ -45,6 +45,9 @@ public class Restaurant {
     @JoinColumn(name = "admin_id")
     private Admin admin;
 
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders;
+
     protected Restaurant() {}
 
     public Restaurant(String nif, String designation, Address address, Admin admin) {
@@ -53,6 +56,7 @@ public class Restaurant {
         this.status = RestaurantStatus.OPEN;
         this.address = address;
         this.products = new ArrayList<Product>();
+        this.orders = new ArrayList<Order>();
         this.admin = admin;
     }
 
@@ -102,5 +106,21 @@ public class Restaurant {
 
     public void setAdmin(Admin admin) {
         this.admin = admin;
+    }
+
+    public void setProduct(Product product) {
+        this.products.add(product);
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void addOrder(Order order) {
+        orders.add(order);
+    }
+
+    public void setOrders(List<Order> order) {
+        this.orders = order;
     }
 }

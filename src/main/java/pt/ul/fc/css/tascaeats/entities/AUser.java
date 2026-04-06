@@ -43,32 +43,6 @@ public abstract class AUser {
         this.nif = nif;
     }
 
-    /**
-     * Factory method to create a user based on the role.
-     * @param role The role of the user (e.g., "ADMIN", "EDITOR", "CLIENT")
-     * @param userName The username of the user
-     * @param password The password of the user
-     * @param name The name of the user
-     * @param phoneNumber The phone number of the user
-     * @param nif The NIF of the user
-     * 
-     * @return AUser instance corresponding to the role
-     */
-    public static AUser create(String role, String userName, String password, String name, String phoneNumber, String nif) {
-        AUser user = switch (role.toUpperCase()) {
-            case "ADMIN" -> new Admin();
-            case "CLIENT" -> new Client();
-            case "DELIVERY" -> new DeliveryPerson();
-            default -> throw new IllegalArgumentException("Invalid role: " + role);
-        };
-        user.username = userName;
-        user.password = password;
-        user.name = name;
-        user.phoneNumber = phoneNumber;
-        user.nif = nif;
-        return user;
-    }
-
     public Long getId() {
         return id;
     }

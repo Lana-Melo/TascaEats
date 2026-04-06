@@ -10,7 +10,6 @@ import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 public class DeliveryPerson extends AUser {
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private DeliveryPersonStatus status;
     
     protected DeliveryPerson() {}

@@ -6,9 +6,10 @@ import org.springframework.web.bind.annotation.*;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import pt.ul.fc.css.tascaeats.dto.LoginRequest;
-import pt.ul.fc.css.tascaeats.dto.UserRequest;
-import pt.ul.fc.css.tascaeats.dto.UserResponse;
+import pt.ul.fc.css.tascaeats.dto.users.ClientRequest;
+import pt.ul.fc.css.tascaeats.dto.users.LoginRequest;
+import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
+import pt.ul.fc.css.tascaeats.dto.users.UserResponse;
 import pt.ul.fc.css.tascaeats.services.UserService;
 
 @RestController
@@ -17,11 +18,15 @@ import pt.ul.fc.css.tascaeats.services.UserService;
 public class UserController {
     /**
      * POST   /api/users/login              login (caso de uso A)
-     * POST   /api/users/register/client      Registo de Client (caso de uso B)
-     * POST   /api/users/register/admin       Registo de Admin (caso de uso B)
-     * POST   /api/users/register/delivery    Registo de DeliveryPerson (caso de uso B)
-     * GET    /api/users/{id}               verificar (caso de uso C)
-     * PUT    /api/users/{id}               atualizar (caso de uso C)
+     * POST   /api/users/client/register     Registo de Client (caso de uso B)
+     * POST   /api/users/admin/register       Registo de Admin (caso de uso B)
+     * POST   /api/users/delivery/register    Registo de DeliveryPerson (caso de uso B)
+     * GET    /api/users/client/{id}               verificar (caso de uso C)
+     * GET    /api/users/delivery/{id}               verificar (caso de uso C)
+     * GET    /api/users/admin/{id}               verificar (caso de uso C)
+     * PUT    /api/users/client/{id}               atualizar (caso de uso C)
+     * PUT    /api/users/delivery/{id}               atualizar (caso de uso C)
+     * PUT    /api/users/admin/{id}               atualizar (caso de uso C)
      * DELETE /api/users/{id}               remover (caso de uso C)
      */
     
@@ -40,7 +45,7 @@ public class UserController {
     //POST   /api/users/register/client -> registo de cliente (caso de uso B)
     @PostMapping("/register/client")
     @ApiOperation(value = "Register client", notes = "Register a new client")
-    public ResponseEntity<UserResponse> registerClient(@RequestBody UserRequest request) {
+    public ResponseEntity<UserResponse> registerClient(@RequestBody ClientRequest request) {
         UserResponse user = userHandler.registerNewClient(request);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
     }
@@ -68,6 +73,9 @@ public class UserController {
         UserResponse user = userHandler.getUserById(id); 
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
+    
+
+    
 
     //PUT    /api/users/{id} -> atualizar (caso de uso C)
     @PutMapping("/{id}")
