@@ -10,6 +10,7 @@ import pt.ul.fc.css.tascaeats.entities.Order;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByCode(Long id);
-    Optional<Order> findByCustomer(Long id);
-    Optional<List<Order>> findByRestaurant(Long id);
+    Optional<List<Order>> findByClientId(Long id);
+    Optional<List<Order>> findByRestaurantId(Long id);
 }
+c
