@@ -8,6 +8,10 @@ import pt.ul.fc.css.tascaeats.dto.users.ClientRequest;
 import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
 import pt.ul.fc.css.tascaeats.dto.users.UserResponse;
 import pt.ul.fc.css.tascaeats.dto.users.ClientResponse;
+import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
+import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
+import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
+import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
 import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
@@ -138,7 +142,7 @@ public class UserService {
         deliveryPerson.setPhoneNumber(request.getPhoneNumber());
         deliveryPerson.setNif(request.getNif());
         deliveryPerson.setPassword(request.getPassword());
-        deliveryPerson.setDeliveryPersonStatus((DeliveryPersonStatus) request.getDeliveryPersonStatus());
+        deliveryPerson.setDeliveryPersonStatus((DeliveryPersonStatus) request.getStatus());
 
         userRepository.save(deliveryPerson);
         return mapDeliveryToDeliveryPersonResponse(deliveryPerson);
