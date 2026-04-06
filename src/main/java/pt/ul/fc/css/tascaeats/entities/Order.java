@@ -33,7 +33,6 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Column(name = "total_value")
     private double totalValue;
 
     @Enumerated(EnumType.STRING)

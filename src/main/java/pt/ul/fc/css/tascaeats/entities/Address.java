@@ -19,7 +19,7 @@ public class Address {
     @Column(nullable = false)
     private String city;
 
-    @Column(name = "postal_code", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String postalCode;
 
     protected Address() {}

@@ -27,7 +27,7 @@ public abstract class AUser {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "phone_number", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String phoneNumber;
 
     @Column(unique = true, nullable = false)

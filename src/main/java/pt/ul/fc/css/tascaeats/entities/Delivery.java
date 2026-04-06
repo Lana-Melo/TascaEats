@@ -17,10 +17,9 @@ public class Delivery {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "picked_up_time", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime pickedUpTimeStamp;
 
-    @Column(name = "delivered_time")
     private LocalDateTime deliveryTimeStamp;
 
     @ManyToOne
