@@ -65,7 +65,7 @@ public class UserService {
         return mapAUserToUserResponse(admin);
     }
 
-    public DeliveryPersonResponse registerNewDeliveryPerson(UserRequest request) {
+    public DeliveryPersonResponse registerNewDeliveryPerson(DeliveryPersonRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return null; 
         }
@@ -142,7 +142,7 @@ public class UserService {
         deliveryPerson.setPhoneNumber(request.getPhoneNumber());
         deliveryPerson.setNif(request.getNif());
         deliveryPerson.setPassword(request.getPassword());
-        deliveryPerson.setDeliveryPersonStatus((DeliveryPersonStatus) request.getStatus());
+        deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus().toUpperCase()));
 
         userRepository.save(deliveryPerson);
         return mapDeliveryToDeliveryPersonResponse(deliveryPerson);
@@ -156,7 +156,7 @@ public class UserService {
      * has associated orders
      */
     public boolean deleteUser(Long id) {
-        if (userRepository.existsById(id) && orderRepository.findByClientId(id).isEmpty()) {
+        if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return true;
         }

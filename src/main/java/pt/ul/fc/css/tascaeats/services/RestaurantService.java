@@ -66,12 +66,14 @@ public class RestaurantService {
     }
 
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
+        return null;
+        /* 
         RestaurantResponse response = new RestaurantResponse();
         response.setId(restaurant.getId());
         response.setDesignation(restaurant.getDesignation());
         response.setStatus(restaurant.getStatus().toString());
         response.setCity(restaurant.getAddress().getCity());
-        return response;
+        return response;*/
     }
     
 }

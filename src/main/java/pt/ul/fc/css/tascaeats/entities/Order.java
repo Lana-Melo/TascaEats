@@ -64,14 +64,9 @@ public class Order {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
-    @ManyToOne
-    @JoinColumn(name = "restaurant_id", nullable = false)
-    private Restaurant restaurant;
-
     protected Order() {}
 
-    public Order(String code, Client client, List<Product> products) {
-        this.code = code;
+    public Order(Restaurant restaurant, Client client, List<Product> products) {
         this.timestamp = LocalDateTime.now();
         this.status = OrderStatus.PREPARING;
         this.client = client;
