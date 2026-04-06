@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<AUser, Long> {
     // deleteById(id)
     // existsById(id)
     // count()
-    Optional<AUser> findByNifNumber(String nif);
+    Optional<AUser> findByNif(String nif);
     Optional<AUser> findByUsername(String username);
 
 }

@@ -9,9 +9,9 @@ import jakarta.persistence.Id;
 @Embeddable
 public class Address {
     
-    @Id
+    /*@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id;*/
 
     @Column(nullable = false)
     private String street;
@@ -30,9 +30,9 @@ public class Address {
         this.zipCode = zipCode;
     }
 
-    public Long getId() {
+    /*public Long getId() {
         return id;
-    }
+    }*/
 
     public String getStreet() {
         return street;
