@@ -11,7 +11,6 @@ import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
-import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 
@@ -74,22 +73,6 @@ public class RestaurantService {
         
         admin.addRestaurant(r);
         Restaurant saved = restaurantRepository.save(r);
-        
-        return mapRestaurantToRestaurantResponse(saved);
-    }
-
-    public RestaurantResponse changeStatus(Long id, String status) {
-        if(id == null || status == null || status.isEmpty()){
-            throw new IllegalArgumentException("The given id or status is invalid");
-        }
-
-        Optional<Restaurant> resOpt = restaurantRepository.findById(id);
-        if(!resOpt.isPresent()){return null;}
-
-        Restaurant restaurant = resOpt.get();
-        restaurant.setStatus(RestaurantStatus.valueOf(status.toUpperCase()));
-        Restaurant saved = restaurantRepository.save(restaurant);
-
         return mapRestaurantToRestaurantResponse(saved);
     }
 

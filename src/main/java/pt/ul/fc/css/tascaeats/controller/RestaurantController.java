@@ -61,7 +61,7 @@ public class RestaurantController {
     @PatchMapping("/{id}/status")
     @ApiOperation(value = "Update restaurant status", notes = "Opens or closes a restaurant.")
     public ResponseEntity<RestaurantResponse> updateStatus(@PathVariable Long id, @RequestParam RestaurantStatus status) { // passar a string OPEN ou CLOSED
-        RestaurantResponse restaurant = restaurantHandler.changeStatus(id, status.toString()); // chamo func changeStatus(id, status) do RestaurantService / handler (changeStatus(id, status))
+        RestaurantResponse restaurant = null; // chamo func changeStatus(id, status) do RestaurantService / handler (changeStatus(id, status))
         //evetualmente teria de ver se quem ta a tentar mudar o status é admin do restaurante mas n sei enfim 
         return restaurant != null ? ResponseEntity.ok(restaurant) : ResponseEntity.notFound().build();
     } 
