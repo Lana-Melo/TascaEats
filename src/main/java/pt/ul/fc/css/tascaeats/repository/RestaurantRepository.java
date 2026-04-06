@@ -11,8 +11,8 @@ import pt.ul.fc.css.tascaeats.entities.Restaurant;
 @Repository
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     Optional<Restaurant> findByNif(Long id);
-    Optional<List<Restaurant>> findByNameContaining(String name);
-    Optional<List<Restaurant>> findByStatusOpen(String city);
+    Optional<List<Restaurant>> findByDesignationContaining(String name);
+    Optional<List<Restaurant>> findByStatus(String city);
     Optional<List<Restaurant>> findByDesignationContainingOrAddressCityContaining(String designation, String city);
 
 }

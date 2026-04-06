@@ -1,18 +1,25 @@
-package pt.ul.fc.css.tascaeats.dto;
+package pt.ul.fc.css.tascaeats.dto.users;
+
+import jakarta.validation.constraints.NotNull;
 
 public class UserRequest {
+    @NotNull
     private String username;
+    @NotNull
     private String password;
+    @NotNull
     private String name;
+    @NotNull
     private String phoneNumber;
+    @NotNull
     private String nif;
-    private String role; // client, admin ou deliveryMan por agora fica string mas eventualmente podiamos ter enum pra isto
-                        //vai depender tbm de como vamos representar a herança nas tabelas (single table, joined, table per class lalalala )
+
+
 
     public UserRequest() {}
 
     public String getUsername() { return username; }
-    public void setUsername(String userName) { this.username = userName; }
+    public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
     public String getName() { return name; }
@@ -21,7 +28,7 @@ public class UserRequest {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getNif() { return nif; }
     public void setNif(String nif) { this.nif = nif; }
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+
+
 
 }

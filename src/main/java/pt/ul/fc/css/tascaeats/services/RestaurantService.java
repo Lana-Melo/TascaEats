@@ -41,7 +41,7 @@ public class RestaurantService {
     public RestaurantResponse createRestaurant(Restaurant restaurant) {
         // assumir que é o dto e nao um Restaurant
         Address address = new Address(restaurant.getAddress().getCity(), restaurant.getAddress().getStreet(), restaurant.getAddress().getPostalCode());
-        Admin admin = new Admin();
+        Admin admin = new Admin(); //mudar dto pra ter o id d user q vai ser admin do restaurant 
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
 
         admin.getRestaurants().add(r);
@@ -50,13 +50,21 @@ public class RestaurantService {
         return mapRestaurantToRestaurantResponse(saved);
     }
 
+
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
-        RestaurantResponse response = new RestaurantResponse();
+        /*RestaurantResponse response = new RestaurantResponse();
         response.setId(restaurant.getId());
         response.setDesignation(restaurant.getDesignation());
         response.setStatus(restaurant.getStatus().toString());
         response.setCity(restaurant.getAddress().getCity());
-        return response;
+        return response;*/
+        return new RestaurantResponse(
+            restaurant.getId(),
+            restaurant.getDesignation(),
+            restaurant.getStatus().toString(),
+            restaurant.getNif(),
+            restaurant.getAddress().getCity()
+        );
     }
     
 }

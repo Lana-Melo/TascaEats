@@ -9,17 +9,10 @@ import jakarta.persistence.Id;
 @Embeddable
 public class Address {
     
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
     private String street;
 
-    @Column(nullable = false)
     private String city;
 
-    @Column(unique = true, nullable = false)
     private String postalCode;
 
     protected Address() {}
@@ -28,10 +21,6 @@ public class Address {
         this.street = street;
         this.city = city;
         this.postalCode = postalCode;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getStreet() {

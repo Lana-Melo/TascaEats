@@ -4,9 +4,11 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import pt.ul.fc.css.tascaeats.dto.UserRequest;
-import pt.ul.fc.css.tascaeats.dto.UserResponse;
+import pt.ul.fc.css.tascaeats.dto.users.ClientRequest;
+import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
+import pt.ul.fc.css.tascaeats.dto.users.UserResponse;
 import pt.ul.fc.css.tascaeats.entities.AUser;
+import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.entities.Client;
@@ -37,16 +39,32 @@ public class UserService {
         return userOpt.map(this::mapAUserToUserResponse).orElse(null);
     }
 
-    public UserResponse registerNewClient(UserRequest request) {
-        return register(request, "CLIENT");
+    public UserResponse registerNewClient(ClientRequest request) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            return null; 
+        }
+        Address address = new Address(request.getCity(), request.getStreet(), request.getPostalCode());
+        Client client = new Client(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif(), address);
+        userRepository.save(client);
+        return mapAUserToUserResponse(client);
     }
 
     public UserResponse registerNewAdmin(UserRequest request) {
-        return register(request, "ADMIN");
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            return null; 
+        }
+        Admin admin = new Admin(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif());
+        userRepository.save(admin);
+        return mapAUserToUserResponse(admin);
     }
 
     public UserResponse registerNewDeliveryPerson(UserRequest request) {
-        return register(request, "DELIVERY");
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            return null; 
+        }
+        DeliveryPerson deliveryPerson = new DeliveryPerson(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif());
+        userRepository.save(deliveryPerson);
+        return mapAUserToUserResponse(deliveryPerson);
     }
 
     public UserResponse getUserById(Long id) {
@@ -89,16 +107,6 @@ public class UserService {
             return true;
         }
         return false;
-    }
-
-    private UserResponse register(UserRequest request, String role) {
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            return null; 
-        }
-
-        AUser newUser = AUser.create(role, request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif());
-        userRepository.save(newUser);
-        return mapAUserToUserResponse(newUser);
     }
 
     private UserResponse mapAUserToUserResponse(AUser user) {

@@ -1,41 +1,20 @@
 package pt.ul.fc.css.tascaeats.entities;
-
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+
 
 @Embeddable
 public class Delivery {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+    
+    @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime pickedUpTimeStamp;
 
+    @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime deliveryTimeStamp;
 
-    @ManyToOne
-    @JoinColumn(name = "delivery_person_id", nullable = false)
-    private DeliveryPerson deliveryPerson;
-
     protected Delivery() {}
-
-    public Delivery(DeliveryPerson deliveryPerson) {
-        this.pickedUpTimeStamp = LocalDateTime.now();
-        this.deliveryPerson = deliveryPerson;
-    }
-
-    public Long getId() {
-        return id;
-    }
 
     public LocalDateTime getPickedUpTimeStamp() {
         return pickedUpTimeStamp;
@@ -49,11 +28,7 @@ public class Delivery {
         this.deliveryTimeStamp = LocalDateTime.now();
     }
 
-    public DeliveryPerson getDeliveryMan() {
-        return deliveryPerson;
-    }
-
-    public void setDeliveryMan(DeliveryPerson deliveryPerson) {
-        this.deliveryPerson = deliveryPerson;
+    public void setPickedUpTimeStamp() {
+        this.pickedUpTimeStamp = LocalDateTime.now();
     }
 }

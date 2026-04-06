@@ -18,19 +18,18 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 
 @Entity
+@Table(name = "orders")
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String code;
-
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime timestamp;
 
     private double totalValue;
@@ -65,9 +64,13 @@ public class Order {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
+
     protected Order() {}
 
-    public Order(String code, Client client, Restaurant restaurant, List<Product> products) {
+    public Order(String code, Client client, List<Product> products) {
         this.code = code;
         this.timestamp = LocalDateTime.now();
         this.status = OrderStatus.PREPARING;
@@ -78,10 +81,6 @@ public class Order {
 
     public Long getId() {
         return id;
-    }
-
-    public String getCode() {
-        return code;
     }
 
     public LocalDateTime getTimestamp() {
