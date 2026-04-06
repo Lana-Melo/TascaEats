@@ -40,7 +40,7 @@ public class RestaurantService {
      */
     public RestaurantResponse createRestaurant(Restaurant restaurant) {
         // assumir que é o dto e nao um Restaurant
-        Address address = new Address(restaurant.getAddress().getCity(), restaurant.getAddress().getStreet(), restaurant.getAddress().getZipCode());
+        Address address = new Address(restaurant.getAddress().getCity(), restaurant.getAddress().getStreet(), restaurant.getAddress().getPostalCode());
         Admin admin = new Admin();
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
 
