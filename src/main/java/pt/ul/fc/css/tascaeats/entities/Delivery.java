@@ -13,9 +13,9 @@ import jakarta.persistence.ManyToOne;
 @Embeddable
 public class Delivery {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    /*@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)     estou a comentar os ids nas classes embebidas porque ta a dar barraca 
+    private Long id;*/                                     //eu acho q elas n tem id proprio, mas sim o id da classe que as embebe
 
     @Column(nullable = false)
     private LocalDateTime pickedUpTimeStamp;
@@ -33,9 +33,9 @@ public class Delivery {
         this.deliveryPerson = deliveryPerson;
     }
 
-    public Long getId() {
+    /*public Long getId() {
         return id;
-    }
+    }*/
 
     public LocalDateTime getPickedUpTimeStamp() {
         return pickedUpTimeStamp;
