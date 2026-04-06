@@ -28,6 +28,9 @@ public class Restaurant {
     @Column(nullable = false)
     private String designation;
 
+    @Column(nullable = false)
+    private String nif;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RestaurantStatus status;
@@ -44,7 +47,8 @@ public class Restaurant {
 
     protected Restaurant() {}
 
-    public Restaurant(String designation, Address address, Admin admin) {
+    public Restaurant(String nif, String designation, Address address, Admin admin) {
+        this.nif = nif;
         this.designation = designation;
         this.status = RestaurantStatus.OPEN;
         this.address = address;
@@ -60,11 +64,23 @@ public class Restaurant {
         return designation;
     }
 
-    public RestaurantStatus getRestaurantStatus() {
+    public void setDesignation(String designation) {
+        this.designation = designation;
+    }
+
+    public String getNif() {
+        return nif;
+    }
+
+    public void setNif(String nif) {
+        this.nif = nif;
+    }
+
+    public RestaurantStatus getStatus() {
         return status;
     }
 
-    public void setRestaurantStatus(RestaurantStatus status) {
+    public void setStatus(RestaurantStatus status) {
         this.status = status;
     }
 

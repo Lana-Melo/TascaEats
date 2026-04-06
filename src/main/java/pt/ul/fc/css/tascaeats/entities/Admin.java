@@ -12,7 +12,7 @@ public class Admin extends AUser {
     @OneToMany(mappedBy = "admin", cascade = CascadeType.ALL)
     private List<Restaurant> restaurants;
 
-    protected Admin() {}
+    public Admin() {}
 
     public List<Restaurant> getRestaurants() {
         return restaurants;
