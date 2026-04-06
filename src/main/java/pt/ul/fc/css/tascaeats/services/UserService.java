@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.dto.users.ClientRequest;
 import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
 import pt.ul.fc.css.tascaeats.dto.users.UserResponse;
+import pt.ul.fc.css.tascaeats.dto.users.ClientResponse;
+import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
@@ -14,6 +16,7 @@ import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 
 @Service
 public class UserService {
@@ -39,14 +42,14 @@ public class UserService {
         return userOpt.map(this::mapAUserToUserResponse).orElse(null);
     }
 
-    public UserResponse registerNewClient(ClientRequest request) {
+    public ClientResponse registerNewClient(ClientRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return null; 
         }
         Address address = new Address(request.getCity(), request.getStreet(), request.getPostalCode());
         Client client = new Client(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif(), address);
         userRepository.save(client);
-        return mapAUserToUserResponse(client);
+        return mapClientToClientResponse(client, address);
     }
 
     public UserResponse registerNewAdmin(UserRequest request) {
@@ -58,13 +61,13 @@ public class UserService {
         return mapAUserToUserResponse(admin);
     }
 
-    public UserResponse registerNewDeliveryPerson(UserRequest request) {
+    public DeliveryPersonResponse registerNewDeliveryPerson(UserRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return null; 
         }
         DeliveryPerson deliveryPerson = new DeliveryPerson(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif());
         userRepository.save(deliveryPerson);
-        return mapAUserToUserResponse(deliveryPerson);
+        return mapDeliveryToDeliveryPersonResponse(deliveryPerson);
     }
 
     public UserResponse getUserById(Long id) {
@@ -73,25 +76,72 @@ public class UserService {
     }
 
     /**
-     * Updates a user's recod with the provided data.
+     * Updates a user's record with the provided data.
      * 
      * @param id the id of the user to update
      * @param request the new user data (only name and phone number are used)
      * @return the updated UserResponse if the user exists, null otherwise
      */
-    public UserResponse updateUser(Long id, UserRequest request) {
+    public UserResponse updateAdmin(Long id, UserRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) {return null;}
 
-        AUser user = userOpt.get();
-        user.setName(request.getName());
-        user.setUsername(request.getUsername());
-        user.setPhoneNumber(request.getPhoneNumber());
-        user.setNif(request.getNif());
-        user.setPassword(request.getPassword());
+        Admin admin = (Admin) userOpt.get();
+        admin.setName(request.getName());
+        admin.setUsername(request.getUsername());
+        admin.setPhoneNumber(request.getPhoneNumber());
+        admin.setNif(request.getNif());
+        admin.setPassword(request.getPassword());
 
-        userRepository.save(user);
-        return mapAUserToUserResponse(user);
+        userRepository.save(admin);
+        return mapAUserToUserResponse(admin);
+    }
+
+    /**
+     * Updates a client's record with the provided data.
+     * 
+     * @param id the id of the user to update
+     * @param request the new user data (only name and phone number are used)
+     * @return the updated ClientResponse if the user exists, null otherwise
+     */
+    public ClientResponse updateClient(Long id, ClientRequest request) {
+        Optional<AUser> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {return null;}
+
+        Client client = (Client) userOpt.get();
+        client.setName(request.getName());
+        client.setUsername(request.getUsername());
+        client.setPhoneNumber(request.getPhoneNumber());
+        client.setNif(request.getNif());
+        client.setPassword(request.getPassword());
+        Address address = new Address(request.getCity(), request.getStreet(), request.getPostalCode());
+        client.setAddress(address);
+
+        userRepository.save(client);
+        return mapClientToClientResponse(client, address);
+    }
+
+    /**
+     * Updates a delivery person's record with the provided data.
+     * 
+     * @param id the id of the user to update
+     * @param request the new user data (only name and phone number are used)
+     * @return the updated DeliveryPersonResponse if the user exists, null otherwise
+     */
+    public DeliveryPersonResponse updateDeliveryPerson(Long id, DeliveryPersonRequest request) {
+        Optional<AUser> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {return null;}
+
+        DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
+        deliveryPerson.setName(request.getName());
+        deliveryPerson.setUsername(request.getUsername());
+        deliveryPerson.setPhoneNumber(request.getPhoneNumber());
+        deliveryPerson.setNif(request.getNif());
+        deliveryPerson.setPassword(request.getPassword());
+        deliveryPerson.setDeliveryPersonStatus((DeliveryPersonStatus) request.getDeliveryPersonStatus());
+
+        userRepository.save(deliveryPerson);
+        return mapDeliveryToDeliveryPersonResponse(deliveryPerson);
     }
 
     /**
@@ -110,18 +160,31 @@ public class UserService {
     }
 
     private UserResponse mapAUserToUserResponse(AUser user) {
-        String role;
-        if (user instanceof Client) role = "CLIENT";
-        else if (user instanceof Admin) role = "ADMIN";
-        else if (user instanceof DeliveryPerson) role = "DELIVERY";
-        else throw new IllegalArgumentException("Unknown user type");
-
         return new UserResponse(user.getId(),
                                 user.getUsername(), 
                                 user.getName(), 
                                 user.getPhoneNumber(), 
-                                user.getNif(), 
-                                role);
+                                user.getNif());
+    }
+
+    private DeliveryPersonResponse mapDeliveryToDeliveryPersonResponse(DeliveryPerson deliveryPerson) {
+        return new DeliveryPersonResponse(deliveryPerson.getId(),
+                                          deliveryPerson.getUsername(), 
+                                          deliveryPerson.getName(), 
+                                          deliveryPerson.getPhoneNumber(), 
+                                          deliveryPerson.getNif(),
+                                          deliveryPerson.getDeliveryPersonStatus().toString());
+    }
+
+    private ClientResponse mapClientToClientResponse(Client client, Address address) {
+        return new ClientResponse(client.getId(),
+                                  client.getUsername(), 
+                                  client.getName(), 
+                                  client.getPhoneNumber(), 
+                                  client.getNif(),
+                                  address.getCity(),
+                                  address.getStreet(),
+                                  address.getPostalCode());
     }
 
 }
