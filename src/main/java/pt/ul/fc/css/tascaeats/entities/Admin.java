@@ -1,5 +1,6 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -13,6 +14,11 @@ public class Admin extends AUser {
     private List<Restaurant> restaurants;
 
     public Admin() {}
+
+    public Admin(String userName, String password, String name, String phoneNumber, String nif) {
+        super(userName, password, name, phoneNumber, nif);
+        this.restaurants = new ArrayList<Restaurant>();
+    }
 
     public List<Restaurant> getRestaurants() {
         return restaurants;

@@ -52,7 +52,7 @@ public class Restaurant {
         this.designation = designation;
         this.status = RestaurantStatus.OPEN;
         this.address = address;
-        this.products = new ArrayList<>();
+        this.products = new ArrayList<Product>();
         this.admin = admin;
     }
 
@@ -90,11 +90,6 @@ public class Restaurant {
 
     public List<Product> getProducts() {
         return products;
-    }
-
-    public void addProduct(Product product) {
-        products.add(product);
-        product.setRestaurant(this);
     }
 
     public void setProducts(List<Product> products) {

@@ -11,6 +11,11 @@ public class Client extends AUser {
 
     protected Client() {}
 
+    public Client(String userName, String password, String name, String phoneNumber, String nif, Address address) {
+        super(userName, password, name, phoneNumber, nif);
+        this.address = address;
+    }
+
     public Address getAddress() {
         return address;
     }

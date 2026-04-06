@@ -20,14 +20,14 @@ public class Address {
     private String city;
 
     @Column(unique = true, nullable = false)
-    private String zipCode;
+    private String postalCode;
 
     protected Address() {}
 
-    public Address(String street, String city, String zipCode) {
+    public Address(String street, String city, String postalCode) {
         this.street = street;
         this.city = city;
-        this.zipCode = zipCode;
+        this.postalCode = postalCode;
     }
 
     /*public Long getId() {
@@ -42,7 +42,7 @@ public class Address {
         return city;
     }
 
-    public String getZipCode() {
-        return zipCode;
+    public String getPostalCode() {
+        return postalCode;
     }
 }

@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -32,7 +33,6 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    // tirei o nullable a false pq o valor total é calculado depois
     private double totalValue;
 
     @Enumerated(EnumType.STRING)
@@ -58,7 +58,7 @@ public class Order {
     private Delivery delivery;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "payment_id") // tirei o nullable a false pq o pagamento é feito depois
+    @JoinColumn(name = "payment_id")
     private Payment payment;
 
     protected Order() {}
@@ -68,7 +68,7 @@ public class Order {
         this.timestamp = LocalDateTime.now();
         this.status = OrderStatus.PREPARING;
         this.client = client;
-        this.products = products;
+        this.products = new ArrayList<Product>();
     }
 
     public Long getId() {
