@@ -27,7 +27,7 @@ public abstract class AUser {
     @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
     @Column(unique = true, nullable = false)
@@ -57,8 +57,8 @@ public abstract class AUser {
     public static AUser create(String role, String userName, String password, String name, String phoneNumber, String nif) {
         AUser user = switch (role.toUpperCase()) {
             case "ADMIN" -> new Admin();
-            case "EDITOR" -> new Client();
-            case "CLIENT" -> new DeliveryPerson();
+            case "CLIENT" -> new Client();
+            case "DELIVERY" -> new DeliveryPerson();
             default -> throw new IllegalArgumentException("Invalid role: " + role);
         };
         user.username = userName;

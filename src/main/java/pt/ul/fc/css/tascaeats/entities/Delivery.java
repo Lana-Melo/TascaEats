@@ -4,34 +4,57 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Embeddable
 public class Delivery {
 
-    @Column(nullable = false)
-    private LocalDateTime pickedUpTimestamp;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private LocalDateTime deliveryTimestamp;
+    @Column(name = "picked_up_time", nullable = false)
+    private LocalDateTime pickedUpTimeStamp;
+
+    @Column(name = "delivered_time")
+    private LocalDateTime deliveryTimeStamp;
+
+    @ManyToOne
+    @JoinColumn(name = "delivery_man_id", nullable = false)
+    private DeliveryPerson deliveryPerson;
 
     protected Delivery() {}
 
-    public Delivery(LocalDateTime pickedUpTimestamp) {
-        this.pickedUpTimestamp = pickedUpTimestamp;
+    public Delivery(DeliveryPerson deliveryPerson) {
+        this.pickedUpTimeStamp = LocalDateTime.now();
+        this.deliveryPerson = deliveryPerson;
     }
 
-    public LocalDateTime getPickedUpTimestamp() {
-        return pickedUpTimestamp;
+    public Long getId() {
+        return id;
     }
 
-    public void setPickedUpTimestamp(LocalDateTime pickedUpTimestamp) {
-        this.pickedUpTimestamp = pickedUpTimestamp;
+    public LocalDateTime getPickedUpTimeStamp() {
+        return pickedUpTimeStamp;
     }
 
-    public LocalDateTime getDeliveryTimestamp() {
-        return deliveryTimestamp;
+    public LocalDateTime getDeliveryTimeStamp() {
+        return deliveryTimeStamp;
     }
 
     public void setDeliveryTimeStamp() {
-        this.deliveryTimestamp = LocalDateTime.now();
+        this.deliveryTimeStamp = LocalDateTime.now();
+    }
+
+    public DeliveryPerson getDeliveryMan() {
+        return deliveryPerson;
+    }
+
+    public void setDeliveryMan(DeliveryPerson deliveryPerson) {
+        this.deliveryPerson = deliveryPerson;
     }
 }
