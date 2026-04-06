@@ -23,7 +23,7 @@ public class Delivery {
     private LocalDateTime deliveryTimeStamp;
 
     @ManyToOne
-    @JoinColumn(name = "delivery_man_id", nullable = false)
+    @JoinColumn(name = "delivery_person_id", nullable = false)
     private DeliveryPerson deliveryPerson;
 
     protected Delivery() {}
