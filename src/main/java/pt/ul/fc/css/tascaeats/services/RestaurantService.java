@@ -4,9 +4,10 @@ import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import java.util.List;
 import java.util.Optional;
-import pt.ul.fc.css.tascaeats.dto.RestaurantListResponse;
-import pt.ul.fc.css.tascaeats.dto.RestaurantResponse;
+
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
+import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantListResponse;
+import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 
