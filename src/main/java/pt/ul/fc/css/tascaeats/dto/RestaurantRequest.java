@@ -5,6 +5,9 @@ public class RestaurantRequest {
     private String designation;
     private String status; 
     private String nif;
+    private String city;
+    private String postalCode;
+    private String street;
 
     public RestaurantRequest() {}
 
@@ -16,5 +19,11 @@ public class RestaurantRequest {
     public void setStatus(String status) { this.status = status; }
     public String getNif() { return nif; }
     public void setNif(String nif) { this.nif = nif; }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    public String getPostalCode() { return postalCode; } 
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+    public String getStreet() { return street; }
+    public void setStreet(String street) { this.street = street; }
 }
 
