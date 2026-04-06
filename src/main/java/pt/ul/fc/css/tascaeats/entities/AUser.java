@@ -35,8 +35,8 @@ public abstract class AUser {
 
     protected AUser() {}
 
-    public AUser(String userName, String password, String name, String phoneNumber, String nif) {
-        this.username = userName;
+    public AUser(String username, String password, String name, String phoneNumber, String nif) {
+        this.username = username;
         this.password = password;
         this.name = name;
         this.phoneNumber = phoneNumber;
@@ -45,24 +45,44 @@ public abstract class AUser {
 
     /**
      * Factory method to create a user based on the role.
-     * @param role The role of the user (e.g., "ADMIN", "EDITOR", "CUSTOMER")
+     * @param role The role of the user (e.g., "ADMIN", "EDITOR", "CLIENT")
+     * @param userName The username of the user
+     * @param password The password of the user
+     * @param name The name of the user
+     * @param phoneNumber The phone number of the user
+     * @param nif The NIF of the user
+     * 
      * @return AUser instance corresponding to the role
      */
-    public static AUser create(String role) {
-        return switch (role) {
+    public static AUser create(String role, String userName, String password, String name, String phoneNumber, String nif) {
+        AUser user = switch (role.toUpperCase()) {
             case "ADMIN" -> new Admin();
             case "EDITOR" -> new Client();
-            case "CUSTOMER" -> new DeliveryPerson();
+            case "CLIENT" -> new DeliveryPerson();
             default -> throw new IllegalArgumentException("Invalid role: " + role);
         };
+        user.username = userName;
+        user.password = password;
+        user.name = name;
+        user.phoneNumber = phoneNumber;
+        user.nif = nif;
+        return user;
     }
 
     public Long getId() {
         return id;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getUsername() {
         return username;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getName() {
@@ -79,5 +99,17 @@ public abstract class AUser {
 
     public String getNif() {
         return nif;
+    }
+
+    public void setNif(String nif) {
+        this.nif = nif;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

@@ -35,6 +35,8 @@ public class UserController {
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build(); 
     }
 
+    // Sofia, o service vai ter um metodo para cada tipo e o controller vai ter de ter
+    // diferentes endpoints para registar cada tipo de user. (LANA)
     //POST   /api/users/register -> registo de utilizador - Client, Admin, DeliveryMan (caso de uso B)
     @PostMapping("/register")
     @ApiOperation(value = "Register user", notes = "Registers a new user (Client, Admin or DeliveryMan).")
