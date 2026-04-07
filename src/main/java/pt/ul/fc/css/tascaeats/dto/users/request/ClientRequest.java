@@ -1,25 +1,26 @@
-package pt.ul.fc.css.tascaeats.dto.users;
+package pt.ul.fc.css.tascaeats.dto.users.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
-public class DeliveryPersonRequest {
-    @NotNull
+public class ClientRequest {
+    @NotBlank
     private String username;
-    @NotNull
+    @NotBlank
     private String password;
-    @NotNull
+    @NotBlank
     private String name;
-    @NotNull
+    @NotBlank
     private String phoneNumber;
-    @NotNull
+    @NotBlank
     private String nif;
-    @NotNull
-    private String status;
+    @NotBlank
+    private String city;
+    @NotBlank
+    private String street;
+    @NotBlank
+    private String postalCode;
 
-
-
-
-    public DeliveryPersonRequest() {}
+    public ClientRequest() {}
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -31,9 +32,12 @@ public class DeliveryPersonRequest {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getNif() { return nif; }
     public void setNif(String nif) { this.nif = nif; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
+    public String getCity() { return city; }    
+    public void setCity(String city) { this.city = city; }
+    public String getStreet() { return street; }    
+    public void setStreet(String street) { this.street = street; }
+    public String getPostalCode() { return postalCode; }
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
 
 
 }
