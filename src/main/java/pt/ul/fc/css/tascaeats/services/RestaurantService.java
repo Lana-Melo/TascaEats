@@ -33,13 +33,17 @@ public class RestaurantService {
         this.userRepository = userRepository;
     }
 
+    /////////////////////////////////////////////////////////////
+    ///  CRUD RESTAURANT'S METHODS
+    /////////////////////////////////////////////////////////////
+    
     public RestaurantListResponse searchByDesignationOrCity(String designation, String city) {
-        if ((designation == null || designation.isEmpty()) && (city == null || city.isEmpty())) { // se n for passado nenhum filtro, retorna todos os restaurantes
+        if ((designation == null || designation.isEmpty()) && (city == null || city.isEmpty())) {
                 return new RestaurantListResponse(restaurantRepository
-                                                    .findAll()
-                                                    .stream()
-                                                    .map(this::mapRestaurantToRestaurantResponse)
-                                                .toList());
+                                                 .findAll()
+                                                 .stream()
+                                                 .map(this::mapRestaurantToRestaurantResponse)
+                                                 .toList());
         }
         
         Optional<List<Restaurant>> rs;
@@ -60,17 +64,7 @@ public class RestaurantService {
                                                     .orElse(null));
     }
 
-    /**
-     * Creates a new restaurant with the provided data. 
-     * The restaurant is associated with the admin mentioned in the restaurant parameter.
-     * @param restaurant the restaurant data to create (should be a DTO in a real implementation)
-     * @return a RestaurantResponse representing the created restaurant
-     * 
-     */
     public RestaurantResponse createRestaurant(RestaurantRequest restaurant) {
-        if(restaurant.getAdminId() == null) {
-            throw new IllegalArgumentException("Admin ID must be provided to create a restaurant");
-        }
         Address address = new Address(restaurant.getCity(), restaurant.getStreet(), restaurant.getPostalCode());
         Admin admin = userRepository.findById(restaurant.getAdminId())
                             .filter(a -> a instanceof Admin)
@@ -84,10 +78,6 @@ public class RestaurantService {
     }
 
     public RestaurantResponse changeStatus(Long id, String status) {
-        if(id == null || status == null || status.isEmpty()){
-            throw new IllegalArgumentException("The given id or status is invalid");
-        }
-
         Optional<Restaurant> resOpt = restaurantRepository.findById(id);
         if(!resOpt.isPresent()){return null;}
 
@@ -96,12 +86,12 @@ public class RestaurantService {
         Restaurant saved = restaurantRepository.save(restaurant);
         return mapRestaurantToRestaurantResponse(saved);
     }
+    
+    /////////////////////////////////////////////////////////////
+    ///  CRUD PRODUCT'S METHODS
+    /////////////////////////////////////////////////////////////
 
     public ProductResponse addProduct(Long restaurantId, ProductRequest productRequest) {
-        if(restaurantId == null) {
-            throw new IllegalArgumentException("Restaurant ID must be provided to create a product");
-        }
-
         Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
         if(!resOpt.isPresent()){return null;}
 
@@ -114,11 +104,7 @@ public class RestaurantService {
         return mapProductToProductResponse(saved);
     }
 
-    public ProductResponse updateProduct(Long restaurantId, Long productId, ProductRequest productRequest) {
-        if(restaurantId == null || productId == null) {
-            throw new IllegalArgumentException("Restaurant and product ID must be provided update a product");
-        }
-        
+    public ProductResponse updateProduct(Long restaurantId, Long productId, ProductRequest productRequest) {        
         Optional<Product> prodOpt = productRepository.findById(productId);
         if(!prodOpt.isPresent()){return null;}
 
@@ -134,10 +120,18 @@ public class RestaurantService {
     }
 
     public boolean deleteProduct(Long restaurantId, Long productId){
-        if(isFromRestaurant(productId, restaurantId)){
+        if(isFromRestaurant(productId, restaurantId) && !isAssociatedWithOrders(productId)){
             productRepository.deleteById(productId);
             return true;    
         }
+        return false;
+    }
+
+
+    /////////////////////////////////////////////////////////////
+    ///  HELPER PRIVATE  METHODS
+    /////////////////////////////////////////////////////////////
+    private boolean isAssociatedWithOrders(Long productId) {
         return false;
     }
 
@@ -146,27 +140,28 @@ public class RestaurantService {
         return prodOpt.get().getRestaurant().getId() == restaurandId;
     }
 
+    /////////////////////////////////////////////////////////////
+    ///  MAPPER METHODS
+    /////////////////////////////////////////////////////////////
     private ProductResponse mapProductToProductResponse(Product product) {
         return new ProductResponse(
-            product.getId(), 
-            product.getPrice(), 
-            product.getDescription(), 
-            product.getDesignation(), 
-            product.getStatus().toString()
-        );
+                                    product.getId(), 
+                                    product.getPrice(), 
+                                    product.getDescription(), 
+                                    product.getDesignation(), 
+                                    product.getStatus().toString());
     }
 
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
         return new RestaurantResponse(
-            restaurant.getId(),
-            restaurant.getDesignation(),
-            restaurant.getStatus().toString(),
-            restaurant.getNif(),
-            restaurant.getAdmin().getName(),
-            restaurant.getAddress().getStreet(),
-            restaurant.getAddress().getCity(),
-            restaurant.getAddress().getPostalCode()
-        );
+                                    restaurant.getId(),
+                                    restaurant.getDesignation(),
+                                    restaurant.getStatus().toString(),
+                                    restaurant.getNif(),
+                                    restaurant.getAdmin().getName(),
+                                    restaurant.getAddress().getStreet(),
+                                    restaurant.getAddress().getCity(),
+                                    restaurant.getAddress().getPostalCode());
     }
     
 }
