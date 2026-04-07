@@ -15,6 +15,7 @@ import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
+import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 
@@ -22,16 +23,17 @@ import pt.ul.fc.css.tascaeats.repository.UserRepository;
 public class RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+    private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    private RestaurantService(RestaurantRepository restaurantRepository, UserRepository userRepository) {
+    private RestaurantService(RestaurantRepository restaurantRepository, UserRepository userRepository, ProductRepository productRepository) {
         this.restaurantRepository = restaurantRepository;
+        this.productRepository = productRepository;
         this.userRepository = userRepository;
     }
 
     public RestaurantListResponse searchByDesignationOrCity(String designation, String city) {
         if ((designation == null || designation.isEmpty()) && (city == null || city.isEmpty())) { // se n for passado nenhum filtro, retorna todos os restaurantes
-                System.out.println("EEEEEE");
                 return new RestaurantListResponse(restaurantRepository
                                                     .findAll()
                                                     .stream()
@@ -106,10 +108,9 @@ public class RestaurantService {
         Product product = new Product(productRequest.getPrice(), productRequest.getDescription(), 
                                 productRequest.getDesignation(), restaurant);
         
-        restaurant.getProducts().add(product);
-        restaurantRepository.save(restaurant);
+        Product saved = productRepository.save(product);
         
-        return mapProductToProductResponse(product); // id do product ta a vir null, preciso corrigir
+        return mapProductToProductResponse(saved); // id do product ta a vir null, preciso corrigir
     }
 
     private ProductResponse mapProductToProductResponse(Product product) {
