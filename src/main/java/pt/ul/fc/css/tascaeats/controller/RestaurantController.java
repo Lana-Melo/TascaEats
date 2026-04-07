@@ -70,7 +70,7 @@ public class RestaurantController {
     @PostMapping("/{id}/products")
     @ApiOperation(value = "Add product to restaurant", notes = "Adds a new product")
     public ResponseEntity<ProductResponse> addProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
-        ProductResponse product = null; // chamo func addProduct(id_Restaurant, request) do RestaurantService / handler (addProduct(id, request))
+        ProductResponse product = restaurantHandler.addProduct(id, request); // chamo func addProduct(id_Restaurant, request) do RestaurantService / handler (addProduct(id, request))
         //a ideia aqui seria criar o produto e associa lo ao restaurante 
         return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
     }

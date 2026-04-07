@@ -19,9 +19,6 @@ public class Product {
     private Long id;
 
     @Column(nullable = false)
-    private String code;
-
-    @Column(nullable = false)
     private double price;
 
     @Column(nullable = false)
@@ -40,8 +37,7 @@ public class Product {
 
     protected Product() {}
 
-    public Product(String code, double price, String description, String designation, Restaurant restaurant) {
-        this.code = code;
+    public Product(double price, String description, String designation, Restaurant restaurant) {
         this.price = price;
         this.description = description;
         this.designation = designation;
@@ -51,10 +47,6 @@ public class Product {
 
     public Long getId() {
         return id;
-    }
-
-    public String getCode() {
-        return code;
     }
 
     public double getPrice() {
@@ -81,11 +73,11 @@ public class Product {
         this.designation = designation;
     }
 
-    public ProductStatus getProductStatus() {
+    public ProductStatus getStatus() {
         return availability;
     }
 
-    public void setProductStatus (ProductStatus availability) {
+    public void setStatus (ProductStatus availability) {
         this.availability = availability;
     }
 

@@ -5,11 +5,14 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
+import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantListResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
+import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -89,6 +92,34 @@ public class RestaurantService {
         restaurant.setStatus(RestaurantStatus.valueOf(status.toUpperCase()));
         Restaurant saved = restaurantRepository.save(restaurant);
         return mapRestaurantToRestaurantResponse(saved);
+    }
+
+    public ProductResponse addProduct(Long restaurantId, ProductRequest productRequest) {
+        if(restaurantId == null) {
+            throw new IllegalArgumentException("Admin ID must be provided to create a restaurant");
+        }
+
+        Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
+        if(!resOpt.isPresent()){return null;}
+
+        Restaurant restaurant = resOpt.get();
+        Product product = new Product(productRequest.getPrice(), productRequest.getDescription(), 
+                                productRequest.getDesignation(), restaurant);
+        
+        restaurant.getProducts().add(product);
+        restaurantRepository.save(restaurant);
+        
+        return mapProductToProductResponse(product); // id do product ta a vir null, preciso corrigir
+    }
+
+    private ProductResponse mapProductToProductResponse(Product product) {
+        return new ProductResponse(
+            product.getId(), 
+            product.getPrice(), 
+            product.getDescription(), 
+            product.getDesignation(), 
+            product.getStatus().toString()
+        );
     }
 
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
