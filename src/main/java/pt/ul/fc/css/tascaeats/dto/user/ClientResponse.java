@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.dto.users;
+package pt.ul.fc.css.tascaeats.dto.user;
 
 //record porque a resposta é imutavel, so lemos, nunca modificamos
 public record ClientResponse(

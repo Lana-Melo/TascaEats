@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.*;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import pt.ul.fc.css.tascaeats.dto.users.ClientRequest;
-import pt.ul.fc.css.tascaeats.dto.users.ClientResponse;
-import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
-import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonResponse;
-import pt.ul.fc.css.tascaeats.dto.users.LoginRequest;
-import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
-import pt.ul.fc.css.tascaeats.dto.users.UserResponse;
+import pt.ul.fc.css.tascaeats.dto.user.ClientRequest;
+import pt.ul.fc.css.tascaeats.dto.user.ClientResponse;
+import pt.ul.fc.css.tascaeats.dto.user.DeliveryPersonRequest;
+import pt.ul.fc.css.tascaeats.dto.user.DeliveryPersonResponse;
+import pt.ul.fc.css.tascaeats.dto.user.LoginRequest;
+import pt.ul.fc.css.tascaeats.dto.user.UserRequest;
+import pt.ul.fc.css.tascaeats.dto.user.UserResponse;
 import pt.ul.fc.css.tascaeats.services.UserService;
 
 @RestController

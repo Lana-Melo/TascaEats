@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.dto.users;
+package pt.ul.fc.css.tascaeats.dto.user;
 
 import jakarta.validation.constraints.NotNull;
 
