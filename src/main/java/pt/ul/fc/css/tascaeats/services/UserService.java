@@ -1,19 +1,17 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import java.util.Optional;
-
 import org.springframework.stereotype.Service;
 
-import pt.ul.fc.css.tascaeats.dto.users.ClientRequest;
-import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
-import pt.ul.fc.css.tascaeats.dto.users.UserResponse;
-import pt.ul.fc.css.tascaeats.dto.users.ClientResponse;
-import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
-import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonResponse;
+import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequest;
+import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequest;
+import pt.ul.fc.css.tascaeats.dto.users.request.UserRequest;
+import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponse;
+import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponse;
+import pt.ul.fc.css.tascaeats.dto.users.response.UserResponse;
+import pt.ul.fc.css.tascaeats.repository.UserRepository;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
-import pt.ul.fc.css.tascaeats.repository.UserRepository;
-import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
@@ -23,34 +21,31 @@ import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final OrderRepository orderRepository;
 
-    public UserService(UserRepository userRepository, OrderRepository orderRepository) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.orderRepository = orderRepository;
     }
 
     /**
      * Mock login, any password is accepted if user is valid.
-     * 
-     * @param username the username of the user trying to log in
-     * @param password the password of the user trying to log in (ignored in this mock
-     * implementation)
-     * @return a UserResponse if the user exists, null otherwise
+     *
      */
     public UserResponse login(String username, String password) {
         Optional<AUser> userOpt = userRepository.findByUsername(username);
         return userOpt.map(this::mapAUserToUserResponse).orElse(null);
     }
 
+    /////////////////////////////////////////////////////////////
+    ///  POST USER METHODS
+    /////////////////////////////////////////////////////////////
     public ClientResponse registerNewClient(ClientRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return null; 
         }
         Address address = new Address(request.getCity(), request.getStreet(), request.getPostalCode());
         Client client = new Client(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif(), address);
-        userRepository.save(client);
-        return mapClientToClientResponse(client, address);
+        Client saved = userRepository.save(client);
+        return mapClientToClientResponse(saved);
     }
 
     public UserResponse registerNewAdmin(UserRequest request) {
@@ -58,8 +53,8 @@ public class UserService {
             return null; 
         }
         Admin admin = new Admin(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif());
-        userRepository.save(admin);
-        return mapAUserToUserResponse(admin);
+        Admin saved = userRepository.save(admin);
+        return mapAUserToUserResponse(saved);
     }
 
     public DeliveryPersonResponse registerNewDeliveryPerson(DeliveryPersonRequest request) {
@@ -67,15 +62,21 @@ public class UserService {
             return null; 
         }
         DeliveryPerson deliveryPerson = new DeliveryPerson(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif());
-        userRepository.save(deliveryPerson);
-        return mapDeliveryToDeliveryPersonResponse(deliveryPerson);
+        DeliveryPerson saved = userRepository.save(deliveryPerson);
+        return mapDeliveryToDeliveryPersonResponse(saved);
     }
 
+    /////////////////////////////////////////////////////////////
+    /// GET USER METHOD
+    /////////////////////////////////////////////////////////////
     public UserResponse getUserById(Long id) {
         Optional<AUser> userOpt = userRepository.findById(id);
         return userOpt.map(this::mapAUserToUserResponse).orElse(null);
     }
 
+    /////////////////////////////////////////////////////////////
+    /// PUT USER METHODS
+    /////////////////////////////////////////////////////////////
     /**
      * Updates a user's record with the provided data.
      * 
@@ -94,8 +95,8 @@ public class UserService {
         admin.setNif(request.getNif());
         admin.setPassword(request.getPassword());
 
-        userRepository.save(admin);
-        return mapAUserToUserResponse(admin);
+        Admin saved = userRepository.save(admin);
+        return mapAUserToUserResponse(saved);
     }
 
     /**
@@ -118,8 +119,8 @@ public class UserService {
         Address address = new Address(request.getCity(), request.getStreet(), request.getPostalCode());
         client.setAddress(address);
 
-        userRepository.save(client);
-        return mapClientToClientResponse(client, address);
+        Client saved = userRepository.save(client);
+        return mapClientToClientResponse(saved);
     }
 
     /**
@@ -141,16 +142,29 @@ public class UserService {
         deliveryPerson.setPassword(request.getPassword());
         deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus().toUpperCase()));
 
-        userRepository.save(deliveryPerson);
-        return mapDeliveryToDeliveryPersonResponse(deliveryPerson);
+        DeliveryPerson saved = userRepository.save(deliveryPerson);
+        return mapDeliveryToDeliveryPersonResponse(saved);
     }
 
+    /////////////////////////////////////////////////////////////
+    /// DELETE USER METHODS
+    /////////////////////////////////////////////////////////////
+
+    /// TODO:
+    /// In the future, implement the business and softdelete rules below:
+    /// - DeliveryPerson and Client
+    ///     Don't delete if the user is assigned to a pending order
+    ///     Do soft delete if the user is associated to past completed orders
+    /// 
+    /// - AdminPerson:
+    ///     Not sure about the business rules here
+    /// 
+  
     /**
-     * Deletes a user by id if they exist and have no associated orders.
+     * Deletes a user by id if they exist
      * 
      * @param id the id of the user to delete
-     * @return true if the user was deleted, false if the user does not exist or
-     * has associated orders
+     * @return true if the user was deleted, false otherwise
      */
     public boolean deleteUser(Long id) {
         if (userRepository.existsById(id)) {
@@ -159,6 +173,10 @@ public class UserService {
         }
         return false;
     }
+
+    /////////////////////////////////////////////////////////////
+    /// MAPPER METHODS
+    /////////////////////////////////////////////////////////////
 
     private UserResponse mapAUserToUserResponse(AUser user) {
         return new UserResponse(user.getId(),
@@ -177,15 +195,15 @@ public class UserService {
                                           deliveryPerson.getDeliveryPersonStatus().toString());
     }
 
-    private ClientResponse mapClientToClientResponse(Client client, Address address) {
+    private ClientResponse mapClientToClientResponse(Client client) {
         return new ClientResponse(client.getId(),
                                   client.getUsername(), 
                                   client.getName(), 
                                   client.getPhoneNumber(), 
                                   client.getNif(),
-                                  address.getCity(),
-                                  address.getStreet(),
-                                  address.getPostalCode());
+                                  client.getAddress().getCity(),
+                                  client.getAddress().getStreet(),
+                                  client.getAddress().getPostalCode());
     }
 
 }
