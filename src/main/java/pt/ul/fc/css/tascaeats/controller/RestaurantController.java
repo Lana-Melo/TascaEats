@@ -87,7 +87,7 @@ public class RestaurantController {
     @ApiOperation(value = "Delete product", notes = "Deletes an existing product")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id, @PathVariable Long productId) {
         // chamo func deleteProduct(id_Restaurant, id_Product) do RestaurantService / handler (deleteProduct(id, productId))
-        return null;//restaurantHandler.deleteProduct(id, productId) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        return restaurantHandler.deleteProduct(id, productId) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
     //GET    /api/restaurants/{id}/products -> buscar produtos de um restaurante (caso de uso G)
     @GetMapping("/{id}/products")

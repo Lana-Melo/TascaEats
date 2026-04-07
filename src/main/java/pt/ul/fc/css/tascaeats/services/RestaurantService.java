@@ -133,6 +133,19 @@ public class RestaurantService {
         return mapProductToProductResponse(saved);
     }
 
+    public boolean deleteProduct(Long restaurantId, Long productId){
+        if(isFromRestaurant(productId, restaurantId)){
+            productRepository.deleteById(productId);
+            return true;    
+        }
+        return false;
+    }
+
+    private boolean isFromRestaurant(Long productId, Long restaurandId){
+        Optional<Product> prodOpt = productRepository.findById(productId);
+        return prodOpt.get().getRestaurant().getId() == restaurandId;
+    }
+
     private ProductResponse mapProductToProductResponse(Product product) {
         return new ProductResponse(
             product.getId(), 
