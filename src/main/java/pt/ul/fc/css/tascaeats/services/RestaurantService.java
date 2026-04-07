@@ -14,6 +14,7 @@ import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
+import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -98,7 +99,7 @@ public class RestaurantService {
 
     public ProductResponse addProduct(Long restaurantId, ProductRequest productRequest) {
         if(restaurantId == null) {
-            throw new IllegalArgumentException("Admin ID must be provided to create a restaurant");
+            throw new IllegalArgumentException("Restaurant ID must be provided to create a product");
         }
 
         Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
@@ -110,7 +111,26 @@ public class RestaurantService {
         
         Product saved = productRepository.save(product);
         
-        return mapProductToProductResponse(saved); // id do product ta a vir null, preciso corrigir
+        return mapProductToProductResponse(saved);
+    }
+
+    public ProductResponse updateProduct(Long restaurantId, Long productId, ProductRequest productRequest) {
+        if(restaurantId == null || productId == null) {
+            throw new IllegalArgumentException("Restaurant and product ID must be provided update a product");
+        }
+        
+        Optional<Product> prodOpt = productRepository.findById(productId);
+        if(!prodOpt.isPresent()){return null;}
+
+        Product product = prodOpt.get();
+        product.setDescription(productRequest.getDescription());
+        product.setDesignation(productRequest.getDesignation());
+        product.setPrice(productRequest.getPrice());
+        product.setStatus(ProductStatus.valueOf(productRequest.getAvailability().toUpperCase()));
+
+        Product saved = productRepository.save(product);
+
+        return mapProductToProductResponse(saved);
     }
 
     private ProductResponse mapProductToProductResponse(Product product) {

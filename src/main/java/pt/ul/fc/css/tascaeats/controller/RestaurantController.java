@@ -78,7 +78,7 @@ public class RestaurantController {
     @PutMapping("/{id}/products/{productId}")
     @ApiOperation(value = "Update product", notes = "Updates an existing product")
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable Long id, @PathVariable Long productId, @RequestBody ProductRequest request) {
-        ProductResponse product = null; // chamo func updateProduct(id_Restaurant, id_Product, request) do RestaurantService / handler (updateProduct(id, productId, request))
+        ProductResponse product = restaurantHandler.updateProduct(id, productId, request); // chamo func updateProduct(id_Restaurant, id_Product, request) do RestaurantService / handler (updateProduct(id, productId, request))
         return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
     }
 
