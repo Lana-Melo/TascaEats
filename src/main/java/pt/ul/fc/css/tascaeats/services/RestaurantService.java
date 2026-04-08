@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,7 +65,7 @@ public class RestaurantService {
         return rs.map(list -> list.stream()
                 .map(this::mapRestaurantToRestaurantResponse)
                 .toList())
-                .orElse(null);
+                .orElse(Collections.emptyList());
     }
 
     public RestaurantResponse createRestaurant(RestaurantRequest restaurant) {
@@ -72,7 +73,7 @@ public class RestaurantService {
         Admin admin = userRepository.findById(restaurant.getAdminId())
                             .filter(a -> a instanceof Admin)
                             .map(a -> (Admin) a)
-                            .orElseThrow(() -> new IllegalArgumentException("Admin with id " + restaurant.getAdminId() + " not found"));
+                            .orElseThrow(null);
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
         
         admin.addRestaurant(r);
@@ -138,6 +139,13 @@ public class RestaurantService {
         }
         return false;
     }
+
+    public List<ProductResponse> getProducts(Long restaurantId) {
+        return productRepository.findAllByRestaurantId(restaurantId)
+                                    .map(products -> products.stream()
+                                    .map(this::mapProductToProductResponse)
+                                    .toList()).orElse(Collections.emptyList());
+    } 
 
     /////////////////////////////////////////////////////////////
     ///  MAPPER METHODS

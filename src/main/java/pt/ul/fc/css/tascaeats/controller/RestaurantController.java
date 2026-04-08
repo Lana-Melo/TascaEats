@@ -77,7 +77,7 @@ public class RestaurantController {
     @GetMapping("/{id}/products")
     @ApiOperation(value = "Get restaurant products", notes = "Returns a list of products for a given restaurant.")
     public ResponseEntity<List<ProductResponse>> getProducts(@PathVariable Long id) {  
-        List<ProductResponse> products = null;
+        List<ProductResponse> products = restaurantHandler.getProducts(id);
         return products != null ? ResponseEntity.ok(products) : ResponseEntity.notFound().build();
     }
 }
