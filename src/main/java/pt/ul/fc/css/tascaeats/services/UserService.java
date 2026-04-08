@@ -153,7 +153,7 @@ public class UserService {
      * has associated orders
      */
     public boolean deleteUser(Long id) {
-        if (userRepository.existsById(id) && orderRepository.findByClientId(id).isEmpty()) {
+        if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
             return true;
         }

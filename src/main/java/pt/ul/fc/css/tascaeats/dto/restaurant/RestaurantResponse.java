@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.dto;
+package pt.ul.fc.css.tascaeats.dto.restaurant;
 
 //record porque a resposta é imutavel, so lemos, nunca modificamos
 public record RestaurantResponse(

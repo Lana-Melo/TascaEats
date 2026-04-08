@@ -41,12 +41,12 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products;
 
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders;
+
     @ManyToOne
     @JoinColumn(name = "admin_id")
     private Admin admin;
-
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Order> orders;
 
     protected Restaurant() {}
 
@@ -96,6 +96,10 @@ public class Restaurant {
         return products;
     }
 
+    public void addProduct(Product product) {
+        products.add(product);
+    }
+
     public void setProducts(List<Product> products) {
         this.products = products;
     }
@@ -124,3 +128,4 @@ public class Restaurant {
         this.orders = order;
     }
 }
+

@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.dto;
+package pt.ul.fc.css.tascaeats.dto.restaurant;
 
 public class RestaurantRequest {
     private String userName; 
