@@ -1,5 +1,6 @@
 package pt.ul.fc.css.tascaeats.dto.users.request;
 
+
 import jakarta.validation.constraints.NotBlank;
 
 public class ClientRequest {
