@@ -76,7 +76,6 @@ public class RestaurantService {
                             .orElseThrow(null);
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
         
-        admin.addRestaurant(r);
         Restaurant saved = restaurantRepository.save(r);
         return mapRestaurantToRestaurantResponse(saved);
     }

@@ -11,14 +11,11 @@ import jakarta.persistence.OneToOne;
 import pt.ul.fc.css.tascaeats.entities.enums.PaymentType;
 
 @Entity
-public abstract class Payment {
+public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private String code;
 
     @Column(nullable = false)
     private double amount;
@@ -33,8 +30,8 @@ public abstract class Payment {
 
     protected Payment() {}
 
-    public Payment(String code, double amount, PaymentType type, Order order) {
-        this.code = code;
+    public Payment(double amount, PaymentType type, Order order) {
+        this.timestamp = LocalDateTime.now();
         this.amount = amount;
         this.type = type;
         this.order = order;
@@ -42,10 +39,6 @@ public abstract class Payment {
 
     public Long getId() {
         return id;
-    }
-
-    public String getCode() {
-        return code;
     }
 
     public double getAmount() {
