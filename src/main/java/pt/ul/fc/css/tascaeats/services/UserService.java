@@ -9,9 +9,6 @@ import pt.ul.fc.css.tascaeats.dto.users.UserRequest;
 import pt.ul.fc.css.tascaeats.dto.users.UserResponse;
 import pt.ul.fc.css.tascaeats.dto.users.ClientResponse;
 import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
-import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
-import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
-import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonRequest;
 import pt.ul.fc.css.tascaeats.dto.users.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
@@ -65,7 +62,7 @@ public class UserService {
         return mapAUserToUserResponse(admin);
     }
 
-    public DeliveryPersonResponse registerNewDeliveryPerson(UserRequest request) {
+    public DeliveryPersonResponse registerNewDeliveryPerson(DeliveryPersonRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return null; 
         }
@@ -142,7 +139,7 @@ public class UserService {
         deliveryPerson.setPhoneNumber(request.getPhoneNumber());
         deliveryPerson.setNif(request.getNif());
         deliveryPerson.setPassword(request.getPassword());
-        deliveryPerson.setDeliveryPersonStatus((DeliveryPersonStatus) request.getStatus());
+        deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus().toUpperCase()));
 
         userRepository.save(deliveryPerson);
         return mapDeliveryToDeliveryPersonResponse(deliveryPerson);
