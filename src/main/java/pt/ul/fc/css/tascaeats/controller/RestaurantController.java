@@ -18,7 +18,6 @@ import jakarta.validation.Valid;
 
 import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
-import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantListResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
@@ -36,8 +35,8 @@ public class RestaurantController {
 
     @GetMapping("/search")
     @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered by name or city.")
-    public ResponseEntity<RestaurantListResponse> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city) {
-        RestaurantListResponse restaurants = restaurantHandler.searchByDesignationOrCity(designation, city); 
+    public ResponseEntity<List<RestaurantResponse>> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city) {
+        List<RestaurantResponse> restaurants = restaurantHandler.searchByDesignationOrCity(designation, city); 
         return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
     }
 

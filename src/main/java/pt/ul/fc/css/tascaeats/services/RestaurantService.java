@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
-import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantListResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
 import pt.ul.fc.css.tascaeats.entities.Address;
@@ -43,13 +42,12 @@ public class RestaurantService {
     ///  CRUD RESTAURANT'S METHODS
     /////////////////////////////////////////////////////////////
     
-    public RestaurantListResponse searchByDesignationOrCity(String designation, String city) {
+    public List<RestaurantResponse> searchByDesignationOrCity(String designation, String city) {
         if ((designation == null || designation.isEmpty()) && (city == null || city.isEmpty())) {
-                return new RestaurantListResponse(restaurantRepository
-                                                 .findAll()
-                                                 .stream()
-                                                 .map(this::mapRestaurantToRestaurantResponse)
-                                                 .toList());
+                return restaurantRepository.findAll()
+                                           .stream()
+                                           .map(this::mapRestaurantToRestaurantResponse)
+                                           .toList();
         }
         
         Optional<List<Restaurant>> rs;
@@ -63,11 +61,10 @@ public class RestaurantService {
         else {
             rs = restaurantRepository.findByDesignationContainingIgnoreCase(designation);
         }
-        return new RestaurantListResponse(rs.map(rss -> 
-                                                    rss.stream()
-                                                    .map(this::mapRestaurantToRestaurantResponse)
-                                                    .toList())
-                                                    .orElse(null));
+        return rs.map(list -> list.stream()
+                .map(this::mapRestaurantToRestaurantResponse)
+                .toList())
+                .orElse(null);
     }
 
     public RestaurantResponse createRestaurant(RestaurantRequest restaurant) {
