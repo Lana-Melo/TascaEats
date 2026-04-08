@@ -1,5 +1,12 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import java.time.LocalDateTime;
+
+import javax.swing.plaf.basic.BasicListUI.ListSelectionHandler;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +19,7 @@ import jakarta.persistence.ManyToOne;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 
 @Entity
+@Where(clause = "deleted_at IS NULL") // For soft deletes
 public class Product {
 
     @Id
@@ -34,6 +42,9 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt; // For soft deletes
 
     protected Product() {}
 
@@ -87,5 +98,9 @@ public class Product {
 
     public void setRestaurant (Restaurant restaurant) {
         this.restaurant = restaurant;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt){
+        this.deletedAt = deletedAt;
     }
 }

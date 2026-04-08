@@ -1,10 +1,12 @@
 package pt.ul.fc.css.tascaeats.services;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantListResponse;
@@ -16,6 +18,7 @@ import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
+import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
@@ -26,11 +29,14 @@ public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
 
-    private RestaurantService(RestaurantRepository restaurantRepository, UserRepository userRepository, ProductRepository productRepository) {
+    public RestaurantService(RestaurantRepository restaurantRepository, UserRepository userRepository, 
+                            ProductRepository productRepository, OrderRepository orderRepository) {
         this.restaurantRepository = restaurantRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
     }
 
     /////////////////////////////////////////////////////////////
@@ -119,25 +125,21 @@ public class RestaurantService {
         return mapProductToProductResponse(saved);
     }
 
+    @Transactional
     public boolean deleteProduct(Long restaurantId, Long productId){
-        if(isFromRestaurant(productId, restaurantId) && !isAssociatedWithOrders(productId)){
-            productRepository.deleteById(productId);
+        boolean isFromRestaurant = productRepository.existsByIdAndRestaurantId(productId, restaurantId);
+        
+        if(isFromRestaurant){
+            if(orderRepository.existsByProductsId(productId)){ // soft delete
+                Product product = productRepository.findById(productId).get();
+                product.setDeletedAt(LocalDateTime.now());
+                productRepository.save(product);
+            } else {
+                productRepository.deleteById(productId);
+            }
             return true;    
         }
         return false;
-    }
-
-
-    /////////////////////////////////////////////////////////////
-    ///  HELPER PRIVATE  METHODS
-    /////////////////////////////////////////////////////////////
-    private boolean isAssociatedWithOrders(Long productId) {
-        return false;
-    }
-
-    private boolean isFromRestaurant(Long productId, Long restaurandId){
-        Optional<Product> prodOpt = productRepository.findById(productId);
-        return prodOpt.get().getRestaurant().getId() == restaurandId;
     }
 
     /////////////////////////////////////////////////////////////
