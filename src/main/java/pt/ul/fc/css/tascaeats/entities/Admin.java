@@ -27,4 +27,8 @@ public class Admin extends AUser {
     public void setRestaurants(List<Restaurant> restaurants) {
         this.restaurants = restaurants;
     }
+
+    public void addRestaurant(Restaurant restaurant) {
+        this.restaurants.add(restaurant);
+    }
 }

@@ -1,7 +1,7 @@
-package pt.ul.fc.css.tascaeats.dto.users;
+package pt.ul.fc.css.tascaeats.dto.users.response;
 
 public record DeliveryPersonResponse (
-    Long id, //aquele gerado pelo spring 
+    Long id,
     String userName,
     String name,
     String phoneNumber,

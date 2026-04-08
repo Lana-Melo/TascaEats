@@ -1,20 +1,18 @@
-package pt.ul.fc.css.tascaeats.dto.users;
+package pt.ul.fc.css.tascaeats.dto.users.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 
 public class UserRequest {
-    @NotNull
+    @NotBlank
     private String username;
-    @NotNull
+    @NotBlank
     private String password;
-    @NotNull
+    @NotBlank
     private String name;
-    @NotNull
+    @NotBlank
     private String phoneNumber;
-    @NotNull
+    @NotBlank
     private String nif;
-
-
 
     public UserRequest() {}
 
@@ -28,7 +26,5 @@ public class UserRequest {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getNif() { return nif; }
     public void setNif(String nif) { this.nif = nif; }
-
-
 
 }

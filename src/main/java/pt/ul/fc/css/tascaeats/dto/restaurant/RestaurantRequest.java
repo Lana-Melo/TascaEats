@@ -1,18 +1,16 @@
 package pt.ul.fc.css.tascaeats.dto.restaurant;
 
 public class RestaurantRequest {
-    private String userName; 
     private String designation;
     private String status; 
     private String nif;
     private String city;
     private String postalCode;
     private String street;
+    private Long adminId; // importante para criar o admin (UserCase E)
 
     public RestaurantRequest() {}
 
-    public String getUserName() { return userName; }
-    public void setUserName(String userName) { this.userName = userName; }
     public String getDesignation() { return designation; }
     public void setDesignation(String designation) { this.designation = designation; }
     public String getStatus() { return status; }
@@ -25,5 +23,7 @@ public class RestaurantRequest {
     public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
     public String getStreet() { return street; }
     public void setStreet(String street) { this.street = street; }
+    public Long getAdminId() { return adminId; }
+    public void setAdminId(Long adminId) { this.adminId = adminId; }
 }
 

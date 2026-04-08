@@ -1,5 +1,12 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import java.time.LocalDateTime;
+
+import javax.swing.plaf.basic.BasicListUI.ListSelectionHandler;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,14 +19,12 @@ import jakarta.persistence.ManyToOne;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 
 @Entity
+@Where(clause = "deleted_at IS NULL") // For soft deletes
 public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
-    private String code;
 
     @Column(nullable = false)
     private double price;
@@ -38,10 +43,12 @@ public class Product {
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt; // For soft deletes
+
     protected Product() {}
 
-    public Product(String code, double price, String description, String designation, Restaurant restaurant) {
-        this.code = code;
+    public Product(double price, String description, String designation, Restaurant restaurant) {
         this.price = price;
         this.description = description;
         this.designation = designation;
@@ -51,10 +58,6 @@ public class Product {
 
     public Long getId() {
         return id;
-    }
-
-    public String getCode() {
-        return code;
     }
 
     public double getPrice() {
@@ -81,11 +84,11 @@ public class Product {
         this.designation = designation;
     }
 
-    public ProductStatus getProductStatus() {
+    public ProductStatus getStatus() {
         return availability;
     }
 
-    public void setProductStatus (ProductStatus availability) {
+    public void setStatus (ProductStatus availability) {
         this.availability = availability;
     }
 
@@ -95,5 +98,9 @@ public class Product {
 
     public void setRestaurant (Restaurant restaurant) {
         this.restaurant = restaurant;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt){
+        this.deletedAt = deletedAt;
     }
 }

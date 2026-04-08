@@ -96,10 +96,6 @@ public class Restaurant {
         return products;
     }
 
-    public void addProduct(Product product) {
-        products.add(product);
-    }
-
     public void setProducts(List<Product> products) {
         this.products = products;
     }
@@ -118,10 +114,6 @@ public class Restaurant {
 
     public List<Order> getOrders() {
         return orders;
-    }
-
-    public void addOrder(Order order) {
-        orders.add(order);
     }
 
     public void setOrders(List<Order> order) {
