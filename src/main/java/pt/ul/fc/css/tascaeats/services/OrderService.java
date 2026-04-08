@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequest;
 import pt.ul.fc.css.tascaeats.dto.order.OrderResponse;
 import pt.ul.fc.css.tascaeats.dto.order.PaymentRequest;
@@ -53,9 +54,9 @@ public class OrderService {
                             .filter(c -> c instanceof Client)
                             .map(c -> (Client) c)
                             .orElseThrow(null);
-        Restaurant restaurant = (Restaurant) resOpt.get();
+        Restaurant restaurant = resOpt.get();
         
-        ArrayList<Product> products = new ArrayList<Product>();
+        ArrayList<Product> products = new ArrayList<>();
         for (Long id : request.getProductIds()) {
             Optional<Product> prodOpt = productRepository.findById(id);
             if (prodOpt.isEmpty() || prodOpt.get().getStatus() == ProductStatus.SOLD_OUT || 
@@ -70,6 +71,7 @@ public class OrderService {
         return mapOrderToOrderResponse(saved);
     }
 
+    @Transactional
     public OrderResponse processPayment(PaymentRequest request) {
         Optional<Order> ordOpt = orderRepository.findById(request.getOrderId());
         
@@ -89,7 +91,7 @@ public class OrderService {
     /////////////////////////////////////////////////////////////
     ///  PATCH ORDER METHODS
     /////////////////////////////////////////////////////////////
-
+    @Transactional
     public OrderResponse updateOrderStatus(Long id, String status) {
         Optional<Order> ordOpt = orderRepository.findById(id);
         if (ordOpt.isEmpty()) {return null;}
@@ -127,6 +129,7 @@ public class OrderService {
         return mapOrderToOrderResponse(saved);
     }
 
+    @Transactional
     public OrderResponse assignDeliveryPerson(Long id, Long deliveryPersonId) {
         Optional<Order> ordOpt = orderRepository.findById(id);
         if (ordOpt.isEmpty()) {return null;}
@@ -153,15 +156,12 @@ public class OrderService {
     /////////////////////////////////////////////////////////////
 
     public boolean cancelOrder(Long id) {
-        System.out.println("1");
         if (orderRepository.existsById(id)) {
-            System.out.println("2");
             Optional<Order> ordOpt = orderRepository.findById(id);
             Order order = ordOpt.get();
             if (order.getOrderStatus() != OrderStatus.CREATED && order.getOrderStatus() != OrderStatus.PAID) {
                 return false;
             }
-            System.out.println("3");
             order.setOrderStatus(OrderStatus.CANCELLED);
             return true;
         }
