@@ -15,7 +15,7 @@ import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
-import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
+
 
 @Service
 public class UserService {
@@ -140,7 +140,6 @@ public class UserService {
         deliveryPerson.setPhoneNumber(request.getPhoneNumber());
         deliveryPerson.setNif(request.getNif());
         deliveryPerson.setPassword(request.getPassword());
-        deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus().toUpperCase()));
 
         DeliveryPerson saved = userRepository.save(deliveryPerson);
         return mapDeliveryToDeliveryPersonResponse(saved);

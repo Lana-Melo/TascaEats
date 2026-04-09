@@ -162,7 +162,7 @@ class UserControllerTest {
         request.setName("João Entregador");
         request.setPhoneNumber("931234567");
         request.setNif("111222333");
-        request.setStatus("AVAILABLE");
+
 
         DeliveryPersonResponse response = new DeliveryPersonResponse(3L, "delivery1", "João Entregador", "931234567", "111222333", "AVAILABLE");
 
@@ -184,7 +184,6 @@ class UserControllerTest {
         request.setName("João Entregador");
         request.setPhoneNumber("931234567");
         request.setNif("111222333");
-        request.setStatus("AVAILABLE");
 
         when(userService.registerNewDeliveryPerson(any())).thenReturn(null);
 
@@ -287,7 +286,6 @@ class UserControllerTest {
         request.setName("Delivery Updated");
         request.setPhoneNumber("931234567");
         request.setNif("111222333");
-        request.setStatus("BUSY");
 
         DeliveryPersonResponse response = new DeliveryPersonResponse(1L, "delivery_updated", "Delivery Updated", "931234567", "111222333", "BUSY");
 
@@ -309,7 +307,6 @@ class UserControllerTest {
         request.setName("Delivery Updated");
         request.setPhoneNumber("931234567");
         request.setNif("111222333");
-        request.setStatus("BUSY");
 
         when(userService.updateDeliveryPerson(eq(99L), any())).thenReturn(null);
 
