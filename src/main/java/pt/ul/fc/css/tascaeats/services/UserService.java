@@ -42,7 +42,7 @@ public class UserService {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             return null; 
         }
-        Address address = new Address(request.getCity(), request.getStreet(), request.getPostalCode());
+        Address address = new Address(request.getStreet(), request.getCity(), request.getPostalCode());
         Client client = new Client(request.getUsername(), request.getPassword(), request.getName(), request.getPhoneNumber(), request.getNif(), address);
         Client saved = userRepository.save(client);
         return mapClientToClientResponse(saved);
@@ -116,7 +116,7 @@ public class UserService {
         client.setPhoneNumber(request.getPhoneNumber());
         client.setNif(request.getNif());
         client.setPassword(request.getPassword());
-        Address address = new Address(request.getCity(), request.getStreet(), request.getPostalCode());
+        Address address = new Address(request.getStreet(), request.getCity(), request.getPostalCode());
         client.setAddress(address);
 
         Client saved = userRepository.save(client);

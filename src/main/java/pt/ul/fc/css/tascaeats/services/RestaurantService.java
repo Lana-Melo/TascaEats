@@ -74,7 +74,7 @@ public class RestaurantService {
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}
 
         Admin admin = (Admin) userOpt.get();
-        Address address = new Address(restaurant.getCity(), restaurant.getStreet(), restaurant.getPostalCode());
+        Address address = new Address(restaurant.getStreet(), restaurant.getCity(), restaurant.getPostalCode());
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
         
         Restaurant saved = restaurantRepository.save(r);
