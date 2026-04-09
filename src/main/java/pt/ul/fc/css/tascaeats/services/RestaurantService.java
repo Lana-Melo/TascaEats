@@ -12,6 +12,7 @@ import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
+import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Product;
@@ -69,11 +70,11 @@ public class RestaurantService {
     }
 
     public RestaurantResponse createRestaurant(RestaurantRequest restaurant) {
+        Optional<AUser> userOpt = userRepository.findById(restaurant.getAdminId());
+        if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}
+
+        Admin admin = (Admin) userOpt.get();
         Address address = new Address(restaurant.getCity(), restaurant.getStreet(), restaurant.getPostalCode());
-        Admin admin = userRepository.findById(restaurant.getAdminId())
-                            .filter(a -> a instanceof Admin)
-                            .map(a -> (Admin) a)
-                            .orElseThrow(null);
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
         
         Restaurant saved = restaurantRepository.save(r);

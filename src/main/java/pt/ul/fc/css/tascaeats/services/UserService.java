@@ -86,7 +86,7 @@ public class UserService {
      */
     public UserResponse updateAdmin(Long id, UserRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) {return null;}
+        if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}
 
         Admin admin = (Admin) userOpt.get();
         admin.setName(request.getName());
@@ -108,7 +108,7 @@ public class UserService {
      */
     public ClientResponse updateClient(Long id, ClientRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) {return null;}
+        if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {return null;}
 
         Client client = (Client) userOpt.get();
         client.setName(request.getName());
@@ -132,7 +132,7 @@ public class UserService {
      */
     public DeliveryPersonResponse updateDeliveryPerson(Long id, DeliveryPersonRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
-        if (userOpt.isEmpty()) {return null;}
+        if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {return null;}
 
         DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
         deliveryPerson.setName(request.getName());

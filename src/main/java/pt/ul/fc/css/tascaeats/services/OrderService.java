@@ -13,6 +13,7 @@ import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
+import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
@@ -48,12 +49,11 @@ public class OrderService {
     
     public OrderResponse createOrder(OrderRequest request) {
         Optional<Restaurant> resOpt = restaurantRepository.findById(request.getRestaurantId());
-
         if (resOpt.isEmpty() || resOpt.get().getStatus() == RestaurantStatus.CLOSED) {return null;}
-        Client client = userRepository.findById(request.getClientId())
-                            .filter(c -> c instanceof Client)
-                            .map(c -> (Client) c)
-                            .orElseThrow(null);
+        Optional<AUser> userOpt = userRepository.findById(request.getClientId());
+        if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {return null;}
+
+        Client client = (Client) userOpt.get();
         Restaurant restaurant = resOpt.get();
         
         ArrayList<Product> products = new ArrayList<>();
@@ -133,11 +133,10 @@ public class OrderService {
     public OrderResponse assignDeliveryPerson(Long id, Long deliveryPersonId) {
         Optional<Order> ordOpt = orderRepository.findById(id);
         if (ordOpt.isEmpty()) {return null;}
-        DeliveryPerson del = userRepository.findById(deliveryPersonId)
-                            .filter(d -> d instanceof DeliveryPerson)
-                            .map(d -> (DeliveryPerson) d)
-                            .orElseThrow(null);
+        Optional<AUser> userOpt = userRepository.findById(deliveryPersonId);
+        if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {return null;}
 
+        DeliveryPerson del = (DeliveryPerson) userOpt.get();
         Order order = ordOpt.get();
         if (del.getDeliveryPersonStatus() == DeliveryPersonStatus.BUSY || 
             order.getOrderStatus() != OrderStatus.READY) {return null;}
@@ -163,6 +162,7 @@ public class OrderService {
                 return false;
             }
             order.setOrderStatus(OrderStatus.CANCELLED);
+            orderRepository.deleteById(id);
             return true;
         }
         return true;
