@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -46,6 +47,14 @@ class RestaurantControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].designation").value("Cantina Velha"))
             .andExpect(jsonPath("$[0].city").value("Lisboa"));
+    }
+
+    @Test
+    void searchRestaurant_shouldReturn404_whenServiceReturnsNull() throws Exception {
+        when(restaurantService.searchByDesignationOrCity(any(), any())).thenReturn(null);
+        
+        mockMvc.perform(get("/api/restaurants/search"))
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -200,5 +209,13 @@ class RestaurantControllerTest {
         mockMvc.perform(get("/api/restaurants/1/products"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].designation").value("Pure"));
+    }
+
+    @Test
+    void getProducts_shouldReturn404_whenServiceReturnsNull() throws Exception {
+        when(restaurantService.getProducts(anyLong())).thenReturn(null);
+        
+        mockMvc.perform(get("/api/restaurants/1/products"))
+            .andExpect(status().isNotFound());
     }
 }
