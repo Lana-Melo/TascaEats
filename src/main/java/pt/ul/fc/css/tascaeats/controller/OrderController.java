@@ -48,7 +48,7 @@ public class OrderController {
     //PATCH  /api/orders/{id}/status -> atualizar estado do pedido (caso de uso J) (é só um campo por isso patch ao inves de put)
     @PatchMapping("/{id}/status")
     @ApiOperation(value = "Update order status", notes = "Updates the status of an order.")
-    public ResponseEntity<OrderResponse> updateOrderStatus(@PathVariable Long id, @RequestBody OrderStatus status) {
+    public ResponseEntity<OrderResponse> updateOrderStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         OrderResponse order = orderHandler.updateOrderStatus(id, status.toString()); 
         return order != null ? ResponseEntity.ok(order) : ResponseEntity.badRequest().build();
     }

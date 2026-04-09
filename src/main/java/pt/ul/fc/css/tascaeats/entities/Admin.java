@@ -15,8 +15,8 @@ public class Admin extends AUser {
 
     public Admin() {}
 
-    public Admin(String userName, String password, String name, String phoneNumber, String nif) {
-        super(userName, password, name, phoneNumber, nif);
+    public Admin(String username, String password, String name, String phoneNumber, String nif) {
+        super(username, password, name, phoneNumber, nif);
         this.restaurants = new ArrayList<Restaurant>();
     }
 

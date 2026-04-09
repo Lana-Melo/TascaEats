@@ -13,8 +13,8 @@ public class DeliveryPerson extends AUser {
     
     protected DeliveryPerson() {}
 
-    public DeliveryPerson(String userName, String password, String name, String phoneNumber, String nif) {
-        super(userName, password, name, phoneNumber, nif);
+    public DeliveryPerson(String username, String password, String name, String phoneNumber, String nif) {
+        super(username, password, name, phoneNumber, nif);
         this.status = DeliveryPersonStatus.AVAILABLE;
     }
 
