@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -258,7 +259,7 @@ class RestaurantServiceTest {
     }
 
     @Test
-    void deleteProduct_shouldSoftDelete_whenProductHasOrders() {
+    void deleteProduct_shouldSoftDelete_whenProductHasOnlyCompletedOrders() {
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
         Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
@@ -266,12 +267,21 @@ class RestaurantServiceTest {
 
         when(productRepository.existsByIdAndRestaurantId(1L, 1L)).thenReturn(true);
         when(orderRepository.existsByProductsId(1L)).thenReturn(true);
+        when(orderRepository.existsByProductsIdAndStatusNotIn(eq(1L), any())).thenReturn(false);
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productRepository.save(any(Product.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        boolean result = restaurantService.deleteProduct(1L, 1L);
+        assertTrue(restaurantService.deleteProduct(1L, 1L));
+        assertNotNull(product.getDeletedAt());
+    }
 
-        assertEquals(true, result);
+    @Test
+    void deleteProduct_shouldReturnFalse_whenProductHasOrdersInProgress() {
+        when(productRepository.existsByIdAndRestaurantId(1L, 1L)).thenReturn(true);
+        when(orderRepository.existsByProductsId(1L)).thenReturn(true);
+        when(orderRepository.existsByProductsIdAndStatusNotIn(eq(1L), any())).thenReturn(true);
+
+        assertFalse(restaurantService.deleteProduct(1L, 1L));
     }
 
     @Test
@@ -312,7 +322,7 @@ class RestaurantServiceTest {
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
         Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin);
 
-        when(restaurantRepository.findByDesignationContainingIgnoreCaseOrAddressCityContainingIgnoreCase(eq("Pizza"), eq("Porto")))
+        when(restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(eq("Pizza"), eq("Porto")))
             .thenReturn(Optional.of(List.of(restaurant)));
 
         List<RestaurantResponse> results = restaurantService.searchByDesignationOrCity("Pizza", "Porto");
@@ -348,7 +358,7 @@ class RestaurantServiceTest {
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
         Restaurant restaurant = new Restaurant("111222333", "Tasca", address, admin);
 
-        when(restaurantRepository.findByDesignationContainingIgnoreCaseOrAddressCityContainingIgnoreCase(eq(""), eq("Coimbra")))
+        when(restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(eq(""), eq("Coimbra")))
             .thenReturn(Optional.of(List.of(restaurant)));
 
         List<RestaurantResponse> results = restaurantService.searchByDesignationOrCity("", "Coimbra");
@@ -395,7 +405,7 @@ class RestaurantServiceTest {
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
         Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin);
 
-        when(restaurantRepository.findByDesignationContainingIgnoreCaseOrAddressCityContainingIgnoreCase(eq("Pizza"), eq("")))
+        when(restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(eq("Pizza"), eq("")))
             .thenReturn(Optional.of(List.of(restaurant)));
 
         List<RestaurantResponse> results = restaurantService.searchByDesignationOrCity("Pizza", "");

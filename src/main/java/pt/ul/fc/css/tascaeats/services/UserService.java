@@ -3,7 +3,10 @@ package pt.ul.fc.css.tascaeats.services;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.stereotype.Service;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequest;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequest;
@@ -35,10 +38,8 @@ public class UserService {
         this.restaurantRepository = restaurantRepository;
     }
 
-    /**
-     * Mock login, any password is accepted if user is valid.
-     *
-     */
+    /** Mock login, any password is accepted if user is valid.*/
+    @Transactional(readOnly = true) 
     public UserResponse login(String username, String password) {
         Optional<AUser> userOpt = userRepository.findByUsername(username);
         return userOpt.map(this::mapAUserToUserResponse).orElse(null);
@@ -86,6 +87,7 @@ public class UserService {
     /////////////////////////////////////////////////////////////
     /// PUT USER METHODS
     /////////////////////////////////////////////////////////////
+    @Transactional
     public UserResponse updateAdmin(Long id, UserRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}
@@ -101,6 +103,7 @@ public class UserService {
         return mapAUserToUserResponse(saved);
     }
 
+    @Transactional
     public ClientResponse updateClient(Long id, ClientRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {return null;}
@@ -117,7 +120,8 @@ public class UserService {
         Client saved = userRepository.save(client);
         return mapClientToClientResponse(saved);
     }
-
+    
+    @Transactional
     public DeliveryPersonResponse updateDeliveryPerson(Long id, DeliveryPersonRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {return null;}
@@ -137,6 +141,7 @@ public class UserService {
     /// DELETE USER METHODS
     /////////////////////////////////////////////////////////////
   
+    @Transactional
     public boolean deleteUser(Long id) {
         if(userRepository.existsById(id)){
             AUser user = userRepository.findById(id).get();
@@ -217,5 +222,4 @@ public class UserService {
                                   client.getAddress().getStreet(),
                                   client.getAddress().getPostalCode());
     }
-
 }
