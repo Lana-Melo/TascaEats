@@ -46,7 +46,7 @@ public class OrderService {
     /////////////////////////////////////////////////////////////
     ///  POST ORDER METHODS
     /////////////////////////////////////////////////////////////
-    
+    @Transactional
     public OrderResponse createOrder(OrderRequest request) {
         Optional<Restaurant> resOpt = restaurantRepository.findById(request.getRestaurantId());
         if (resOpt.isEmpty() || resOpt.get().getStatus() == RestaurantStatus.CLOSED) {return null;}
@@ -153,7 +153,7 @@ public class OrderService {
     /////////////////////////////////////////////////////////////
     ///  DELETE ORDER METHODS
     /////////////////////////////////////////////////////////////
-
+    @Transactional
     public boolean cancelOrder(Long id) {
         if (orderRepository.existsById(id)) {
             Optional<Order> ordOpt = orderRepository.findById(id);
@@ -171,7 +171,7 @@ public class OrderService {
     /////////////////////////////////////////////////////////////
     ///  MAPPER METHODS
     /////////////////////////////////////////////////////////////
-
+     
     private OrderResponse mapOrderToOrderResponse(Order order) {
         ArrayList<Long> productIds = new ArrayList<Long>();
         for (Product p : order.getProducts()) {

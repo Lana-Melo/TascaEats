@@ -100,4 +100,8 @@ public class Product {
     public void setDeletedAt(LocalDateTime deletedAt){
         this.deletedAt = deletedAt;
     }
+
+    public Object getDeletedAt() {
+        return this.deletedAt;
+    }
 }
