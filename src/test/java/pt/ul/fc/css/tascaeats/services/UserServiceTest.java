@@ -2,9 +2,11 @@ package pt.ul.fc.css.tascaeats.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -25,6 +27,8 @@ import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.repository.OrderRepository;
+import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +39,12 @@ class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
+
+    @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
+    private RestaurantRepository restaurantRepository;
 
     @Test
     void login_shouldReturnUserResponse_whenUserExists() {
@@ -280,16 +290,98 @@ class UserServiceTest {
     }
 
     @Test
-    void deleteUser_shouldReturnTrue_whenUserExists() {
+    void deleteUser_shouldReturnFalse_whenUserDoesNotExist() {
+        when(userRepository.existsById(99L)).thenReturn(false);
+        assertFalse(userService.deleteUser(99L));
+    }
+
+    @Test
+    void deleteAdmin_shouldHardDelete_whenNoRestaurantsAssociated() {
+        Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
         when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(restaurantRepository.existsByAdminId(admin.getId())).thenReturn(false);
 
         assertTrue(userService.deleteUser(1L));
     }
 
     @Test
-    void deleteUser_shouldReturnFalse_whenUserDoesNotExist() {
-        when(userRepository.existsById(1L)).thenReturn(false);
+    void deleteAdmin_shouldReturnFalse_whenRestaurantsAssociated() {
+        Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(restaurantRepository.existsByAdminId(admin.getId())).thenReturn(true);
 
         assertFalse(userService.deleteUser(1L));
+    }
+
+    // --- DELETE CLIENT ---
+
+    @Test
+    void deleteClient_shouldHardDelete_whenNoOrdersAssociated() {
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(client));
+        when(orderRepository.existsByClientId(client.getId())).thenReturn(false);
+
+        assertTrue(userService.deleteUser(1L));
+    }
+
+    @Test
+    void deleteClient_shouldReturnFalse_whenOrdersInProgress() {
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(client));
+        when(orderRepository.existsByClientId(client.getId())).thenReturn(true);
+        when(orderRepository.existsByClientIdAndStatusNotIn(eq(client.getId()), any())).thenReturn(true);
+
+        assertFalse(userService.deleteUser(1L));
+    }
+
+    @Test
+    void deleteClient_shouldSoftDelete_whenAllOrdersFinished() {
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(client));
+        when(orderRepository.existsByClientId(client.getId())).thenReturn(true);
+        when(orderRepository.existsByClientIdAndStatusNotIn(eq(client.getId()), any())).thenReturn(false);
+
+        assertTrue(userService.deleteUser(1L));
+        assertNotNull(client.getDeletedAt()); // confirma soft delete
+    }
+
+    // --- DELETE DELIVERY PERSON ---
+
+    @Test
+    void deleteDeliveryPerson_shouldHardDelete_whenNoOrdersAssociated() {
+        DeliveryPerson dp = new DeliveryPerson("delivery", "pass", "Delivery", "912345678", "987654321");
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+        when(orderRepository.existsByDeliveryPersonId(dp.getId())).thenReturn(false);
+
+        assertTrue(userService.deleteUser(1L));
+    }
+
+    @Test
+    void deleteDeliveryPerson_shouldReturnFalse_whenOrdersInProgress() {
+        DeliveryPerson dp = new DeliveryPerson("delivery", "pass", "Delivery", "912345678", "987654321");
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+        when(orderRepository.existsByDeliveryPersonId(dp.getId())).thenReturn(true);
+        when(orderRepository.existsByDeliveryPersonIdAndStatusNotIn(eq(dp.getId()), any())).thenReturn(true);
+
+        assertFalse(userService.deleteUser(1L));
+    }
+
+    @Test
+    void deleteDeliveryPerson_shouldSoftDelete_whenAllOrdersFinished() {
+        DeliveryPerson dp = new DeliveryPerson("delivery", "pass", "Delivery", "912345678", "987654321");
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+        when(orderRepository.existsByDeliveryPersonId(dp.getId())).thenReturn(true);
+        when(orderRepository.existsByDeliveryPersonIdAndStatusNotIn(eq(dp.getId()), any())).thenReturn(false);
+
+        assertTrue(userService.deleteUser(1L));
+        assertNotNull(dp.getDeletedAt()); // confirma soft delete
     }
 }
