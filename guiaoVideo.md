@@ -50,7 +50,7 @@ Abrir o Swagger em: **http://localhost:8080/swagger-ui/index.html**
 ```
 POST /api/users/login
 {
-  "userName": "moscateira1",
+  "username": "moscateira1",
   "password": "naoInteressa"
 }
 ```
@@ -60,7 +60,7 @@ POST /api/users/login
 ```
 POST /api/users/login
 {
-  "userName": "lalala",
+  "username": "lalala",
   "password": "qualquer"
 }
 ```
@@ -147,15 +147,14 @@ PUT /api/users/delivery/8
 {
   "username": "entregador2",
   "password": "777",
-  "name": "Lana Foguete",
+  "name": "Lana Foguete Update",
   "phoneNumber": "945678902",
   "nif": "100000005",
-  "status": "BUSY"
 }
 ```
-> Esperado: 200 OK — entregador2 agora está BUSY.
+> Esperado: 200 OK — entregador2 agora mudou nome.
 
-**✅ Remover utilizador** — remover o clienteNovo criado no caso B:
+**✅ Remover utilizador** — (HARD DELETE) remover o clienteNovo criado no caso B que nao tem orders associadas:
 ```
 DELETE /api/users/{id do clienteNovo}
 ```
@@ -166,6 +165,15 @@ DELETE /api/users/{id do clienteNovo}
 DELETE /api/users/9999
 ```
 > Esperado: 404 Not Found.
+
+**❌ Negativo — delete de cliente com ordem ativa:**
+
+> O cliente 2 vai ter uma ordem ativa depois do Caso H. Voltar aqui após criar o pedido do Caso H para demonstrar esta regra.
+
+```
+DELETE /api/users/client/2
+```
+> Esperado: 400 Bad Request — não é possível apagar um cliente com pedidos ativos.
 
 ---
 
@@ -197,9 +205,8 @@ GET /api/restaurants/search?city=Porto
 POST /api/restaurants/
 {
 "designation": "Boteco da Sogra",
-"status": "OPEN",
 "nif": "54635353",
-"city": "Viseu,
+"city": "Viseu",
 "postalCode": "1234-123",
 "street": "rua da rotunda",
 "adminId": 6
@@ -262,7 +269,8 @@ DELETE /api/restaurants/1/products/{id do sumo de laranja}
 
 **❌ Negativo — soft-delete** — remover produto com pedidos associados (id 1 — arroz doce):
 
-> Primeiro criar e pagar um pedido com produto 1 (fazer Casos H e I antes), depois voltar aqui.
+> Primeiro criar e pagar um pedido com produto 1 (fazer Casos H e I antes), depois voltar aqui. 
+
 ```
 DELETE /api/restaurants/1/products/1
 ```
@@ -325,6 +333,8 @@ POST /api/orders
 ```
 > Esperado: 400 Bad Request — produto esgotado.
 
+> ⚠️ Agora que o cliente 2 tem uma ordem ativa, voltar ao **Caso C** para demonstrar o caso negativo do delete de cliente com ordem ativa.
+
 ---
 
 ### Caso I — Registar e processar pagamento
@@ -352,6 +362,8 @@ POST /api/orders/payment
 }
 ```
 > Esperado: 400 Bad Request — pedido já foi pago.
+
+> ⚠️ Agora que o produto 1 está associado a um pedido pago, voltar ao **Caso F** para demonstrar o soft delete do produto.
 
 ---
 
@@ -433,7 +445,7 @@ DELETE /api/orders/2
 
 **❌ Negativo — cancelar pedido em PREPARING:**
 
-> O pedido 1 está em READY (já passou de PREPARING). Para demonstrar esta validação, criar um pedido 3, pagar, avançar para PREPARING, e tentar cancelar:
+> Criar pedido 3, pagar e avançar para PREPARING:
 
 ```
 POST /api/orders
