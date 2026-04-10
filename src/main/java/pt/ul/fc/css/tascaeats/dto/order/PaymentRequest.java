@@ -1,8 +1,14 @@
 package pt.ul.fc.css.tascaeats.dto.order;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class PaymentRequest {
+    @NotNull
     private Long orderId;
+    @NotBlank
     private String paymentMethod;
+    @NotNull
     private double amount;
 
     public PaymentRequest() {}  

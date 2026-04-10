@@ -1,12 +1,21 @@
 package pt.ul.fc.css.tascaeats.dto.restaurant;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class RestaurantRequest {
+    @NotBlank
     private String designation;
+    @NotBlank
     private String nif;
+    @NotBlank
     private String city;
+    @NotBlank
     private String postalCode;
+    @NotBlank
     private String street;
-    private Long adminId; // importante para criar o admin (UserCase E)
+    @NotNull
+    private Long adminId;
 
     public RestaurantRequest() {}
 
