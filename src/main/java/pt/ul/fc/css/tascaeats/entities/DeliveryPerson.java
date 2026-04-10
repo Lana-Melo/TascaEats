@@ -1,15 +1,24 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.Where;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 
 @Entity
+@Where(clause = "deleted_at IS NULL") // For soft deletes
 public class DeliveryPerson extends AUser {
 
     @Enumerated(EnumType.STRING)
     private DeliveryPersonStatus status;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt; // For soft deletes
     
     protected DeliveryPerson() {}
 
@@ -24,5 +33,13 @@ public class DeliveryPerson extends AUser {
 
     public void setDeliveryPersonStatus(DeliveryPersonStatus status) {
         this.status = status;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt){
+        this.deletedAt = deletedAt;
+    }
+
+    public LocalDateTime getDeletedAt(){
+        return this.deletedAt;
     }
 }

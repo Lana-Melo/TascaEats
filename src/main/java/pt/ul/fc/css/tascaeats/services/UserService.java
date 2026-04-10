@@ -1,5 +1,7 @@
 package pt.ul.fc.css.tascaeats.services;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
@@ -9,21 +11,28 @@ import pt.ul.fc.css.tascaeats.dto.users.request.UserRequest;
 import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponse;
 import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponse;
+import pt.ul.fc.css.tascaeats.repository.OrderRepository;
+import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final RestaurantRepository restaurantRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, OrderRepository orderRepository, RestaurantRepository restaurantRepository) {
         this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
+        this.restaurantRepository = restaurantRepository;
     }
 
     /**
@@ -77,13 +86,6 @@ public class UserService {
     /////////////////////////////////////////////////////////////
     /// PUT USER METHODS
     /////////////////////////////////////////////////////////////
-    /**
-     * Updates a user's record with the provided data.
-     * 
-     * @param id the id of the user to update
-     * @param request the new user data (only name and phone number are used)
-     * @return the updated UserResponse if the user exists, null otherwise
-     */
     public UserResponse updateAdmin(Long id, UserRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}
@@ -99,13 +101,6 @@ public class UserService {
         return mapAUserToUserResponse(saved);
     }
 
-    /**
-     * Updates a client's record with the provided data.
-     * 
-     * @param id the id of the user to update
-     * @param request the new user data (only name and phone number are used)
-     * @return the updated ClientResponse if the user exists, null otherwise
-     */
     public ClientResponse updateClient(Long id, ClientRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {return null;}
@@ -123,13 +118,6 @@ public class UserService {
         return mapClientToClientResponse(saved);
     }
 
-    /**
-     * Updates a delivery person's record with the provided data.
-     * 
-     * @param id the id of the user to update
-     * @param request the new user data (only name and phone number are used)
-     * @return the updated DeliveryPersonResponse if the user exists, null otherwise
-     */
     public DeliveryPersonResponse updateDeliveryPerson(Long id, DeliveryPersonRequest request) {
         Optional<AUser> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {return null;}
@@ -148,29 +136,54 @@ public class UserService {
     /////////////////////////////////////////////////////////////
     /// DELETE USER METHODS
     /////////////////////////////////////////////////////////////
-
-    /// TODO:
-    /// In the future, implement the business and softdelete rules below:
-    /// - DeliveryPerson and Client
-    ///     Don't delete if the user is assigned to a pending order
-    ///     Do soft delete if the user is associated to past completed orders
-    /// 
-    /// - AdminPerson:
-    ///     Not sure about the business rules here
-    /// 
   
-    /**
-     * Deletes a user by id if they exist
-     * 
-     * @param id the id of the user to delete
-     * @return true if the user was deleted, false otherwise
-     */
     public boolean deleteUser(Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return true;
+        if(userRepository.existsById(id)){
+            AUser user = userRepository.findById(id).get();
+            if(user instanceof Admin){
+                return deleteAdmin(user);
+            } else if (user instanceof Client){
+                return deleteClient(user);
+            } else if (user instanceof DeliveryPerson){
+                return deleteDeliveryPerson(user);
+            }
         }
         return false;
+    }
+
+    private boolean deleteDeliveryPerson(AUser user) {
+        DeliveryPerson deliveryPerson = (DeliveryPerson) user;
+        if(!orderRepository.existsByDeliveryPersonId(deliveryPerson.getId())){
+            userRepository.deleteById(deliveryPerson.getId()); // definitively delete
+        } else if(orderRepository.existsByDeliveryPersonIdAndStatusNotIn(deliveryPerson.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))){
+            return false;
+        } else {
+            deliveryPerson.setDeletedAt(LocalDateTime.now());
+            userRepository.save(deliveryPerson);
+        }
+        return true;
+    }
+
+    private boolean deleteClient(AUser user) {
+        Client client = (Client) user;
+        if(!orderRepository.existsByClientId(client.getId())){
+            userRepository.deleteById(client.getId()); // definitively delete
+        } else if(orderRepository.existsByClientIdAndStatusNotIn(client.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))){
+            return false; // don't delete client associated with orders in progress
+        } else {
+            client.setDeletedAt(LocalDateTime.now()); // soft delete
+            userRepository.save(client);
+        }
+        return true;
+    }
+
+    private boolean deleteAdmin(AUser user) {
+        Admin admin = (Admin) user;
+        if(!restaurantRepository.existsByAdminId(admin.getId())){
+            userRepository.deleteById(admin.getId());
+            return true;
+        }
+        return false; // don't delete admin associated with restaurants
     }
 
     /////////////////////////////////////////////////////////////
