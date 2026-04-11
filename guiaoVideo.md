@@ -159,7 +159,7 @@ PUT /api/users/delivery/8
   "password": "777",
   "name": "Lana Foguete Update",
   "phoneNumber": "945678902",
-  "nif": "100000005",
+  "nif": "100000005"
 }
 ```
 > Esperado: 200 OK — entregador2 agora mudou nome.
