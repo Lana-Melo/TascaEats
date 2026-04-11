@@ -18,7 +18,7 @@ cd tascaeats
 ## PASSO 2 — Arrancar o Docker
 
 ```bash
-docker-compose up --build
+bash run.sh
 ```
 
 Esperar até aparecer no terminal:
@@ -30,6 +30,16 @@ Esperar até aparecer no terminal:
 
 > O seed popula automaticamente: 3 clientes, 2 admins, 2 entregadores, 2 restaurantes, 4 produtos.
 > A Tasca do Brunao fica OPEN. O produto "batata frita" fica SOLD_OUT para os testes de validação.
+
+
+
+## Mostrar os testes
+
+```bash
+docker compose cp springbootapp:/app/jacoco-report ./jacoco-report
+```
+
+Then open `./jacoco-report/index.html` in your browser.
 
 Abrir o Swagger em: **http://localhost:8080/swagger-ui/index.html**
 

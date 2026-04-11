@@ -11,8 +11,8 @@ The platform connects customers, restaurant administrators, and delivery person 
 | Name |
 |------|
 | Lana Santos |
-| Sofia Rodrigues |
 | Bruno Antunes |
+| Sofia Rodrigues |
 
 ---
 
