@@ -29,6 +29,9 @@ Core features include:
 
 ---
 
+## Domain Model 
+![Domain Model](DiagramaCSS.png)
+
 ## Running the Project
 
 From the project root, run:
