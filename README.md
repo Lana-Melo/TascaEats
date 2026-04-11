@@ -34,6 +34,10 @@ Core features include:
 
 ## Running the Project
 
+The project has been tested and runs correctly on **Windows** and **Ubuntu**, provided **Docker is installed.**
+ 
+> **macOS users:** Running the project on Mac would require a `docker-compose.override.yml` with platform-specific adjustments. Although one team member used such a file during development, we decided not to include it in the repository. The project is therefore intended to be run on Windows or Ubuntu only.
+
 From the project root, run:
 
 ```bash
