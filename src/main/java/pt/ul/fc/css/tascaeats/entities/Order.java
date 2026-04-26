@@ -61,7 +61,7 @@ public class Order {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "payment_id")
-    private Payment payment;
+    private APayment payment;
 
     protected Order() {}
 
@@ -126,11 +126,11 @@ public class Order {
         this.delivery = delivery;
     }
 
-    public Payment getPayment() {
+    public APayment getPayment() {
         return payment;
     }
 
-    public void setPayment(Payment payment) {
+    public void setPayment(APayment payment) {
         this.payment = payment;
     }
 

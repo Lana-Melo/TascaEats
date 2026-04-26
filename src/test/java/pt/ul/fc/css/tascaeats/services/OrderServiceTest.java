@@ -145,7 +145,7 @@ class OrderServiceTest {
     void processPayment_shouldReturnNull_whenOrderMissing() {
         PaymentRequest request = new PaymentRequest();
         request.setOrderId(1L);
-        request.setPaymentMethod("CARD");
+        request.setPaymentMethod("CASH");
         request.setAmount(9.99);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.empty());
@@ -161,7 +161,7 @@ class OrderServiceTest {
 
         PaymentRequest request = new PaymentRequest();
         request.setOrderId(1L);
-        request.setPaymentMethod("CARD");
+        request.setPaymentMethod("CASH");
         request.setAmount(8.99);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -178,7 +178,7 @@ class OrderServiceTest {
 
         PaymentRequest request = new PaymentRequest();
         request.setOrderId(1L);
-        request.setPaymentMethod("CARD");
+        request.setPaymentMethod("CASH");
         request.setAmount(9.99);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -194,7 +194,7 @@ class OrderServiceTest {
 
         PaymentRequest request = new PaymentRequest();
         request.setOrderId(1L);
-        request.setPaymentMethod("CARD");
+        request.setPaymentMethod("CASH");
         request.setAmount(9.99);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));

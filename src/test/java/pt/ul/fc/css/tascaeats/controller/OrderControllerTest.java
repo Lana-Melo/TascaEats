@@ -58,7 +58,7 @@ class OrderControllerTest {
 
     @Test
     void processPayment_shouldReturn400_whenMissingRequiredField() throws Exception {
-        String jsonWithMissingField = "{\"paymentMethod\": \"CARD\", \"amount\": 25.99}"; // Missing orderId
+        String jsonWithMissingField = "{\"paymentMethod\": \"CASH\", \"amount\": 25.99}"; // Missing orderId
 
         mockMvc.perform(post("/api/orders/payment")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -82,6 +82,7 @@ class OrderControllerTest {
         request.setOrderId(1L);
         request.setPaymentMethod("CARD");
         request.setAmount(25.99);
+        request.setPaymentInfo("123456");
 
         OrderResponse response = new OrderResponse(1L, OrderStatus.PAID, LocalDateTime.now(), 25.99, 1L, "Client Name", List.of(1L), List.of(1L, 2L), null, null, "Lisboa", "Rua A", "1000-001");
         when(orderService.processPayment(any())).thenReturn(response);

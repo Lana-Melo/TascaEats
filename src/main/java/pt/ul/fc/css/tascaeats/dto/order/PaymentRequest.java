@@ -10,6 +10,7 @@ public class PaymentRequest {
     private String paymentMethod;
     @NotNull
     private double amount;
+    private String paymentInfo; //MBWay and Card only
 
     public PaymentRequest() {}  
 
@@ -17,6 +18,8 @@ public class PaymentRequest {
     public void setOrderId(Long orderId) { this.orderId = orderId; }            
     public String getPaymentMethod() { return paymentMethod; }
     public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+    public String getPaymentInfo() { return paymentInfo; }
+    public void setPaymentInfo(String paymentInfo) { this.paymentInfo = paymentInfo; }
     public double getAmount() { return amount; }
     public void setAmount(double amount) { this.amount = amount; }
 

@@ -15,16 +15,18 @@ import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
+import pt.ul.fc.css.tascaeats.entities.Card;
+import pt.ul.fc.css.tascaeats.entities.Cash;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.entities.MBWay;
 import pt.ul.fc.css.tascaeats.entities.Order;
-import pt.ul.fc.css.tascaeats.entities.Payment;
+import pt.ul.fc.css.tascaeats.entities.APayment;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
-import pt.ul.fc.css.tascaeats.entities.enums.PaymentType;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 
@@ -95,10 +97,29 @@ public class OrderService {
         
         if (ordOpt.isEmpty()) {return null;}
         Order order = ordOpt.get();
-        if (order.getOrderStatus() != OrderStatus.CREATED ||
-            order.getTotalValue() != request.getAmount()) {return null;}
+        if (order.getOrderStatus() != OrderStatus.CREATED) {return null;}
         
-        Payment payment = new Payment(request.getAmount(), PaymentType.valueOf(request.getPaymentMethod()), order);
+        APayment payment;
+        switch (request.getPaymentMethod()) {
+            case "MBWay":
+                if (order.getTotalValue() != request.getAmount() || 
+                request.getPaymentInfo().equals(null)) {return null;}
+                payment = new MBWay(request.getAmount(), order, request.getPaymentInfo());
+                break;
+            case "Card":
+                if (order.getTotalValue() != request.getAmount() || 
+                request.getPaymentInfo().equals(null)) {return null;}
+                payment = new Card(request.getAmount(), order, request.getPaymentInfo());
+                break;
+            case "Cash":
+                if (order.getTotalValue() > request.getAmount() || 
+                !request.getPaymentInfo().equals(null)) {return null;}
+                payment = new Cash(request.getAmount(), order, request.getAmount()-order.getTotalValue());
+                break;            
+            default:
+                return null;
+        }
+        
         order.setPayment(payment);
         order.setOrderStatus(OrderStatus.PAID);
         Order saved = orderRepository.save(order);
