@@ -15,5 +15,8 @@ public record OrderResponse(
     List<Long> restaurantIds,
     List<Long> productIds,
     Long deliveryPersonId,
-    String deliveryPersonName
+    String deliveryPersonName,
+    String city,
+    String street,
+    String postalCode
 ){}

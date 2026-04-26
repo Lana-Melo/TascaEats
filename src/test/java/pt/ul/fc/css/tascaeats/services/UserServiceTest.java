@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -81,9 +82,7 @@ class UserServiceTest {
         request.setName("Jane Doe");
         request.setPhoneNumber("912345678");
         request.setNif("123456789");
-        request.setCity("Lisboa");
-        request.setStreet("Rua A");
-        request.setPostalCode("1000-001");
+        request.setAddresses(List.of(List.of("Lisboa", "Rua A", "1000-001")));
 
         when(userRepository.findByUsername("jane")).thenReturn(Optional.empty());
         when(userRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -91,7 +90,7 @@ class UserServiceTest {
         ClientResponse response = userService.registerNewClient(request);
 
         assertEquals("jane", response.username());
-        assertEquals("Lisboa", response.city());
+        assertEquals(List.of(List.of("Lisboa", "Rua A", "1000-001")), response.addresses());
     }
 
     @Test
@@ -117,7 +116,7 @@ class UserServiceTest {
 
     @Test
     void updateClient_shouldReturnClientResponse_whenSuccessful() {
-        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", List.of(new Address("Rua A", "Lisboa", "1000-001")));
         when(userRepository.findById(1L)).thenReturn(Optional.of(client));
         when(userRepository.save(any(Client.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -127,14 +126,12 @@ class UserServiceTest {
         request.setName("Client Updated");
         request.setPhoneNumber("912345678");
         request.setNif("123456789");
-        request.setCity("Porto");
-        request.setStreet("Rua B");
-        request.setPostalCode("4000-001");
+        request.setAddresses(List.of(List.of("Porto", "Rua B", "4000-001")));
 
         ClientResponse response = userService.updateClient(1L, request);
 
         assertEquals("client_updated", response.username());
-        assertEquals("Porto", response.city());
+        assertEquals(List.of(List.of("Porto", "Rua B", "4000-001")), response.addresses());
     }
 
     @Test
@@ -221,7 +218,7 @@ class UserServiceTest {
 
     @Test
     void updateAdmin_shouldReturnNull_whenUserIsNotAdmin() {
-        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", List.of(new Address("Rua A", "Lisboa", "1000-001")));
         when(userRepository.findById(1L)).thenReturn(Optional.of(client));
 
         UserRequest request = new UserRequest();
@@ -319,7 +316,7 @@ class UserServiceTest {
 
     @Test
     void deleteClient_shouldHardDelete_whenNoOrdersAssociated() {
-        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", List.of(new Address("Rua A", "Lisboa", "1000-001")));
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(client));
         when(orderRepository.existsByClientId(client.getId())).thenReturn(false);
@@ -329,7 +326,7 @@ class UserServiceTest {
 
     @Test
     void deleteClient_shouldReturnFalse_whenOrdersInProgress() {
-        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", List.of(new Address("Rua A", "Lisboa", "1000-001")));
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(client));
         when(orderRepository.existsByClientId(client.getId())).thenReturn(true);
@@ -340,7 +337,7 @@ class UserServiceTest {
 
     @Test
     void deleteClient_shouldSoftDelete_whenAllOrdersFinished() {
-        Client client = new Client("client", "pass", "Client", "912345678", "123456789", new Address("Rua A", "Lisboa", "1000-001"));
+        Client client = new Client("client", "pass", "Client", "912345678", "123456789", List.of(new Address("Rua A", "Lisboa", "1000-001")));
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(client));
         when(orderRepository.existsByClientId(client.getId())).thenReturn(true);

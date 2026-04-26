@@ -14,6 +14,7 @@ import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 import pt.ul.fc.css.tascaeats.entities.AUser;
+import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
@@ -66,7 +67,10 @@ public class OrderService {
             }
         }
 
-        Order order = new Order(client, products);
+        if (request.getCity() == null || request.getStreet() == null || request.getPostalCode() == null) {return null;}
+        Address address = new Address(request.getStreet(), request.getCity(), request.getPostalCode());
+
+        Order order = new Order(client, products, address);
 
         for (Restaurant res : restaurants) {
             Optional<Restaurant> resOpt = restaurantRepository.findById(res.getId());
@@ -74,6 +78,10 @@ public class OrderService {
             Restaurant restaurant = (Restaurant) resOpt.get();
             restaurant.addOrder(order);
             restaurantRepository.save(restaurant);
+        }
+        if (!client.getAddresses().contains(address)) {
+            client.addAddress(address);
+            userRepository.save(client);
         }
 
         Order saved = orderRepository.save(order);
@@ -216,7 +224,10 @@ public class OrderService {
                                     restaurantIds,
                                     productIds,
                                     delId,
-                                    delName);
+                                    delName, 
+                                    order.getAddress().getCity(),
+                                    order.getAddress().getStreet(),
+                                    order.getAddress().getPostalCode());
     }
 
 }

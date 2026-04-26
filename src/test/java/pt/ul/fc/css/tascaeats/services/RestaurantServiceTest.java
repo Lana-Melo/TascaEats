@@ -426,7 +426,7 @@ class RestaurantServiceTest {
 
         // Mock a user that is not an Admin (e.g., a Client)
         Address clientAddress = new Address("Rua Cliente", "Lisboa", "1000-002");
-        pt.ul.fc.css.tascaeats.entities.Client client = new pt.ul.fc.css.tascaeats.entities.Client("client", "pass", "Client", "912345678", "111222333", clientAddress);
+        pt.ul.fc.css.tascaeats.entities.Client client = new pt.ul.fc.css.tascaeats.entities.Client("client", "pass", "Client", "912345678", "111222333", List.of(clientAddress));
         when(userRepository.findById(1L)).thenReturn(Optional.of(client));
 
         assertNull(restaurantService.createRestaurant(request));

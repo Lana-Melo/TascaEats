@@ -1,36 +1,47 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.Where;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 
 @Entity
 @Where(clause = "deleted_at IS NULL") // For soft deletes
 public class Client extends AUser {
     
-    @Embedded
-    private Address address;
+    @ManyToMany
+    @JoinTable(
+        name = "client_address", 
+        joinColumns = @JoinColumn(name = "client_id"), 
+        inverseJoinColumns = @JoinColumn(name = "address_id"))
+    private List<Address> addresses;
     
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt; // For soft deletes
 
     protected Client() {}
 
-    public Client(String username, String password, String name, String phoneNumber, String nif, Address address) {
+    public Client(String username, String password, String name, String phoneNumber, String nif, List<Address> addresses) {
         super(username, password, name, phoneNumber, nif);
-        this.address = address;
+        this.addresses = addresses;
     }
 
-    public Address getAddress() {
-        return address;
+    public List<Address> getAddresses() {
+        return this.addresses;
     }
 
-    public void setAddress(Address address) {
-        this.address = address;
+    public void addAddress(Address address) {
+        this.addresses.add(address);
+    }
+
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
     }
 
     public void setDeletedAt(LocalDateTime deletedAt){

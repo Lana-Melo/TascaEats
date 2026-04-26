@@ -1,13 +1,13 @@
 package pt.ul.fc.css.tascaeats.dto.users.response;
 
+import java.util.List;
+
 public record ClientResponse(
     Long id,
     String username,
     String name,
     String phoneNumber,
     String nif,
-    String city,
-    String street,
-    String postalCode
+    List<List<String>> addresses
 ) {}
 

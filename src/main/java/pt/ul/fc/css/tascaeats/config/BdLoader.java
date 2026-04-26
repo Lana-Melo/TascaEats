@@ -1,5 +1,7 @@
 package pt.ul.fc.css.tascaeats.config;
 
+import java.util.List;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,15 +42,15 @@ public class BdLoader {
             // ── CLIENTES ──────────────────────────────────────────────────
             Client moscateira1 = userRepository.save(new Client(
                 "moscateira1", "123", "Lana Melo", "912456322", "234509221",
-                new Address("avenida mal penteada", "Ilha do Sol", "2352-123")));
+                List.of(new Address("avenida mal penteada", "Ilha do Sol", "2352-123"))));
 
             Client moscateira2 = userRepository.save(new Client(
                 "moscateira2", "456", "Bruno Antunes", "933333333", "123456333",
-                new Address("rua alto da charneca", "Aldeia dos Fininhos", "2090-123")));
+                List.of(new Address("rua alto da charneca", "Aldeia dos Fininhos", "2090-123"))));
 
             Client moscateira3 = userRepository.save(new Client(
                 "moscateira3", "789", "Sofia Rodrigues", "955456357", "23477777",
-                new Address("rua das minas", "Mangualde", "2050-391")));
+                List.of(new Address("rua das minas", "Mangualde", "2050-391"))));
 
             // ── ADMINS ────────────────────────────────────────────────────
             Admin admin1 = userRepository.save(new Admin(

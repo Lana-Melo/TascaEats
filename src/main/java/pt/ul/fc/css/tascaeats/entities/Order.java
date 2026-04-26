@@ -37,6 +37,10 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "address_id")
+    private Address address;
+
     @ManyToOne
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
@@ -61,11 +65,12 @@ public class Order {
 
     protected Order() {}
 
-    public Order(Client client, List<Product> products) {
+    public Order(Client client, List<Product> products, Address address) {
         this.timestamp = LocalDateTime.now();
         this.status = OrderStatus.CREATED;
         this.client = client;
         this.products = products;
+        this.address = address;
         this.totalValue = 0.0;
 
         for (Product product : products) {
@@ -135,5 +140,9 @@ public class Order {
 
     public DeliveryPerson getDeliveryPerson() {
         return deliveryPerson;
+    }
+
+    public Address getAddress() {
+        return address;
     }
 }

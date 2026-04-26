@@ -2,6 +2,9 @@ package pt.ul.fc.css.tascaeats.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -79,11 +82,9 @@ class UserControllerTest {
         request.setName("Jane Doe");
         request.setPhoneNumber("912345678");
         request.setNif("123456789");
-        request.setCity("Lisboa");
-        request.setStreet("Rua A");
-        request.setPostalCode("1000-001");
+        request.setAddresses(List.of(List.of("Lisboa", "Rua A", "1000-001")));
 
-        ClientResponse response = new ClientResponse(1L, "jane", "Jane Doe", "912345678", "123456789", "Lisboa", "Rua A", "1000-001");
+        ClientResponse response = new ClientResponse(1L, "jane", "Jane Doe", "912345678", "123456789", List.of(List.of("Lisboa", "Rua A", "1000-001")));
 
         when(userService.registerNewClient(any())).thenReturn(response);
 
@@ -103,9 +104,7 @@ class UserControllerTest {
         request.setName("Jane Doe");
         request.setPhoneNumber("912345678");
         request.setNif("123456789");
-        request.setCity("Lisboa");
-        request.setStreet("Rua A");
-        request.setPostalCode("1000-001");
+        request.setAddresses(List.of(List.of("Lisboa", "Rua A", "1000-001")));
 
         when(userService.registerNewClient(any())).thenReturn(null);
 
@@ -202,11 +201,9 @@ class UserControllerTest {
         request.setName("Jane Updated");
         request.setPhoneNumber("912345678");
         request.setNif("123456789");
-        request.setCity("Porto");
-        request.setStreet("Rua B");
-        request.setPostalCode("4000-001");
+        request.setAddresses(List.of(List.of("Porto", "Rua B", "4000-001")));
 
-        ClientResponse response = new ClientResponse(1L, "jane_updated", "Jane Updated", "912345678", "123456789", "Porto", "Rua B", "4000-001");
+        ClientResponse response = new ClientResponse(1L, "jane_updated", "Jane Updated", "912345678", "123456789", List.of(List.of("Porto", "Rua B", "4000-001")));
 
         when(userService.updateClient(eq(1L), any())).thenReturn(response);
 
@@ -226,9 +223,7 @@ class UserControllerTest {
         request.setName("Jane Updated");
         request.setPhoneNumber("912345678");
         request.setNif("123456789");
-        request.setCity("Porto");
-        request.setStreet("Rua B");
-        request.setPostalCode("4000-001");
+        request.setAddresses(List.of(List.of("Porto", "Rua B", "4000-001")));
 
         when(userService.updateClient(eq(99L), any())).thenReturn(null);
 
