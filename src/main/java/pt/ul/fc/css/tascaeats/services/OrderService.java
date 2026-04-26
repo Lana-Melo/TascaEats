@@ -117,6 +117,18 @@ public class OrderService {
                 break;
             case PREPARING:
                 if (ordStat != OrderStatus.READY) {return null;}
+                else {
+                    Optional<DeliveryPerson> delOpt = userRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
+                    DeliveryPerson del = delOpt.isEmpty()? null : delOpt.get();
+
+                    if (del != null) {
+                        Delivery delivery = new Delivery(LocalDateTime.now());
+                        order.setDelivery(delivery);
+                        del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
+                        order.setDeliveryPerson(del);
+                        userRepository.save(del);
+                    }
+                }
                 break;
             case READY:
                 if (ordStat != OrderStatus.DELIVERED) {return null;}
