@@ -37,8 +37,8 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "address_id")
+    @ManyToOne
+    @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
     @ManyToOne
