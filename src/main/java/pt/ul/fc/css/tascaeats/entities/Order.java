@@ -41,10 +41,6 @@ public class Order {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    @ManyToOne
-    @JoinColumn(name = "restaurant_id", nullable = false)
-    private Restaurant restaurant;
-
     @ManyToMany
     @JoinTable(
         name = "order_products", 
@@ -65,11 +61,10 @@ public class Order {
 
     protected Order() {}
 
-    public Order(Restaurant restaurant, Client client, List<Product> products) {
+    public Order(Client client, List<Product> products) {
         this.timestamp = LocalDateTime.now();
         this.status = OrderStatus.CREATED;
         this.client = client;
-        this.restaurant = restaurant;
         this.products = products;
         this.totalValue = 0.0;
 
@@ -104,10 +99,6 @@ public class Order {
 
     public Client getClient() {
         return client;
-    }
-
-    public Restaurant getRestaurant() {
-        return restaurant;
     }
 
     public List<Product> getProducts() {

@@ -40,10 +40,9 @@ class OrderControllerTest {
     void createOrder_shouldReturn200_whenSuccessful() throws Exception {
         OrderRequest request = new OrderRequest();
         request.setClientId(1L);
-        request.setRestaurantId(1L);
         request.setProductIds(List.of(1L, 2L));
 
-        OrderResponse response = new OrderResponse(1L, OrderStatus.CREATED, LocalDateTime.now(), 25.99, 1L, "Client Name", 1L, "Restaurant", List.of(1L, 2L), null, null);
+        OrderResponse response = new OrderResponse(1L, OrderStatus.CREATED, LocalDateTime.now(), 25.99, 1L, "Client Name", List.of(1L), List.of(1L, 2L), null, null);
         when(orderService.createOrder(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/orders")
@@ -66,7 +65,7 @@ class OrderControllerTest {
 
     @Test
     void createOrder_shouldReturn400_whenMissingRequiredField() throws Exception {
-        String jsonWithMissingField = "{\"restaurantId\": 1, \"productIds\": [1,2]}"; // Missing clientId
+        String jsonWithMissingField = "{\"productIds\": [1,2]}"; // Missing clientId
 
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -81,7 +80,7 @@ class OrderControllerTest {
         request.setPaymentMethod("CARD");
         request.setAmount(25.99);
 
-        OrderResponse response = new OrderResponse(1L, OrderStatus.PAID, LocalDateTime.now(), 25.99, 1L, "Client Name", 1L, "Restaurant", List.of(1L, 2L), null, null);
+        OrderResponse response = new OrderResponse(1L, OrderStatus.PAID, LocalDateTime.now(), 25.99, 1L, "Client Name", List.of(1L), List.of(1L, 2L), null, null);
         when(orderService.processPayment(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/orders/payment")
@@ -98,7 +97,7 @@ class OrderControllerTest {
         request.setPaymentMethod("CASH");
         request.setAmount(15.50);
 
-        OrderResponse response = new OrderResponse(1L, OrderStatus.PAID, LocalDateTime.now(), 15.50, 1L, "Client Name", 1L, "Restaurant", List.of(1L), null, null);
+        OrderResponse response = new OrderResponse(1L, OrderStatus.PAID, LocalDateTime.now(), 15.50, 1L, "Client Name", List.of(1L), List.of(1L), null, null);
         when(orderService.processPayment(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/orders/payment")
@@ -111,7 +110,7 @@ class OrderControllerTest {
 
     @Test
     void updateOrderStatus_shouldReturn200_whenSuccessful() throws Exception {
-        OrderResponse response = new OrderResponse(1L, OrderStatus.READY, LocalDateTime.now(), 25.99, 1L, "Client Name", 1L, "Restaurant", List.of(1L, 2L), null, null);
+        OrderResponse response = new OrderResponse(1L, OrderStatus.READY, LocalDateTime.now(), 25.99, 1L, "Client Name", List.of(1L), List.of(1L, 2L), null, null);
         when(orderService.updateOrderStatus(eq(1L), eq("READY"))).thenReturn(response);
 
         mockMvc.perform(patch("/api/orders/1/status")
@@ -122,7 +121,7 @@ class OrderControllerTest {
 
     @Test
     void updateOrderStatus_shouldReturn200_whenUpdatingToPreparing() throws Exception {
-        OrderResponse response = new OrderResponse(1L, OrderStatus.PREPARING, LocalDateTime.now(), 25.99, 1L, "Client Name", 1L, "Restaurant", List.of(1L, 2L), null, null);
+        OrderResponse response = new OrderResponse(1L, OrderStatus.PREPARING, LocalDateTime.now(), 25.99, 1L, "Client Name", List.of(1L), List.of(1L, 2L), null, null);
         when(orderService.updateOrderStatus(eq(1L), eq("PREPARING"))).thenReturn(response);
 
         mockMvc.perform(patch("/api/orders/1/status")
@@ -149,7 +148,7 @@ class OrderControllerTest {
 
     @Test
     void assignDeliveryPerson_shouldReturn200_whenSuccessful() throws Exception {
-        OrderResponse response = new OrderResponse(1L, OrderStatus.DELIVERED, LocalDateTime.now(), 25.99, 1L, "Client Name", 1L, "Restaurant", List.of(1L, 2L), 1L, "Delivery Person");
+        OrderResponse response = new OrderResponse(1L, OrderStatus.DELIVERED, LocalDateTime.now(), 25.99, 1L, "Client Name", List.of(1L), List.of(1L, 2L), 1L, "Delivery Person");
         when(orderService.assignDeliveryPerson(eq(1L), eq(1L))).thenReturn(response);
 
         mockMvc.perform(patch("/api/orders/1/deliveryPerson/1"))

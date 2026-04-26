@@ -12,8 +12,7 @@ public record OrderResponse(
     double totalValue,
     Long clientId,
     String clientName,
-    Long restaurantId,
-    String restaurantDesignation,
+    List<Long> restaurantIds,
     List<Long> productIds,
     Long deliveryPersonId,
     String deliveryPersonName

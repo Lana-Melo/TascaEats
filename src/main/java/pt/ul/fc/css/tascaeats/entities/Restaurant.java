@@ -13,6 +13,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
@@ -41,7 +43,11 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products;
 
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany
+    @JoinTable(
+        name = "restaurant_orders", 
+        joinColumns = @JoinColumn(name = "restaurant_id"), 
+        inverseJoinColumns = @JoinColumn(name = "order_id"))
     private List<Order> orders;
 
     @ManyToOne
@@ -114,6 +120,10 @@ public class Restaurant {
 
     public List<Order> getOrders() {
         return orders;
+    }
+
+    public void addOrder(Order order) {
+        this.orders.add(order);
     }
 
     public void setOrders(List<Order> order) {

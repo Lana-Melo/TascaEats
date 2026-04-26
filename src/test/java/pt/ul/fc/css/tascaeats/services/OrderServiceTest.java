@@ -58,25 +58,11 @@ class OrderServiceTest {
     // --- CREATE ORDER ---
 
     @Test
-    void createOrder_shouldReturnNull_whenRestaurantNotFound() {
-        OrderRequest request = new OrderRequest();
-        request.setClientId(1L);
-        request.setRestaurantId(1L);
-        request.setProductIds(List.of(1L));
-
-        when(restaurantRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertNull(orderService.createOrder(request));
-    }
-
-    @Test
     void createOrder_shouldReturnNull_whenClientNotFound() {
         OrderRequest request = new OrderRequest();
         request.setClientId(1L);
-        request.setRestaurantId(1L);
         request.setProductIds(List.of(1L));
 
-        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant()));
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertNull(orderService.createOrder(request));
@@ -86,10 +72,8 @@ class OrderServiceTest {
     void createOrder_shouldReturnNull_whenUserIsNotClient() {
         OrderRequest request = new OrderRequest();
         request.setClientId(1L);
-        request.setRestaurantId(1L);
         request.setProductIds(List.of(1L));
 
-        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant()));
         when(userRepository.findById(1L)).thenReturn(Optional.of(admin()));
 
         assertNull(orderService.createOrder(request));
@@ -99,10 +83,8 @@ class OrderServiceTest {
     void createOrder_shouldReturnNull_whenProductNotFound() {
         OrderRequest request = new OrderRequest();
         request.setClientId(1L);
-        request.setRestaurantId(1L);
         request.setProductIds(List.of(1L));
 
-        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant()));
         when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -113,13 +95,14 @@ class OrderServiceTest {
     void createOrder_shouldReturnNull_whenRestaurantClosed() {
         Restaurant restaurant = restaurant();
         restaurant.setStatus(RestaurantStatus.CLOSED);
+        Product product = product(restaurant);
 
         OrderRequest request = new OrderRequest();
         request.setClientId(1L);
-        request.setRestaurantId(1L);
         request.setProductIds(List.of(1L));
 
-        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
         assertNull(orderService.createOrder(request));
     }
@@ -132,10 +115,8 @@ class OrderServiceTest {
 
         OrderRequest request = new OrderRequest();
         request.setClientId(1L);
-        request.setRestaurantId(1L);
         request.setProductIds(List.of(1L));
 
-        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
         when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
@@ -149,15 +130,13 @@ class OrderServiceTest {
 
         OrderRequest request = new OrderRequest();
         request.setClientId(1L);
-        request.setRestaurantId(1L);
         request.setProductIds(List.of(1L));
 
-        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
         when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertEquals("Cantina", orderService.createOrder(request).restaurantDesignation());
+        assertNotNull(orderService.createOrder(request));
     }
 
     // --- PROCESS PAYMENT ---
@@ -177,7 +156,7 @@ class OrderServiceTest {
     @Test
     void processPayment_shouldReturnNull_whenAmountMismatch() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
 
         PaymentRequest request = new PaymentRequest();
         request.setOrderId(1L);
@@ -192,7 +171,7 @@ class OrderServiceTest {
     @Test
     void processPayment_shouldReturnNull_whenOrderNotInCreatedStatus() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.PAID);
 
         PaymentRequest request = new PaymentRequest();
@@ -208,7 +187,7 @@ class OrderServiceTest {
     @Test
     void processPayment_shouldReturnOrderResponse_whenSuccessful() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
 
         PaymentRequest request = new PaymentRequest();
         request.setOrderId(1L);
@@ -233,7 +212,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenCreatedToPreparing() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         // CREATED → PREPARING é inválido
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -243,7 +222,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenCreatedToDelivered() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         assertNull(orderService.updateOrderStatus(1L, "DELIVERED"));
@@ -253,7 +232,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenPaidToReady() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.PAID);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -263,7 +242,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenPaidToDelivered() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.PAID);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -274,7 +253,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenPreparingToPaid() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.PREPARING);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -284,7 +263,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenPreparingToDelivered() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.PREPARING);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -295,7 +274,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenReadyToPaid() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.READY);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -305,7 +284,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenReadyToPreparing() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.READY);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -315,7 +294,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenAlreadyDelivered() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.DELIVERED);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -325,7 +304,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnOrderResponse_whenValidTransition() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         // CREATED → PAID is valid
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -336,7 +315,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenDeliveredButNoDeliveryAssigned() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.READY);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -348,7 +327,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnNull_whenAlreadyCancelled() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.CANCELLED);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -359,7 +338,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus_shouldReturnOrderResponse_whenReadyToDeliveredWithDelivery() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.READY);
 
         DeliveryPerson delivery = new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
@@ -385,7 +364,7 @@ class OrderServiceTest {
     @Test
     void assignDeliveryPerson_shouldReturnNull_whenDeliveryPersonNotFound() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.READY);
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
@@ -397,7 +376,7 @@ class OrderServiceTest {
     @Test
     void assignDeliveryPerson_shouldReturnNull_whenDeliveryPersonBusy() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.READY);
 
         DeliveryPerson delivery = new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
@@ -412,7 +391,7 @@ class OrderServiceTest {
     @Test
     void assignDeliveryPerson_shouldReturnNull_whenOrderNotReady() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         // status is CREATED, not READY
 
         DeliveryPerson delivery = new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
@@ -427,7 +406,7 @@ class OrderServiceTest {
     @Test
     void assignDeliveryPerson_shouldReturnOrderResponse_whenSuccessful() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.READY);
 
         DeliveryPerson delivery = new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
@@ -451,7 +430,7 @@ class OrderServiceTest {
     @Test
     void cancelOrder_shouldReturnFalse_whenOrderNotCancellable() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.PREPARING);
 
         when(orderRepository.existsById(1L)).thenReturn(true);
@@ -463,7 +442,7 @@ class OrderServiceTest {
     @Test
     void cancelOrder_shouldReturnTrue_whenOrderInCreatedStatus() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         // status is CREATED by default
 
         when(orderRepository.existsById(1L)).thenReturn(true);
@@ -475,7 +454,7 @@ class OrderServiceTest {
     @Test
     void cancelOrder_shouldReturnTrue_whenOrderInPaidStatus() {
         Restaurant restaurant = restaurant();
-        Order order = new Order(restaurant, client(), List.of(product(restaurant)));
+        Order order = new Order(client(), List.of(product(restaurant)));
         order.setOrderStatus(OrderStatus.PAID);
 
         when(orderRepository.existsById(1L)).thenReturn(true);

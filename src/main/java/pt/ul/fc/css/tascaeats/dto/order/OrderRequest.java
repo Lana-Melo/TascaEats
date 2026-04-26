@@ -8,16 +8,12 @@ public class OrderRequest {
     @NotNull
     private Long clientId;
     @NotNull
-    private Long restaurantId;
-    @NotNull
     private List<Long> productIds;
 
     public OrderRequest() {}
 
     public Long getClientId() { return clientId; }
     public void setClientId(Long clientId) { this.clientId = clientId; }        
-    public Long getRestaurantId() { return restaurantId; }
-    public void setRestaurantId(Long restaurantId) { this.restaurantId = restaurantId; }
     public List<Long> getProductIds() { return productIds; }
     public void setProductIds(List<Long> productIds) { this.productIds = productIds; }  
 }

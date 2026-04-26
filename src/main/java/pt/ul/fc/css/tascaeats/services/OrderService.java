@@ -48,24 +48,34 @@ public class OrderService {
     /////////////////////////////////////////////////////////////
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
-        Optional<Restaurant> resOpt = restaurantRepository.findById(request.getRestaurantId());
-        if (resOpt.isEmpty() || resOpt.get().getStatus() == RestaurantStatus.CLOSED) {return null;}
         Optional<AUser> userOpt = userRepository.findById(request.getClientId());
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {return null;}
 
         Client client = (Client) userOpt.get();
-        Restaurant restaurant = resOpt.get();
         
         ArrayList<Product> products = new ArrayList<>();
+        ArrayList<Restaurant> restaurants = new ArrayList<>();
         for (Long id : request.getProductIds()) {
             Optional<Product> prodOpt = productRepository.findById(id);
             if (prodOpt.isEmpty() || prodOpt.get().getStatus() == ProductStatus.SOLD_OUT || 
-                prodOpt.get().getRestaurant() != restaurant) {return null;}
+                prodOpt.get().getRestaurant().getStatus() == RestaurantStatus.CLOSED) {return null;}
 
             products.add(prodOpt.get());
+            if (!restaurants.contains(prodOpt.get().getRestaurant())) {
+                restaurants.add(prodOpt.get().getRestaurant());
+            }
         }
 
-        Order order = new Order(restaurant, client, products);
+        Order order = new Order(client, products);
+
+        for (Restaurant res : restaurants) {
+            Optional<Restaurant> resOpt = restaurantRepository.findById(res.getId());
+            if (resOpt.isEmpty()) {return null;}
+            Restaurant restaurant = (Restaurant) resOpt.get();
+            restaurant.addOrder(order);
+            restaurantRepository.save(restaurant);
+        }
+
         Order saved = orderRepository.save(order);
         
         return mapOrderToOrderResponse(saved);
@@ -174,8 +184,12 @@ public class OrderService {
      
     private OrderResponse mapOrderToOrderResponse(Order order) {
         ArrayList<Long> productIds = new ArrayList<Long>();
+        ArrayList<Long> restaurantIds = new ArrayList<Long>();
         for (Product p : order.getProducts()) {
             productIds.add(p.getId());
+            if (!restaurantIds.contains(p.getRestaurant().getId())) {
+                restaurantIds.add(p.getRestaurant().getId());
+            }
         }
         Long delId = order.getDeliveryPerson() == null? null: order.getDeliveryPerson().getId();
         String delName = order.getDeliveryPerson() == null? null: order.getDeliveryPerson().getName();
@@ -187,8 +201,7 @@ public class OrderService {
                                     order.getTotalValue(),
                                     order.getClient().getId(),
                                     order.getClient().getName(),
-                                    order.getRestaurant().getId(),
-                                    order.getRestaurant().getDesignation(),
+                                    restaurantIds,
                                     productIds,
                                     delId,
                                     delName);
