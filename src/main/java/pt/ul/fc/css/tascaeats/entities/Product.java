@@ -2,9 +2,6 @@ package pt.ul.fc.css.tascaeats.entities;
 
 import java.time.LocalDateTime;
 
-import javax.swing.plaf.basic.BasicListUI.ListSelectionHandler;
-
-import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import jakarta.persistence.Column;
@@ -102,5 +99,9 @@ public class Product {
 
     public void setDeletedAt(LocalDateTime deletedAt){
         this.deletedAt = deletedAt;
+    }
+
+    public Object getDeletedAt() {
+        return this.deletedAt;
     }
 }

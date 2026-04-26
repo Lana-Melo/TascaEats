@@ -1,7 +1,6 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
@@ -68,10 +67,15 @@ public class Order {
 
     public Order(Restaurant restaurant, Client client, List<Product> products) {
         this.timestamp = LocalDateTime.now();
-        this.status = OrderStatus.PREPARING;
+        this.status = OrderStatus.CREATED;
         this.client = client;
         this.restaurant = restaurant;
-        this.products = new ArrayList<Product>();
+        this.products = products;
+        this.totalValue = 0.0;
+
+        for (Product product : products) {
+            this.totalValue = this.totalValue + product.getPrice();
+        }
     }
 
     public Long getId() {

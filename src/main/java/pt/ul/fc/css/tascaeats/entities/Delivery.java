@@ -16,6 +16,10 @@ public class Delivery {
 
     protected Delivery() {}
 
+    public Delivery(LocalDateTime pickedUpTimeStamp) {
+        this.pickedUpTimeStamp = pickedUpTimeStamp;
+    }
+
     public LocalDateTime getPickedUpTimeStamp() {
         return pickedUpTimeStamp;
     }

@@ -12,10 +12,12 @@ import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
+import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
+import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
@@ -53,7 +55,7 @@ public class RestaurantService {
         
         Optional<List<Restaurant>> rs;
         if (designation != null && city != null) {
-            rs = restaurantRepository.findByDesignationContainingIgnoreCaseOrAddressCityContainingIgnoreCase(designation, city);
+            rs = restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(designation, city);
 
         }
         else if (city != null) {
@@ -69,18 +71,18 @@ public class RestaurantService {
     }
 
     public RestaurantResponse createRestaurant(RestaurantRequest restaurant) {
-        Address address = new Address(restaurant.getCity(), restaurant.getStreet(), restaurant.getPostalCode());
-        Admin admin = userRepository.findById(restaurant.getAdminId())
-                            .filter(a -> a instanceof Admin)
-                            .map(a -> (Admin) a)
-                            .orElseThrow(null);
+        Optional<AUser> userOpt = userRepository.findById(restaurant.getAdminId());
+        if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}
+
+        Admin admin = (Admin) userOpt.get();
+        Address address = new Address(restaurant.getStreet(), restaurant.getCity(), restaurant.getPostalCode());
         Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
         
-        admin.addRestaurant(r);
         Restaurant saved = restaurantRepository.save(r);
         return mapRestaurantToRestaurantResponse(saved);
     }
 
+    @Transactional
     public RestaurantResponse changeStatus(Long id, String status) {
         Optional<Restaurant> resOpt = restaurantRepository.findById(id);
         if(!resOpt.isPresent()){return null;}
@@ -108,6 +110,7 @@ public class RestaurantService {
         return mapProductToProductResponse(saved);
     }
 
+    @Transactional
     public ProductResponse updateProduct(Long restaurantId, Long productId, ProductRequest productRequest) {        
         Optional<Product> prodOpt = productRepository.findById(productId);
         if(!prodOpt.isPresent()){return null;}
@@ -128,14 +131,16 @@ public class RestaurantService {
         boolean isFromRestaurant = productRepository.existsByIdAndRestaurantId(productId, restaurantId);
         
         if(isFromRestaurant){
-            if(orderRepository.existsByProductsId(productId)){ // soft delete
-                Product product = productRepository.findById(productId).get();
-                product.setDeletedAt(LocalDateTime.now());
-                productRepository.save(product);
+            if(!orderRepository.existsByProductsId(productId)){ 
+                productRepository.deleteById(productId); // definitively delete
+            } else if(orderRepository.existsByProductsIdAndStatusNotIn(productId, List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))){
+                return false; // don't delete product associated with orders in progress
             } else {
-                productRepository.deleteById(productId);
-            }
-            return true;    
+                Product product = productRepository.findById(productId).get();
+                product.setDeletedAt(LocalDateTime.now()); // soft delete
+                productRepository.save(product);
+            }  
+            return true; 
         }
         return false;
     }

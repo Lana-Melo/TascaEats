@@ -1,9 +1,16 @@
 package pt.ul.fc.css.tascaeats.dto.product;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class ProductRequest {
+    @NotNull
     private double price;
+    @NotBlank
     private String description;
+    @NotBlank
     private String designation;
+    @NotBlank
     private String availability; 
 
     public ProductRequest() {}

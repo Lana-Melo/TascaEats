@@ -13,8 +13,7 @@ public class DeliveryPersonRequest {
     private String phoneNumber;
     @NotBlank
     private String nif;
-    @NotBlank
-    private String status;
+
 
     public DeliveryPersonRequest() {}
 
@@ -28,7 +27,5 @@ public class DeliveryPersonRequest {
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getNif() { return nif; }
     public void setNif(String nif) { this.nif = nif; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 
 }

@@ -2,9 +2,14 @@ package pt.ul.fc.css.tascaeats.dto.order;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotNull;
+
 public class OrderRequest {
+    @NotNull
     private Long clientId;
+    @NotNull
     private Long restaurantId;
+    @NotNull
     private List<Long> productIds;
 
     public OrderRequest() {}

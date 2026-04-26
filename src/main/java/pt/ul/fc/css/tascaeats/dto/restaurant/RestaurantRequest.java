@@ -1,20 +1,26 @@
 package pt.ul.fc.css.tascaeats.dto.restaurant;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class RestaurantRequest {
+    @NotBlank
     private String designation;
-    private String status; 
+    @NotBlank
     private String nif;
+    @NotBlank
     private String city;
+    @NotBlank
     private String postalCode;
+    @NotBlank
     private String street;
-    private Long adminId; // importante para criar o admin (UserCase E)
+    @NotNull
+    private Long adminId;
 
     public RestaurantRequest() {}
 
     public String getDesignation() { return designation; }
     public void setDesignation(String designation) { this.designation = designation; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
     public String getNif() { return nif; }
     public void setNif(String nif) { this.nif = nif; }
     public String getCity() { return city; }

@@ -28,7 +28,7 @@ public class UserController {
     @PostMapping("/login") 
     @ApiOperation(value = "Login", notes = "Mock login, any password is accepted if user is valid.")
     public ResponseEntity<UserResponse> login(@RequestBody @Valid LoginRequest request) {
-        UserResponse user = userHandler.login(request.getUserName(), request.getPassword());
+        UserResponse user = userHandler.login(request.getUsername(), request.getPassword());
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build(); 
     }
 
