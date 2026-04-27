@@ -29,14 +29,16 @@ public class UserController {
     @ApiOperation(value = "Login", notes = "Mock login, any password is accepted if user is valid.")
     public ResponseEntity<UserResponse> login(@RequestBody @Valid LoginRequest request) {
         UserResponse user = userHandler.login(request.getUsername(), request.getPassword());
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build(); 
+        //return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build(); 
+        return ResponseEntity.ok(user); //not found ja nao é tratado aqui, service lança exceptions
     }
 
     @PostMapping("/register/client")
     @ApiOperation(value = "Register client", notes = "Register a new client")
     public ResponseEntity<ClientResponse> registerClient(@RequestBody @Valid ClientRequest request) {
         ClientResponse user = userHandler.registerNewClient(request);
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
+        //return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
+        return ResponseEntity.ok(user); //bad request ja nao é tratado aqui, service lança exceptions
     }
 
     @PostMapping("/register/admin")

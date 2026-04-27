@@ -25,15 +25,12 @@ public class GlobalExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problemDetail.setDetail("Invalid request");
         problemDetail.setProperty("message", ex.getMessage());
-        problemDetail.setProperty("errorCode", "INVALID_REQUEST_ERR_001");
         return problemDetail;
     }
 
     // Catch generic exceptions as a fallback
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
-        problemDetail.setProperty("errorCode", "INTERNAL_SERVER_ERR_001");
-        return problemDetail;
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 }
