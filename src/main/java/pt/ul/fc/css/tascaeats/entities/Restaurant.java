@@ -58,6 +58,10 @@ public class Restaurant {
     @JoinColumn(name = "admin_id")
     private Admin admin;
 
+    @ManyToOne
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
+
     protected Restaurant() {}
 
     public Restaurant(String nif, String designation, Address address, Admin admin) {
@@ -145,6 +149,14 @@ public class Restaurant {
 
     public void setOrders(List<Order> order) {
         this.orders = order;
+    }
+
+    public Menu getMenu() {
+        return menu;
+    }
+
+    public void setMenu(Menu menu) {
+        this.menu = menu;
     }
 }
 

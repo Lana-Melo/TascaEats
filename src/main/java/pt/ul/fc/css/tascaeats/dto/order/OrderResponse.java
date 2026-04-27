@@ -6,7 +6,7 @@ import java.util.List;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 
 public record OrderResponse(
-    Long id, //gerado pelo spring 
+    Long id,
     OrderStatus status,
     LocalDateTime timestamp,
     double totalValue,

@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
-
 import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
@@ -95,5 +94,12 @@ public class RestaurantController {
     public ResponseEntity<List<ReviewResponse>> getReviews(@PathVariable Long id) {
         List<ReviewResponse> review = restaurantHandler.getReviews(id); 
         return review != null ? ResponseEntity.ok(review) : ResponseEntity.notFound().build();
+    }
+
+    @PatchMapping("/{id}/menu/{menuId}")
+    @ApiOperation(value = "Assign menu", notes = "Assigns menu to restaurant given by id.")
+    public ResponseEntity<RestaurantResponse> assignMenu(@PathVariable Long id, @PathVariable Long menuId) {
+        RestaurantResponse restaurant = restaurantHandler.assignMenu(id, menuId); 
+        return restaurant != null ? ResponseEntity.ok(restaurant) : ResponseEntity.badRequest().build();
     }
 }

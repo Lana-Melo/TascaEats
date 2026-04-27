@@ -8,5 +8,6 @@ public record RestaurantResponse(
     String adminName,
     String street,
     String city,
-    String postalCode
+    String postalCode,
+    Long menuId
 ) {}

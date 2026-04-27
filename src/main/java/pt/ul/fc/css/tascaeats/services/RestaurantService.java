@@ -19,6 +19,7 @@ import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
+import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
@@ -26,6 +27,7 @@ import pt.ul.fc.css.tascaeats.entities.Review;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
+import pt.ul.fc.css.tascaeats.repository.MenuRepository;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -38,13 +40,15 @@ public class RestaurantService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final MenuRepository menuRepository;
 
-    public RestaurantService(RestaurantRepository restaurantRepository, UserRepository userRepository, 
+    public RestaurantService(RestaurantRepository restaurantRepository, UserRepository userRepository, MenuRepository menuRepository,
                             ProductRepository productRepository, OrderRepository orderRepository) {
         this.restaurantRepository = restaurantRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
+        this.menuRepository = menuRepository;
     }
 
     /////////////////////////////////////////////////////////////
@@ -95,6 +99,23 @@ public class RestaurantService {
 
         Restaurant restaurant = resOpt.get();
         restaurant.setStatus(RestaurantStatus.valueOf(status.toUpperCase()));
+        Restaurant saved = restaurantRepository.save(restaurant);
+        return mapRestaurantToRestaurantResponse(saved);
+    }
+
+    @Transactional
+    public RestaurantResponse assignMenu(Long id, Long menuId) {
+        Optional<Restaurant> resOpt = restaurantRepository.findById(id);
+        if(!resOpt.isPresent()){return null;}
+        Optional<Menu> menuOpt = menuRepository.findById(menuId);
+        if(!menuOpt.isPresent()){return null;}
+
+        Restaurant restaurant = resOpt.get();
+        Menu menu = menuOpt.get();
+        restaurant.setMenu(menu);
+        menu.addRestaurant(restaurant);
+
+        menuRepository.save(menu);
         Restaurant saved = restaurantRepository.save(restaurant);
         return mapRestaurantToRestaurantResponse(saved);
     }
@@ -159,7 +180,7 @@ public class RestaurantService {
     }
 
     /////////////////////////////////////////////////////////////
-    ///  CRUD REVIEW'S METHODS
+    ///  REVIEW METHODS
     /////////////////////////////////////////////////////////////
     public ReviewResponse addReview(Long restaurantId, ReviewRequest reviewRequest) {
         Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
@@ -224,7 +245,8 @@ public class RestaurantService {
                                     restaurant.getAdmin().getName(),
                                     restaurant.getAddress().getStreet(),
                                     restaurant.getAddress().getCity(),
-                                    restaurant.getAddress().getPostalCode());
+                                    restaurant.getAddress().getPostalCode(),
+                                    restaurant.getMenu().getId());
     }
 
     private ReviewResponse mapReviewToReviewResponse(Review review) {
