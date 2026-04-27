@@ -44,6 +44,9 @@ public class Restaurant {
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Product> products;
 
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
+    private List<Review> reviews;
+
     @ManyToMany
     @JoinTable(
         name = "restaurant_orders", 
@@ -64,6 +67,7 @@ public class Restaurant {
         this.address = address;
         this.products = new ArrayList<Product>();
         this.orders = new ArrayList<Order>();
+        this.reviews = new ArrayList<Review>();
         this.admin = admin;
     }
 
@@ -107,6 +111,18 @@ public class Restaurant {
         this.products = products;
     }
 
+    public List<Review> getReviews() {
+        return this.reviews;
+    }
+
+    public void addReview(Review review) {
+        this.reviews.add(review);
+    }
+
+    public void setReviews(List<Review> reviews) {
+        this.reviews = reviews;
+    }
+
     public Admin getAdmin() {
         return admin;
     }
@@ -115,7 +131,7 @@ public class Restaurant {
         this.admin = admin;
     }
 
-    public void setProduct(Product product) {
+    public void addProduct(Product product) {
         this.products.add(product);
     }
 

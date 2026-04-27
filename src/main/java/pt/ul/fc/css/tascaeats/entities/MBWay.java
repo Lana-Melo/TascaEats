@@ -1,13 +1,15 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 
 @Entity
 public class MBWay extends APayment {
     
+    @Column(nullable = false)
     private String phoneNumber;
 
-    public MBWay() {}
+    protected MBWay() {}
 
     public MBWay(double amount, Order order, String phoneNumber) {
         super(amount, order);

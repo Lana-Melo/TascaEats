@@ -20,6 +20,8 @@ import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
+import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequest;
+import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewResponse;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.services.RestaurantService;
 
@@ -79,5 +81,19 @@ public class RestaurantController {
     public ResponseEntity<List<ProductResponse>> getProducts(@PathVariable Long id) {  
         List<ProductResponse> products = restaurantHandler.getProducts(id);
         return products != null ? ResponseEntity.ok(products) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{id}/reviews")
+    @ApiOperation(value = "Create review", notes = "Adds a new review")
+    public ResponseEntity<ReviewResponse> addReview(@PathVariable Long id, @RequestBody @Valid ReviewRequest request) {
+        ReviewResponse review = restaurantHandler.addReview(id, request); 
+        return review != null ? ResponseEntity.ok(review) : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/reviews")
+    @ApiOperation(value = "Get restaurant reviews", notes = "Returns a list of products for a given restaurant.")
+    public ResponseEntity<List<ReviewResponse>> getReviews(@PathVariable Long id) {
+        List<ReviewResponse> review = restaurantHandler.getReviews(id); 
+        return review != null ? ResponseEntity.ok(review) : ResponseEntity.notFound().build();
     }
 }

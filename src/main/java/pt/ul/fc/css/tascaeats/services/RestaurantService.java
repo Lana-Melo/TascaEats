@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -12,11 +13,16 @@ import pt.ul.fc.css.tascaeats.dto.product.ProductRequest;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponse;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequest;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponse;
+import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequest;
+import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewResponse;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
+import pt.ul.fc.css.tascaeats.entities.Client;
+import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
+import pt.ul.fc.css.tascaeats.entities.Review;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
@@ -150,7 +156,52 @@ public class RestaurantService {
                                     .map(products -> products.stream()
                                     .map(this::mapProductToProductResponse)
                                     .toList()).orElse(Collections.emptyList());
-    } 
+    }
+
+    /////////////////////////////////////////////////////////////
+    ///  CRUD REVIEW'S METHODS
+    /////////////////////////////////////////////////////////////
+    public ReviewResponse addReview(Long restaurantId, ReviewRequest reviewRequest) {
+        Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
+        if(!resOpt.isPresent()){return null;}
+        Optional<AUser> userOpt = userRepository.findById(reviewRequest.getClientId());
+        if(userOpt.isEmpty() || !(userOpt.get() instanceof Client)){return null;}
+
+        Restaurant restaurant = resOpt.get();
+        Client client = (Client) userOpt.get();
+        List<Order> orders = restaurant.getOrders();
+        boolean canReview = false;
+
+        for (Order order : orders) {
+            if (order.getClient().getId() == client.getId()) {
+                canReview = true;
+            }
+        }
+        if (!canReview || reviewRequest.getRating() < 1 || reviewRequest.getRating() > 5) {return null;}
+
+        Review review = new Review(reviewRequest.getRating(), reviewRequest.getComment(), client, restaurant);
+        
+        client.addReview(review);
+        restaurant.addReview(review);
+        userRepository.save(client);
+        restaurantRepository.save(restaurant);
+        
+        return mapReviewToReviewResponse(review);
+    }
+
+    public List<ReviewResponse> getReviews(Long restaurantId) {
+        Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
+        if(!resOpt.isPresent()){return null;}
+
+        Restaurant restaurant = resOpt.get();
+        List<Review> reviews = restaurant.getReviews();
+
+        List<ReviewResponse> responses = new ArrayList<>();
+        for (Review review : reviews) {
+            responses.add(mapReviewToReviewResponse(review));
+        }
+        return responses;
+    }
 
     /////////////////////////////////////////////////////////////
     ///  MAPPER METHODS
@@ -174,6 +225,15 @@ public class RestaurantService {
                                     restaurant.getAddress().getStreet(),
                                     restaurant.getAddress().getCity(),
                                     restaurant.getAddress().getPostalCode());
+    }
+
+    private ReviewResponse mapReviewToReviewResponse(Review review) {
+        return new ReviewResponse(
+                                    review.getId(), 
+                                    review.getRating(), 
+                                    review.getComment(), 
+                                    review.getClient().getId(), 
+                                    review.getRestaurant().getId());
     }
     
 }

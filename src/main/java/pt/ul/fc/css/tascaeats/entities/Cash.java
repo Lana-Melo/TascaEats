@@ -1,13 +1,15 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 
 @Entity
 public class Cash extends APayment {
     
+    @Column(nullable = false)
     private double change;
 
-    public Cash() {}
+    protected Cash() {}
 
     public Cash(double amount, Order order, double change) {
         super(amount, order);
