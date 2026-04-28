@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import pt.ul.fc.css.tascaeats.dto.order.OrderRequest;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequest;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponse;
 import pt.ul.fc.css.tascaeats.services.OrderService;
@@ -38,7 +39,7 @@ public class WebController {
   }
 
   @PostMapping("/login")
-  public String Login(
+  public String login(
       @RequestParam String username,
       @RequestParam String password,
       HttpSession session,
@@ -105,14 +106,63 @@ public class WebController {
   // ---- RESTAURANT ----
 
   // UC E - buscar por restaurantes
+  @GetMapping("/restaurants")
+  public String restaurants(Model model) {
+    // model.addAttribute("restaurants", restaurantService.getAllRestaurants());
+    return "restaurants"; // returns the restaurants.html template
+  }
+
+  @GetMapping("/restaurants/search")
+  public String searchRestaurants(@RequestParam String query, Model model) {
+    // model.addAttribute("restaurants", restaurantService.searchRestaurants(query));
+    return "restaurants"; // returns the restaurants.html template
+    // voltar aqui o client tem q escolher o filtro q deseja, se quer filtar por nome, cidade, tipo
+    // de comida lalalal
+  }
 
   // UC I - buscar produtos de um restaurante
+  @GetMapping("/restaurants/{restaurantId}/products")
+  public String restaurantProducts(
+      @RequestParam Long restaurantId, Model model, RedirectAttributes ra) {
+    try {
+      model.addAttribute("products", restaurantService.getProducts(restaurantId));
+      return "products"; // returns the products.html template
+    } catch (RuntimeException ex) {
+      ra.addFlashAttribute("error", ex.getMessage());
+      return "redirect:/restaurants";
+    }
+  }
 
   // ---------------------
 
   // ------- ORDER -------
 
   // UC J - criar pedido
+  @PostMapping("/orders")
+  public String createOrder(
+      @RequestParam Long restaurantId,
+      @RequestParam List<Long> productIds,
+      @RequestParam String city,
+      @RequestParam String street,
+      @RequestParam String postalCode,
+      HttpSession session,
+      RedirectAttributes ra) {
+    try {
+      Long clientId = (Long) session.getAttribute("userId");
+      OrderRequest orderRequest = new OrderRequest();
+      orderRequest.setClientId(clientId);
+      orderRequest.setProductIds(productIds);
+      orderRequest.setCity(city);
+      orderRequest.setStreet(street);
+      orderRequest.setPostalCode(postalCode);
+      orderService.createOrder(orderRequest);
+      ra.addFlashAttribute("message", "Order created successfully!");
+      return "redirect:/orders"; // returns the orders.html template
+    } catch (RuntimeException ex) { // mudar serviços pra lidar com as exceptions
+      ra.addFlashAttribute("error", ex.getMessage());
+      return "redirect:/restaurants";
+    }
+  }
 
   // UC N - cancelar pedido
 
