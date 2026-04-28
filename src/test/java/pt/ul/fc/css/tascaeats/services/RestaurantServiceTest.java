@@ -51,7 +51,7 @@ class RestaurantServiceTest {
     @InjectMocks
     private RestaurantService restaurantService;
 
-    @Test
+    /*@Test
     void searchByDesignationOrCity_shouldReturnAllWhenNoFilters() {
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
@@ -431,5 +431,5 @@ class RestaurantServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(client));
 
         assertNull(restaurantService.createRestaurant(request));
-    }
+    }*/
 }

@@ -198,6 +198,23 @@ public class RestaurantService {
                                     .toList()).orElse(Collections.emptyList());
     }
 
+    public List<ProductResponse> searchProductBy(String designation, String description, String availability, String timesOrdered) {
+        List<Product> products = designation.isEmpty()? productRepository.findAll() : productRepository.findAllByDesignation(designation);
+
+        if (!description.isEmpty()) {
+            products.retainAll(productRepository.findAllByDescription(description));
+        }
+        if (!availability.isEmpty()) {
+            products.retainAll(productRepository.findAllByAvailability(ProductStatus.valueOf(availability)));
+        }
+        if (!timesOrdered.isEmpty()) {
+            products.retainAll(productRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));
+        }
+        return products.stream()
+                       .map(this::mapProductToProductResponse)
+                       .toList();
+    }
+
     /////////////////////////////////////////////////////////////
     ///  REVIEW METHODS
     /////////////////////////////////////////////////////////////

@@ -45,6 +45,14 @@ public class RestaurantController {
         return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/products/search")
+    @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered by name or city.")
+    public ResponseEntity<List<ProductResponse>> searchProduct(@RequestParam(required = false) String designation, @RequestParam(required = false) String description, 
+        @RequestParam(required = false) String availability, @RequestParam(required = false) String timesOrdered) {
+        List<ProductResponse> products = restaurantHandler.searchProductBy(designation, description, availability, timesOrdered); 
+        return products != null ? ResponseEntity.ok(products) : ResponseEntity.notFound().build();
+    }
+
     @GetMapping
     @ApiOperation(value = "Get all restaurants", notes = "Returns a list of all restaurants.")
     public ResponseEntity<List<RestaurantResponse>> getAllRestaurants() {
