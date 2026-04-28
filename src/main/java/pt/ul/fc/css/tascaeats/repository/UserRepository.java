@@ -21,13 +21,13 @@ public interface UserRepository extends JpaRepository<AUser, Long> {
     Optional<DeliveryPerson> findFirstByStatus(DeliveryPersonStatus status);
     List<AUser> findAllByName(String name);
 
-    @Query("SELECT c FROM AUser u WHERE TYPE(u) = Client")
+    @Query("SELECT c FROM Client c")
     List<Client> findAllClients();
 
-    @Query("SELECT a FROM AUser u WHERE TYPE(u) = Admin")
+    @Query("SELECT a FROM Admin a")
     List<Admin> findAllAdmins();
 
-    @Query("SELECT d FROM AUser u WHERE TYPE(u) = DeliveryPerson")
+    @Query("SELECT d FROM DeliveryPerson d")
     List<DeliveryPerson> findAllDeliveryPersons();
 
     @Query("""

@@ -1,5 +1,6 @@
 package pt.ul.fc.css.tascaeats.entities;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +38,12 @@ public class Restaurant {
     @Column(nullable = false)
     private RestaurantStatus status;
 
+    @Column(nullable = false)
+    private LocalTime openHours;
+
+    @Column(nullable = false)
+    private LocalTime closeHours;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "address_id")
     private Address address;
@@ -64,7 +71,7 @@ public class Restaurant {
 
     protected Restaurant() {}
 
-    public Restaurant(String nif, String designation, Address address, Admin admin) {
+    public Restaurant(String nif, String designation, Address address, Admin admin, LocalTime openHours, LocalTime closeHours) {
         this.nif = nif;
         this.designation = designation;
         this.status = RestaurantStatus.OPEN;
@@ -73,6 +80,8 @@ public class Restaurant {
         this.orders = new ArrayList<Order>();
         this.reviews = new ArrayList<Review>();
         this.admin = admin;
+        this.openHours = openHours;
+        this.closeHours = closeHours;
     }
 
     public Long getId() {
@@ -157,6 +166,22 @@ public class Restaurant {
 
     public void setMenu(Menu menu) {
         this.menu = menu;
+    }
+
+    public LocalTime getOpenHours() {
+        return openHours;
+    }
+
+    public void setOpenHours(LocalTime openHours) {
+        this.openHours = openHours;
+    }
+
+    public LocalTime getCloseHours() {
+        return closeHours;
+    }
+
+    public void setCloseHours(LocalTime closeHours) {
+        this.closeHours = closeHours;
     }
 }
 

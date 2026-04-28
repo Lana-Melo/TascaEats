@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -55,29 +56,35 @@ public class RestaurantService {
     ///  CRUD RESTAURANT'S METHODS
     /////////////////////////////////////////////////////////////
     
-    public List<RestaurantResponse> searchByDesignationOrCity(String designation, String city) {
-        if ((designation == null || designation.isEmpty()) && (city == null || city.isEmpty())) {
-                return restaurantRepository.findAll()
-                                           .stream()
-                                           .map(this::mapRestaurantToRestaurantResponse)
-                                           .toList();
-        }
-        
-        Optional<List<Restaurant>> rs;
-        if (designation != null && city != null) {
-            rs = restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(designation, city);
+    public List<RestaurantResponse> searchBy(String designation, String city, String street, String postalCode, 
+        String cuisine, String orderNumber, String reviewNumber, String activeHour, String average) {
 
+        List<Restaurant> restaurants = designation.isEmpty()? restaurantRepository.findAll() : restaurantRepository.findAllByDesignation(designation);
+        
+        if (!city.isEmpty() && !street.isEmpty() && !postalCode.isEmpty()) {
+            Address address = new Address(street, city, postalCode);
+            restaurants.retainAll(restaurantRepository.findAllByAddress(address));
         }
-        else if (city != null) {
-            rs = restaurantRepository.findByAddressCityContainingIgnoreCase(city);
+        if (!cuisine.isEmpty()) {
+            restaurants.retainAll(restaurantRepository.findByMenu_CuisineIgnoreCase(cuisine));
         }
-        else {
-            rs = restaurantRepository.findByDesignationContainingIgnoreCase(designation);
+        if (!orderNumber.isEmpty()) {
+            restaurants.retainAll(restaurantRepository.findByOrderNumber(Integer.parseInt(orderNumber)));
         }
-        return rs.map(list -> list.stream()
-                .map(this::mapRestaurantToRestaurantResponse)
-                .toList())
-                .orElse(Collections.emptyList());
+        if (!reviewNumber.isEmpty()) {
+            restaurants.retainAll(restaurantRepository.findByReviewNumber(Integer.parseInt(reviewNumber)));
+        }
+        if (!activeHour.isEmpty()) {
+            String[] hour = activeHour.split(":");
+            restaurants.retainAll(restaurantRepository.findByActiveHours(LocalTime.of(Integer.parseInt(hour[0]), Integer.parseInt(hour[1]))));
+        }
+        if (!average.isEmpty()) {
+            restaurants.retainAll(restaurantRepository.findByAveragePrice(Double.parseDouble(average)));
+        }
+
+        return restaurants.stream()
+                          .map(this::mapRestaurantToRestaurantResponse)
+                          .toList();
     }
 
     public List<RestaurantResponse> getAllRestaurants() {
@@ -91,9 +98,14 @@ public class RestaurantService {
         Optional<AUser> userOpt = userRepository.findById(restaurant.getAdminId());
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}
 
+        String[] open = restaurant.getOpenHours().split(":");
+        String[] close = restaurant.getCloseHours().split(":");
+        LocalTime openHours = LocalTime.of(Integer.parseInt(open[0]), Integer.parseInt(open[1]));
+        LocalTime closeHours = LocalTime.of(Integer.parseInt(close[0]), Integer.parseInt(close[1]));
+
         Admin admin = (Admin) userOpt.get();
         Address address = new Address(restaurant.getStreet(), restaurant.getCity(), restaurant.getPostalCode());
-        Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin);
+        Restaurant r = new Restaurant(restaurant.getNif(), restaurant.getDesignation(), address, admin, openHours, closeHours);
         
         Restaurant saved = restaurantRepository.save(r);
         return mapRestaurantToRestaurantResponse(saved);
@@ -254,6 +266,8 @@ public class RestaurantService {
                                     restaurant.getAddress().getStreet(),
                                     restaurant.getAddress().getCity(),
                                     restaurant.getAddress().getPostalCode(),
+                                    restaurant.getOpenHours().toString(),
+                                    restaurant.getCloseHours().toString(),
                                     menuId);
     }
 

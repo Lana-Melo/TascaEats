@@ -38,7 +38,7 @@ class RestaurantControllerTest {
 
     @Test
     void searchRestaurant_shouldReturn200_whenRestaurantsFound() throws Exception {
-        RestaurantResponse restaurant = new RestaurantResponse(1L, "Cantina Velha", "OPEN", "123456789", "Admin", "Rua A", "Lisboa", "1000-001", 1L);
+        RestaurantResponse restaurant = new RestaurantResponse(1L, "Cantina Velha", "OPEN", "123456789", "Admin", "Rua A", "Lisboa", "1000-001", "11:00", "22:00", 1L);
         when(restaurantService.searchByDesignationOrCity("Cantina Velha", "Lisboa")).thenReturn(List.of(restaurant));
 
         mockMvc.perform(get("/api/restaurants/search")
@@ -67,7 +67,7 @@ class RestaurantControllerTest {
         request.setPostalCode("1000-001");
         request.setAdminId(1L);
 
-        RestaurantResponse response = new RestaurantResponse(1L, "Cantina Velha", "OPEN", "123456789", "Admin", "Rua A", "Lisboa", "1000-001", 1L);
+        RestaurantResponse response = new RestaurantResponse(1L, "Cantina Velha", "OPEN", "123456789", "Admin", "Rua A", "Lisboa", "1000-001", "11:00", "22:00", 1L);
         when(restaurantService.createRestaurant(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/restaurants")
@@ -98,7 +98,7 @@ class RestaurantControllerTest {
 
     @Test
     void updateStatus_shouldReturn200_whenSuccessful() throws Exception {
-        RestaurantResponse response = new RestaurantResponse(1L, "Cantina Velha", "CLOSED", "123456789", "Admin", "Rua A", "Lisboa", "1000-001", 1L);
+        RestaurantResponse response = new RestaurantResponse(1L, "Cantina Velha", "CLOSED", "123456789", "Admin", "Rua A", "Lisboa", "1000-001", "11:00", "22:00", 1L);
         when(restaurantService.changeStatus(eq(1L), eq("CLOSED"))).thenReturn(response);
 
         mockMvc.perform(patch("/api/restaurants/1/status")

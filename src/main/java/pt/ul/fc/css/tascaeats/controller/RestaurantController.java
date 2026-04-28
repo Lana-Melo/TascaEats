@@ -36,8 +36,12 @@ public class RestaurantController {
 
     @GetMapping("/search")
     @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered by name or city.")
-    public ResponseEntity<List<RestaurantResponse>> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city) {
-        List<RestaurantResponse> restaurants = restaurantHandler.searchByDesignationOrCity(designation, city); 
+    public ResponseEntity<List<RestaurantResponse>> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city, 
+        @RequestParam(required = false) String street, @RequestParam(required = false) String postalCode, @RequestParam(required = false) String cuisine, 
+        @RequestParam(required = false) String orderNumber, @RequestParam(required = false) String reviewNumber, @RequestParam(required = false) String activeHour, 
+        @RequestParam(required = false) String average) {
+        List<RestaurantResponse> restaurants = restaurantHandler.searchBy(designation, city, street, postalCode, cuisine, 
+                                                                          orderNumber, reviewNumber, activeHour, average); 
         return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
     }
 

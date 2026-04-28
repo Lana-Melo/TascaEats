@@ -16,6 +16,10 @@ public class RestaurantRequest {
     private String street;
     @NotNull
     private Long adminId;
+    @NotNull
+    private String openHours;
+    @NotNull
+    private String closeHours;
 
     public RestaurantRequest() {}
 
@@ -31,5 +35,9 @@ public class RestaurantRequest {
     public void setStreet(String street) { this.street = street; }
     public Long getAdminId() { return adminId; }
     public void setAdminId(Long adminId) { this.adminId = adminId; }
+    public String getOpenHours() { return openHours; }
+    public void setOpenHours(String openHours) { this.openHours = openHours; }
+    public String getCloseHours() { return closeHours; }
+    public void setCloseHours(String closeHours) { this.closeHours = closeHours; }
 }
 

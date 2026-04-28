@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,7 +52,7 @@ class OrderServiceTest {
     // helpers
     private Address address() { return new Address("Rua A", "Lisboa", "1000-001"); }
     private Admin admin() { return new Admin("admin", "pass", "Admin", "912345678", "987654321"); }
-    private Restaurant restaurant() { return new Restaurant("123456789", "Cantina", address(), admin()); }
+    private Restaurant restaurant() { return new Restaurant("123456789", "Cantina", address(), admin(), LocalTime.of(11, 0), LocalTime.of(22, 0)); }
     private Client client() { return new Client("client", "pass", "Client", "912345678", "123456789", List.of(address())); }
     private Product product(Restaurant r) { return new Product(9.99, "Mussarela", "Pizza", r); }
 

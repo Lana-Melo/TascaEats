@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +55,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnAllWhenNoFilters() {
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
+        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findAll()).thenReturn(List.of(restaurant));
 
@@ -77,7 +78,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnAllWhenBothEmptyStrings() {
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
+        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findAll()).thenReturn(List.of(restaurant));
 
@@ -91,7 +92,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnByDesignationOnly() {
         Address address = new Address("Rua B", "Porto", "4000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin);
+        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findByDesignationContainingIgnoreCase(eq("Pizza")))
             .thenReturn(Optional.of(List.of(restaurant)));
@@ -106,7 +107,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnByCityOnly() {
         Address address = new Address("Rua C", "Coimbra", "3000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("111222333", "Tasca", address, admin);
+        Restaurant restaurant = new Restaurant("111222333", "Tasca", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findByAddressCityContainingIgnoreCase(eq("Coimbra")))
             .thenReturn(Optional.of(List.of(restaurant)));
@@ -177,7 +178,7 @@ class RestaurantServiceTest {
 
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
+        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -202,7 +203,7 @@ class RestaurantServiceTest {
     void getProducts_shouldReturnProductList_whenProductsExist() {
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
+        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
         Product product = new Product(9.99, "Mussarela", "Pizza", restaurant);
 
         when(productRepository.findAllByRestaurantId(1L)).thenReturn(Optional.of(List.of(product)));
@@ -236,7 +237,7 @@ class RestaurantServiceTest {
 
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
+        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
         Product product = new Product(9.99, "Mussarela", "Pizza", restaurant);
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
@@ -262,7 +263,7 @@ class RestaurantServiceTest {
     void deleteProduct_shouldSoftDelete_whenProductHasOnlyCompletedOrders() {
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
+        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
         Product product = new Product(9.99, "Mussarela", "Pizza", restaurant);
 
         when(productRepository.existsByIdAndRestaurantId(1L, 1L)).thenReturn(true);
@@ -305,7 +306,7 @@ class RestaurantServiceTest {
     void changeStatus_shouldReturnResponse_whenRestaurantExists() {
         Address address = new Address("Rua A", "Lisboa", "1000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin);
+        Restaurant restaurant = new Restaurant("123456789", "Cantina", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
         when(restaurantRepository.save(any(Restaurant.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -320,7 +321,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnByBothDesignationAndCity() {
         Address address = new Address("Rua B", "Porto", "4000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin);
+        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(eq("Pizza"), eq("Porto")))
             .thenReturn(Optional.of(List.of(restaurant)));
@@ -356,7 +357,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnByCity_whenDesignationIsEmpty() {
         Address address = new Address("Rua C", "Coimbra", "3000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("111222333", "Tasca", address, admin);
+        Restaurant restaurant = new Restaurant("111222333", "Tasca", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(eq(""), eq("Coimbra")))
             .thenReturn(Optional.of(List.of(restaurant)));
@@ -372,7 +373,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnByCity_whenDesignationIsNull() {
         Address address = new Address("Rua C", "Coimbra", "3000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("111222333", "Tasca", address, admin);
+        Restaurant restaurant = new Restaurant("111222333", "Tasca", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findByAddressCityContainingIgnoreCase(eq("Coimbra")))
             .thenReturn(Optional.of(List.of(restaurant)));
@@ -388,7 +389,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnByDesignation_whenCityIsNull() {
         Address address = new Address("Rua B", "Porto", "4000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin);
+        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findByDesignationContainingIgnoreCase(eq("Pizza")))
             .thenReturn(Optional.of(List.of(restaurant)));
@@ -403,7 +404,7 @@ class RestaurantServiceTest {
     void searchByDesignationOrCity_shouldReturnByDesignation_whenCityIsEmpty() {
         Address address = new Address("Rua B", "Porto", "4000-001");
         Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin);
+        Restaurant restaurant = new Restaurant("987654321", "Pizza House", address, admin, LocalTime.of(11, 0), LocalTime.of(22, 0));
 
         when(restaurantRepository.findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(eq("Pizza"), eq("")))
             .thenReturn(Optional.of(List.of(restaurant)));
