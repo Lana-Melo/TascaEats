@@ -237,6 +237,7 @@ public class RestaurantService {
     }
 
     private RestaurantResponse mapRestaurantToRestaurantResponse(Restaurant restaurant) {
+        Long menuId = restaurant.getMenu() == null? null: restaurant.getMenu().getId();
         return new RestaurantResponse(
                                     restaurant.getId(),
                                     restaurant.getDesignation(),
@@ -246,7 +247,7 @@ public class RestaurantService {
                                     restaurant.getAddress().getStreet(),
                                     restaurant.getAddress().getCity(),
                                     restaurant.getAddress().getPostalCode(),
-                                    restaurant.getMenu().getId());
+                                    menuId);
     }
 
     private ReviewResponse mapReviewToReviewResponse(Review review) {
