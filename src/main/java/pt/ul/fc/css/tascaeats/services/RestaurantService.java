@@ -80,6 +80,13 @@ public class RestaurantService {
                 .orElse(Collections.emptyList());
     }
 
+    public List<RestaurantResponse> getAllRestaurants() {
+        return restaurantRepository.findAll()
+                                   .stream()
+                                   .map(this::mapRestaurantToRestaurantResponse)
+                                   .toList();
+    }
+
     public RestaurantResponse createRestaurant(RestaurantRequest restaurant) {
         Optional<AUser> userOpt = userRepository.findById(restaurant.getAdminId());
         if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {return null;}

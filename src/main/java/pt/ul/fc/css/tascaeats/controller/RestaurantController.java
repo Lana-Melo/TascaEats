@@ -41,6 +41,13 @@ public class RestaurantController {
         return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
     }
 
+    @GetMapping
+    @ApiOperation(value = "Get all restaurants", notes = "Returns a list of all restaurants.")
+    public ResponseEntity<List<RestaurantResponse>> getAllRestaurants() {
+        List<RestaurantResponse> restaurants = restaurantHandler.getAllRestaurants(); 
+        return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
+    }
+
     @PostMapping
     @ApiOperation(value = "Create restaurant", notes = "Creates a new restaurant.")
     public ResponseEntity<RestaurantResponse> createRestaurant(@RequestBody @Valid RestaurantRequest request) {
