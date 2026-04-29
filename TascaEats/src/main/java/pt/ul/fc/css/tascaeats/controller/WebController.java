@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import pt.ul.fc.css.tascaeats.dto.order.OrderRequest;
-import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequest;
-import pt.ul.fc.css.tascaeats.dto.users.response.UserResponse;
+import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.services.OrderService;
 import pt.ul.fc.css.tascaeats.services.RestaurantService;
 import pt.ul.fc.css.tascaeats.services.UserService;
@@ -46,7 +46,7 @@ public class WebController {
       Model model,
       RedirectAttributes ra) {
     try {
-      UserResponse userDto =
+      UserResponseDto userDto =
           userService.login(
               username,
               password); // apesar de ser um cliente, o loginn retorna UserRequest mas n faz mal n
@@ -80,18 +80,21 @@ public class WebController {
       @RequestParam String name,
       @RequestParam String phoneNumber,
       @RequestParam String nif,
-      @RequestParam
-          List<List<String>> addresses, // nao sei se pode ser só assim, depois voltar aqui :)
+      @RequestParam String city,
+      @RequestParam String postalCode,
+      @RequestParam String street,
       Model model,
       RedirectAttributes ra) {
     try {
-      ClientRequest clientRequest = new ClientRequest();
+      ClientRequestDto clientRequest = new ClientRequestDto();
       clientRequest.setUsername(username);
       clientRequest.setPassword(password);
       clientRequest.setName(name);
       clientRequest.setPhoneNumber(phoneNumber);
       clientRequest.setNif(nif);
-      clientRequest.setAddresses(addresses);
+      clientRequest.setCity(city);
+      clientRequest.setPostalCode(postalCode);
+      clientRequest.setStreet(street);
       userService.registerNewClient(clientRequest);
       ra.addFlashAttribute("message", "Client registered successfully!");
       return "redirect:/login"; // returns the login.html template
@@ -149,7 +152,7 @@ public class WebController {
       RedirectAttributes ra) {
     try {
       Long clientId = (Long) session.getAttribute("userId");
-      OrderRequest orderRequest = new OrderRequest();
+      OrderRequestDto orderRequest = new OrderRequestDto();
       orderRequest.setClientId(clientId);
       orderRequest.setProductIds(productIds);
       orderRequest.setCity(city);

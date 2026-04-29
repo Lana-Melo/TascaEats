@@ -17,6 +17,7 @@ import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
@@ -54,21 +55,8 @@ public class UserService {
       // return null;
       throw new IllegalArgumentException("Username already exists.");
     }
-    List<List<String>> infoAddress = request.getAddresses();
-    ArrayList<Address> addresses = new ArrayList<Address>();
-    for (List<String> info : infoAddress) {
-      if (info.size() != 3) {
-        // return null;
-        throw new IllegalArgumentException("Invalid address format.");
-      } else {
-        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
-        addresses.add(newAdd);
-      }
-    }
-    if (addresses.isEmpty()) {
-      throw new IllegalArgumentException("Client must have at least one address.");
-    }
-
+    List<Address> addresses =
+        List.of(new Address(request.getStreet(), request.getCity(), request.getPostalCode()));
     Client client =
         new Client(
             request.getUsername(),
