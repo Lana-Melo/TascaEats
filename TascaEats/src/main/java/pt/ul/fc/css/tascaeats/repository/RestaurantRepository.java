@@ -42,7 +42,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
       SELECT r FROM Restaurant r
       JOIN r.products p
       GROUP BY r
-      HAVING AVG(p.price) = :average
+      HAVING AVG(p.price) <= :average
   """)
   List<Restaurant> findByAveragePrice(@Param("average") double average);
 }

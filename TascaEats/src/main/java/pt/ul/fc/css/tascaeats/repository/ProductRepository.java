@@ -24,7 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
       FROM Order o
       JOIN o.products p
       GROUP BY p
-      HAVING COUNT(p) = :timesOrdered
+      HAVING COUNT(p) >= :timesOrdered
   """)
   List<Product> findByTimesOrdered(@Param("timesOrdered") int timesOrdered);
 }

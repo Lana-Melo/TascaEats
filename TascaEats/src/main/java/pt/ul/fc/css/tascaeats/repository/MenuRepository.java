@@ -18,7 +18,7 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
       SELECT m FROM Menu m
       JOIN m.products p
       GROUP BY m
-      HAVING AVG(p.price) = :average
+      HAVING AVG(p.price) <= :average
     """)
     List<Menu> findByAveragePrice(double average);
 }

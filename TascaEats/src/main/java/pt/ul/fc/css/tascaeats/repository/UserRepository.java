@@ -34,7 +34,7 @@ public interface UserRepository extends JpaRepository<AUser, Long> {
         SELECT c FROM Client c, Order o
         WHERE o.client = c 
         GROUP BY c 
-        HAVING COUNT(o) = :orderNumber
+        HAVING COUNT(o) >= :orderNumber
     """)
     List<Client> findClientsWithOrderNumber(@Param("orderNumber") int orderNumber);
 
@@ -42,7 +42,7 @@ public interface UserRepository extends JpaRepository<AUser, Long> {
         SELECT d FROM DeliveryPerson d, Order o
         WHERE o.deliveryPerson = d AND o.status = :status
         GROUP BY d
-        HAVING COUNT(o) = :deliveryNumber
+        HAVING COUNT(o) >= :deliveryNumber
     """)
     List<DeliveryPerson> findDeliveryPersonsWithDeliveryNumber(@Param("deliveryNumber") int deliveryNumber, @Param("status") OrderStatus status);
 }
