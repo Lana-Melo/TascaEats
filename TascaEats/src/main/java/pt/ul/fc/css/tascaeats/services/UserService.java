@@ -259,8 +259,22 @@ public class UserService {
   /////////////////////////////////////////////////////////////
 
   private UserResponseDto mapAUserToUserResponse(AUser user) {
+    String role = null;
+    if (user instanceof DeliveryPerson) {
+      role = "DELIVERY_PERSON";
+    } else if (user instanceof Admin) {
+      role = "ADMIN";
+    } else if (user instanceof Client) {
+      role = "CLIENT";
+    }
+
     return new UserResponseDto(
-        user.getId(), user.getUsername(), user.getName(), user.getPhoneNumber(), user.getNif());
+        user.getId(),
+        role,
+        user.getUsername(),
+        user.getName(),
+        user.getPhoneNumber(),
+        user.getNif());
   }
 
   private DeliveryPersonResponseDto mapDeliveryToDeliveryPersonResponse(
