@@ -14,7 +14,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -44,8 +43,7 @@ public class Restaurant {
   @Column(nullable = false)
   private LocalTime closeHours;
 
-  @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-  @JoinColumn(name = "address_id")
+  @Embedded
   private Address address;
 
   @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -61,7 +59,8 @@ public class Restaurant {
       inverseJoinColumns = @JoinColumn(name = "order_id"))
   private List<Order> orders;
 
-  @Embedded
+  @ManyToOne
+  @JoinColumn(name = "admin_id")
   private Admin admin;
 
   @ManyToOne
