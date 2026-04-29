@@ -2,12 +2,14 @@ package pt.ul.fc.css.tascaeats.grpc;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
 import pt.ul.fc.css.tascaeats.services.UserService;
 
+@GrpcService
 public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceImplBase {
 
   @Autowired private UserService userService;

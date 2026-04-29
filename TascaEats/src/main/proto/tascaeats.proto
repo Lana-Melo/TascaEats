@@ -24,4 +24,5 @@ message UserResponse {
   string name = 3;
   string phoneNumber = 4;
   string nif = 5;
+  string role = 6;
 }

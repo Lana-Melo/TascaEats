@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package javafx;
+package tascaeats;
 
 option java_package = "pt.ul.fc.css.tascaeats.grpc";
 option java_multiple_files = true;
@@ -24,4 +24,5 @@ message UserResponse {
   string name = 3;
   string phoneNumber = 4;
   string nif = 5;
+  string role = 6;
 }

@@ -8,6 +8,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import pt.ul.fc.css.tascaeats.grpc.UserResponse;
+import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 
 public class LoginController {
 
@@ -21,15 +23,21 @@ public class LoginController {
     String password = passwordField.getText();
     System.out.println("Login apertado — email: " + email + ", password: " + password);
 
-    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/home.fxml"));
+    FXMLLoader loader =
+        new FXMLLoader(getClass().getResource("/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml"));
 
-    // chamada a ApiClient
+    try {
 
-    Parent root = loader.load();
-    HomeController homeController = loader.getController();
-    homeController.initData(response.getName(), response.getRole());
+      UserResponse response = ApiClient.login(email, password);
 
-    Stage stage = (Stage) emailField.getScene().getWindow();
-    stage.setScene(new Scene(root, 640, 400));
+      Parent root = loader.load();
+      HomeController homeController = loader.getController();
+      homeController.initData(response.getName(), response.getRole());
+
+      Stage stage = (Stage) emailField.getScene().getWindow();
+      stage.setScene(new Scene(root, 640, 400));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

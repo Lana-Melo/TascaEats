@@ -18,6 +18,7 @@ public class ApiClient {
       TascaEatsServiceGrpc.newBlockingStub(channel);
 
   public static UserResponse login(String username, String password) {
+    System.out.println("TENTOU LOGIN");
     LoginRequest request =
         LoginRequest.newBuilder().setUsername(username).setPassword(password).build();
     return stub.login(request);
