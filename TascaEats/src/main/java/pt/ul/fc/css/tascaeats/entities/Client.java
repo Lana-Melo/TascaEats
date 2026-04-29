@@ -1,11 +1,11 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,11 +16,8 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL") // For soft deletes
 public class Client extends AUser {
 
-  @ManyToMany
-  @JoinTable(
-      name = "client_address",
-      joinColumns = @JoinColumn(name = "client_id"),
-      inverseJoinColumns = @JoinColumn(name = "address_id"))
+  @ElementCollection
+  @CollectionTable(name = "client_addresses", joinColumns = @JoinColumn(name = "client_id"))
   private List<Address> addresses;
 
   @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)

@@ -36,8 +36,7 @@ public class Order {
   @Column(nullable = false)
   private OrderStatus status;
 
-  @ManyToOne
-  @JoinColumn(name = "address_id", nullable = false)
+  @Embedded
   private Address address;
 
   @ManyToOne

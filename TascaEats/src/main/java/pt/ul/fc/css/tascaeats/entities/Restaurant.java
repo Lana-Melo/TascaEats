@@ -2,6 +2,7 @@ package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -60,8 +61,7 @@ public class Restaurant {
       inverseJoinColumns = @JoinColumn(name = "order_id"))
   private List<Order> orders;
 
-  @ManyToOne
-  @JoinColumn(name = "admin_id")
+  @Embedded
   private Admin admin;
 
   @ManyToOne

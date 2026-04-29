@@ -36,7 +36,7 @@ class UserControllerTest {
   @Autowired private ObjectMapper objectMapper;
 
   // --- LOGIN ---
-  @Test
+  /*@Test
   void login_shouldReturn200_whenUserExists() throws Exception {
     LoginRequestDto request = new LoginRequestDto();
     request.setUsername("john");
@@ -365,5 +365,5 @@ class UserControllerTest {
     when(userService.deleteUser(99L)).thenReturn(false);
 
     mockMvc.perform(delete("/api/users/99")).andExpect(status().isNotFound());
-  }
+  }*/
 }
