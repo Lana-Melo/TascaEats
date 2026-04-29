@@ -1,7 +1,6 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -52,19 +51,7 @@ public class UserService {
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
       return null;
     }
-    List<List<String>> infoAddress = request.getAddresses();
-    ArrayList<Address> addresses = new ArrayList<Address>();
-    for (List<String> info : infoAddress) {
-      if (info.size() != 3) {
-        return null;
-      } else {
-        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
-        addresses.add(newAdd);
-      }
-    }
-    if (addresses.isEmpty()) {
-      return null;
-    }
+    List<Address> addresses = List.of(new Address(request.getStreet(), request.getCity(), request.getPostalCode()));
 
     Client client =
         new Client(
@@ -179,22 +166,7 @@ public class UserService {
     client.setPhoneNumber(request.getPhoneNumber());
     client.setNif(request.getNif());
     client.setPassword(request.getPassword());
-
-    List<List<String>> infoAddress = request.getAddresses();
-    ArrayList<Address> addresses = new ArrayList<Address>();
-    for (List<String> info : infoAddress) {
-      if (info.size() != 3) {
-        return null;
-      } else {
-        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
-        addresses.add(newAdd);
-      }
-    }
-    if (addresses.isEmpty()) {
-      return null;
-    }
-
-    client.setAddresses(addresses);
+    client.addAddress(new Address(request.getStreet(), request.getCity(), request.getPostalCode()));
 
     Client saved = userRepository.save(client);
     return mapClientToClientResponse(saved);
@@ -295,18 +267,15 @@ public class UserService {
   }
 
   private ClientResponseDto mapClientToClientResponse(Client client) {
-    List<Address> addresses = client.getAddresses();
-    List<List<String>> infoAddress = new ArrayList<List<String>>();
-    for (Address address : addresses) {
-      List<String> info = List.of(address.getCity(), address.getStreet(), address.getPostalCode());
-      infoAddress.add(info);
-    }
+    Address address = client.getAddresses().get(client.getAddresses().size()-1);
     return new ClientResponseDto(
         client.getId(),
         client.getUsername(),
         client.getName(),
         client.getPhoneNumber(),
         client.getNif(),
-        infoAddress);
+        address.getStreet(),
+        address.getCity(), 
+        address.getPostalCode());
   }
 }
