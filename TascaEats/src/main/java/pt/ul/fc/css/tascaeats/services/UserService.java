@@ -270,11 +270,11 @@ public class UserService {
 
     return new UserResponseDto(
         user.getId(),
+        role,
         user.getUsername(),
         user.getName(),
         user.getPhoneNumber(),
-        user.getNif(),
-        role);
+        user.getNif());
   }
 
   private DeliveryPersonResponseDto mapDeliveryToDeliveryPersonResponse(
