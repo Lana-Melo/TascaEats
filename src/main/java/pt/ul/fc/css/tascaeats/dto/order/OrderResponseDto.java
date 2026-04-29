@@ -2,10 +2,9 @@ package pt.ul.fc.css.tascaeats.dto.order;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 
-public record OrderResponse(
+public record OrderResponseDto(
     Long id,
     OrderStatus status,
     LocalDateTime timestamp,
@@ -18,5 +17,4 @@ public record OrderResponse(
     String deliveryPersonName,
     String city,
     String street,
-    String postalCode
-){}
+    String postalCode) {}

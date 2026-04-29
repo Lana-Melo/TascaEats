@@ -1,9 +1,11 @@
 package pt.ul.fc.css.tascaeats.dto.users.response;
 
-public record UserResponse (
+import java.util.List;
+
+public record ClientResponseDto(
     Long id,
     String username,
     String name,
     String phoneNumber,
-    String nif
-) {}
+    String nif,
+    List<List<String>> addresses) {}

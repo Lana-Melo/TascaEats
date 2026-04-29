@@ -1,6 +1,6 @@
 package pt.ul.fc.css.tascaeats.dto.restaurant;
 
-public record RestaurantResponse(
+public record RestaurantResponseDto(
     Long id,
     String designation,
     String status,
@@ -9,5 +9,4 @@ public record RestaurantResponse(
     String street,
     String city,
     String postalCode,
-    Long menuId
-) {}
+    Long menuId) {}
