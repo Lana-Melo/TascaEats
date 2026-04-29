@@ -1,0 +1,312 @@
+package pt.ul.fc.css.tascaeats.services;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponseDto;
+import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
+import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
+import pt.ul.fc.css.tascaeats.entities.AUser;
+import pt.ul.fc.css.tascaeats.entities.Address;
+import pt.ul.fc.css.tascaeats.entities.Admin;
+import pt.ul.fc.css.tascaeats.entities.Client;
+import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
+import pt.ul.fc.css.tascaeats.repository.OrderRepository;
+import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
+import pt.ul.fc.css.tascaeats.repository.UserRepository;
+
+@Service
+public class UserService {
+
+  private final UserRepository userRepository;
+  private final OrderRepository orderRepository;
+  private final RestaurantRepository restaurantRepository;
+
+  public UserService(
+      UserRepository userRepository,
+      OrderRepository orderRepository,
+      RestaurantRepository restaurantRepository) {
+    this.userRepository = userRepository;
+    this.orderRepository = orderRepository;
+    this.restaurantRepository = restaurantRepository;
+  }
+
+  /** Mock login, any password is accepted if user is valid. */
+  @Transactional(readOnly = true)
+  public UserResponseDto login(String username, String password) {
+    Optional<AUser> userOpt = userRepository.findByUsername(username);
+    return userOpt.map(this::mapAUserToUserResponse).orElse(null);
+  }
+
+  /////////////////////////////////////////////////////////////
+  ///  POST USER METHODS
+  /////////////////////////////////////////////////////////////
+  public ClientResponseDto registerNewClient(ClientRequestDto request) {
+    if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+      return null;
+    }
+    List<List<String>> infoAddress = request.getAddresses();
+    ArrayList<Address> addresses = new ArrayList<Address>();
+    for (List<String> info : infoAddress) {
+      if (info.size() != 3) {
+        return null;
+      } else {
+        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
+        addresses.add(newAdd);
+      }
+    }
+    if (addresses.isEmpty()) {
+      return null;
+    }
+
+    Client client =
+        new Client(
+            request.getUsername(),
+            request.getPassword(),
+            request.getName(),
+            request.getPhoneNumber(),
+            request.getNif(),
+            addresses);
+    Client saved = userRepository.save(client);
+    return mapClientToClientResponse(saved);
+  }
+
+  public UserResponseDto registerNewAdmin(UserRequestDto request) {
+    if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+      return null;
+    }
+    Admin admin =
+        new Admin(
+            request.getUsername(),
+            request.getPassword(),
+            request.getName(),
+            request.getPhoneNumber(),
+            request.getNif());
+    Admin saved = userRepository.save(admin);
+    return mapAUserToUserResponse(saved);
+  }
+
+  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
+    if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+      return null;
+    }
+    DeliveryPerson deliveryPerson =
+        new DeliveryPerson(
+            request.getUsername(),
+            request.getPassword(),
+            request.getName(),
+            request.getPhoneNumber(),
+            request.getNif());
+    DeliveryPerson saved = userRepository.save(deliveryPerson);
+    return mapDeliveryToDeliveryPersonResponse(saved);
+  }
+
+  /////////////////////////////////////////////////////////////
+  /// GET USER METHOD
+  /////////////////////////////////////////////////////////////
+  public UserResponseDto getUserById(Long id) {
+    Optional<AUser> userOpt = userRepository.findById(id);
+    return userOpt.map(this::mapAUserToUserResponse).orElse(null);
+  }
+
+  public List<UserResponseDto> searchBy(String name, String userType, String orderNumber, String deliveryNumber) {
+    List<AUser> allUsers = userRepository.findAll();
+    if (name.isEmpty() && userType.isEmpty() && orderNumber.isEmpty() && userType.isEmpty()) {
+      return allUsers.stream()
+                     .map(this::mapAUserToUserResponse)
+                     .toList();
+    }
+    List<AUser> users = name.isEmpty()? allUsers : userRepository.findAllByName(name);
+    switch (userType) {
+      case "Client":
+        List<Client> orders = orderNumber.isEmpty()? userRepository.findAllClients() : userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
+        users.retainAll(orders);
+        break;
+      case "Delivery Person":
+        List<DeliveryPerson> delies = deliveryNumber.isEmpty()? userRepository.findAllDeliveryPersons() : userRepository.findDeliveryPersonsWithDeliveryNumber(Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);
+        users.retainAll(delies);
+        break;
+      case "Admin":
+        List<Admin> admins = userRepository.findAllAdmins();
+        users.retainAll(admins);
+        break;
+      default:
+        break;
+    }
+    return users.stream()
+                .map(this::mapAUserToUserResponse)
+                .toList();
+  }
+
+  /////////////////////////////////////////////////////////////
+  /// PUT USER METHODS
+  /////////////////////////////////////////////////////////////
+  @Transactional
+  public UserResponseDto updateAdmin(Long id, UserRequestDto request) {
+    Optional<AUser> userOpt = userRepository.findById(id);
+    if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {
+      return null;
+    }
+
+    Admin admin = (Admin) userOpt.get();
+    admin.setName(request.getName());
+    admin.setUsername(request.getUsername());
+    admin.setPhoneNumber(request.getPhoneNumber());
+    admin.setNif(request.getNif());
+    admin.setPassword(request.getPassword());
+
+    Admin saved = userRepository.save(admin);
+    return mapAUserToUserResponse(saved);
+  }
+
+  @Transactional
+  public ClientResponseDto updateClient(Long id, ClientRequestDto request) {
+    Optional<AUser> userOpt = userRepository.findById(id);
+    if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {
+      return null;
+    }
+
+    Client client = (Client) userOpt.get();
+    client.setName(request.getName());
+    client.setUsername(request.getUsername());
+    client.setPhoneNumber(request.getPhoneNumber());
+    client.setNif(request.getNif());
+    client.setPassword(request.getPassword());
+
+    List<List<String>> infoAddress = request.getAddresses();
+    ArrayList<Address> addresses = new ArrayList<Address>();
+    for (List<String> info : infoAddress) {
+      if (info.size() != 3) {
+        return null;
+      } else {
+        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
+        addresses.add(newAdd);
+      }
+    }
+    if (addresses.isEmpty()) {
+      return null;
+    }
+
+    client.setAddresses(addresses);
+
+    Client saved = userRepository.save(client);
+    return mapClientToClientResponse(saved);
+  }
+
+  @Transactional
+  public DeliveryPersonResponseDto updateDeliveryPerson(Long id, DeliveryPersonRequestDto request) {
+    Optional<AUser> userOpt = userRepository.findById(id);
+    if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
+      return null;
+    }
+
+    DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
+    deliveryPerson.setName(request.getName());
+    deliveryPerson.setUsername(request.getUsername());
+    deliveryPerson.setPhoneNumber(request.getPhoneNumber());
+    deliveryPerson.setNif(request.getNif());
+    deliveryPerson.setPassword(request.getPassword());
+
+    DeliveryPerson saved = userRepository.save(deliveryPerson);
+    return mapDeliveryToDeliveryPersonResponse(saved);
+  }
+
+  /////////////////////////////////////////////////////////////
+  /// DELETE USER METHODS
+  /////////////////////////////////////////////////////////////
+
+  @Transactional
+  public boolean deleteUser(Long id) {
+    if (userRepository.existsById(id)) {
+      AUser user = userRepository.findById(id).get();
+      if (user instanceof Admin) {
+        return deleteAdmin(user);
+      } else if (user instanceof Client) {
+        return deleteClient(user);
+      } else if (user instanceof DeliveryPerson) {
+        return deleteDeliveryPerson(user);
+      }
+    }
+    return false;
+  }
+
+  private boolean deleteDeliveryPerson(AUser user) {
+    DeliveryPerson deliveryPerson = (DeliveryPerson) user;
+    if (!orderRepository.existsByDeliveryPersonId(deliveryPerson.getId())) {
+      userRepository.deleteById(deliveryPerson.getId()); // definitively delete
+    } else if (orderRepository.existsByDeliveryPersonIdAndStatusNotIn(
+        deliveryPerson.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))) {
+      return false;
+    } else {
+      deliveryPerson.setDeletedAt(LocalDateTime.now());
+      userRepository.save(deliveryPerson);
+    }
+    return true;
+  }
+
+  private boolean deleteClient(AUser user) {
+    Client client = (Client) user;
+    if (!orderRepository.existsByClientId(client.getId())) {
+      userRepository.deleteById(client.getId()); // definitively delete
+    } else if (orderRepository.existsByClientIdAndStatusNotIn(
+        client.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))) {
+      return false; // don't delete client associated with orders in progress
+    } else {
+      client.setDeletedAt(LocalDateTime.now()); // soft delete
+      userRepository.save(client);
+    }
+    return true;
+  }
+
+  private boolean deleteAdmin(AUser user) {
+    Admin admin = (Admin) user;
+    if (!restaurantRepository.existsByAdminId(admin.getId())) {
+      userRepository.deleteById(admin.getId());
+      return true;
+    }
+    return false; // don't delete admin associated with restaurants
+  }
+
+  /////////////////////////////////////////////////////////////
+  /// MAPPER METHODS
+  /////////////////////////////////////////////////////////////
+
+  private UserResponseDto mapAUserToUserResponse(AUser user) {
+    return new UserResponseDto(
+        user.getId(), user.getUsername(), user.getName(), user.getPhoneNumber(), user.getNif());
+  }
+
+  private DeliveryPersonResponseDto mapDeliveryToDeliveryPersonResponse(
+      DeliveryPerson deliveryPerson) {
+    return new DeliveryPersonResponseDto(
+        deliveryPerson.getId(),
+        deliveryPerson.getUsername(),
+        deliveryPerson.getName(),
+        deliveryPerson.getPhoneNumber(),
+        deliveryPerson.getNif(),
+        deliveryPerson.getDeliveryPersonStatus().toString());
+  }
+
+  private ClientResponseDto mapClientToClientResponse(Client client) {
+    List<Address> addresses = client.getAddresses();
+    List<List<String>> infoAddress = new ArrayList<List<String>>();
+    for (Address address : addresses) {
+      List<String> info = List.of(address.getCity(), address.getStreet(), address.getPostalCode());
+      infoAddress.add(info);
+    }
+    return new ClientResponseDto(
+        client.getId(),
+        client.getUsername(),
+        client.getName(),
+        client.getPhoneNumber(),
+        client.getNif(),
+        infoAddress);
+  }
+}
