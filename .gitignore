@@ -4,7 +4,7 @@ target/classes/**
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
- .cache/
+.cache/
 
 ### STS ###
 .apt_generated
