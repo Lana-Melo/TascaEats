@@ -2,6 +2,7 @@ package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,7 +14,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
@@ -35,8 +37,13 @@ public class Restaurant {
   @Column(nullable = false)
   private RestaurantStatus status;
 
-  @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-  @JoinColumn(name = "address_id")
+  @Column(nullable = false)
+  private LocalTime openHours;
+
+  @Column(nullable = false)
+  private LocalTime closeHours;
+
+  @Embedded
   private Address address;
 
   @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -62,7 +69,7 @@ public class Restaurant {
 
   protected Restaurant() {}
 
-  public Restaurant(String nif, String designation, Address address, Admin admin) {
+  public Restaurant(String nif, String designation, Address address, Admin admin, LocalTime openHours, LocalTime closeHours) {
     this.nif = nif;
     this.designation = designation;
     this.status = RestaurantStatus.OPEN;
@@ -71,6 +78,8 @@ public class Restaurant {
     this.orders = new ArrayList<Order>();
     this.reviews = new ArrayList<Review>();
     this.admin = admin;
+    this.openHours = openHours;
+    this.closeHours = closeHours;
   }
 
   public Long getId() {
@@ -155,5 +164,21 @@ public class Restaurant {
 
   public void setMenu(Menu menu) {
     this.menu = menu;
+  }
+
+  public LocalTime getOpenHours() {
+    return openHours;
+  }
+
+  public void setOpenHours(LocalTime openHours) {
+    this.openHours = openHours;
+  }
+
+  public LocalTime getCloseHours() {
+      return closeHours;
+  }
+
+  public void setCloseHours(LocalTime closeHours) {
+    this.closeHours = closeHours;
   }
 }

@@ -10,6 +10,8 @@ public class RestaurantRequestDto {
   @NotBlank private String postalCode;
   @NotBlank private String street;
   @NotNull private Long adminId;
+  @NotNull private String openHours;
+  @NotNull private String closeHours;
 
   public RestaurantRequestDto() {}
 
@@ -59,5 +61,19 @@ public class RestaurantRequestDto {
 
   public void setAdminId(Long adminId) {
     this.adminId = adminId;
+  }
+  public String getOpenHours() { 
+    return openHours; 
+  }
+
+  public void setOpenHours(String openHours) { 
+    this.openHours = openHours; 
+  }
+
+  public String getCloseHours() { 
+    return closeHours; 
+  }
+  public void setCloseHours(String closeHours) { 
+    this.closeHours = closeHours; 
   }
 }

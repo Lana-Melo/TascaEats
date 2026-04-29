@@ -1,7 +1,6 @@
 package pt.ul.fc.css.tascaeats.dto.users.request;
 
 import jakarta.validation.constraints.NotBlank;
-import java.util.List;
 
 public class ClientRequestDto {
   @NotBlank private String username;
@@ -9,7 +8,9 @@ public class ClientRequestDto {
   @NotBlank private String name;
   @NotBlank private String phoneNumber;
   @NotBlank private String nif;
-  @NotBlank private List<List<String>> addresses;
+  @NotBlank private String city;
+  @NotBlank private String postalCode;
+  @NotBlank private String street;
 
   public ClientRequestDto() {}
 
@@ -45,12 +46,28 @@ public class ClientRequestDto {
     this.phoneNumber = phoneNumber;
   }
 
-  public List<List<String>> getAddresses() {
-    return addresses;
+  public String getCity() {
+    return city;
   }
 
-  public void setAddresses(List<List<String>> addresses) {
-    this.addresses = addresses;
+  public void setCity(String city) {
+    this.city = city;
+  }
+
+  public String getPostalCode() {
+    return postalCode;
+  }
+
+  public void setPostalCode(String postalCode) {
+    this.postalCode = postalCode;
+  }
+
+  public String getStreet() {
+    return street;
+  }
+
+  public void setStreet(String street) {
+    this.street = street;
   }
 
   public String getNif() {

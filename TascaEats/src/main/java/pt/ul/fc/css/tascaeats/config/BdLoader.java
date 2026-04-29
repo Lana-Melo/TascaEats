@@ -1,5 +1,6 @@
 package pt.ul.fc.css.tascaeats.config;
 
+import java.time.LocalTime;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -97,7 +98,9 @@ public class BdLoader {
                   "6060606060",
                   "Tasca do Brunao",
                   new Address("rua sesamo", "Almada", "2078-317"),
-                  admin1));
+                  admin1, 
+                  LocalTime.of(11,0), 
+                  LocalTime.of(22,0)));
 
       Restaurant cantinhoBudega =
           restaurantRepository.save(
@@ -105,7 +108,9 @@ public class BdLoader {
                   "81818181818",
                   "Cantinho da budega",
                   new Address("rua barriga cheia", "Porto", "1034-123"),
-                  admin2));
+                  admin2,
+                  LocalTime.of(11,0), 
+                  LocalTime.of(22,0)));
 
       // ── PRODUTOS — Tasca do Brunao ─────────────────────────────
       // produto 1: disponivel — vai ser usado no pedido de demo

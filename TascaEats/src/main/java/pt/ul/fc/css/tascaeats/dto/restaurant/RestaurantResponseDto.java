@@ -9,4 +9,6 @@ public record RestaurantResponseDto(
     String street,
     String city,
     String postalCode,
+    String openHours,
+    String closeHours,
     Long menuId) {}

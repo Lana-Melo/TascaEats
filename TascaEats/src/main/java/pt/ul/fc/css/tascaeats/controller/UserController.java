@@ -3,13 +3,16 @@ package pt.ul.fc.css.tascaeats.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
@@ -35,7 +38,8 @@ public class UserController {
   @ApiOperation(value = "Login", notes = "Mock login, any password is accepted if user is valid.")
   public ResponseEntity<UserResponseDto> login(@RequestBody @Valid LoginRequestDto request) {
     UserResponseDto user = userHandler.login(request.getUsername(), request.getPassword());
-    return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    // return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(user); // not found ja nao é tratado aqui, service lança exceptions
   }
 
   @PostMapping("/register/client")
@@ -43,7 +47,8 @@ public class UserController {
   public ResponseEntity<ClientResponseDto> registerClient(
       @RequestBody @Valid ClientRequestDto request) {
     ClientResponseDto user = userHandler.registerNewClient(request);
-    return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
+    // return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(user); // bad request ja nao é tratado aqui, service lança exceptions
   }
 
   @PostMapping("/register/admin")
@@ -59,6 +64,24 @@ public class UserController {
       @RequestBody @Valid DeliveryPersonRequestDto request) {
     DeliveryPersonResponseDto user = userHandler.registerNewDeliveryPerson(request);
     return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
+  }
+
+  @GetMapping("/{id}")
+  @ApiOperation(value = "Get user", notes = "Returns a user for a given id.")
+  public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
+    UserResponseDto user = userHandler.getUserById(id);
+    return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+  }
+
+  @GetMapping("/search")
+  @ApiOperation(value = "Search users", notes = "Returns a list of users filtered by a given id.")
+  public ResponseEntity<List<UserResponseDto>> searchUser(
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String userType,
+      @RequestParam(required = false) String orderNumber,
+      @RequestParam(required = false) String deliveryNumber) {
+    List<UserResponseDto> users = userHandler.searchBy(name, userType, orderNumber, deliveryNumber);
+    return users != null ? ResponseEntity.ok(users) : ResponseEntity.notFound().build();
   }
 
   @PutMapping("/client/{id}")

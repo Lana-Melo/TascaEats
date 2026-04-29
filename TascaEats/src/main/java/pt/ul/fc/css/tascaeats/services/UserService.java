@@ -1,7 +1,6 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -18,6 +17,7 @@ import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
@@ -42,7 +42,9 @@ public class UserService {
   @Transactional(readOnly = true)
   public UserResponseDto login(String username, String password) {
     Optional<AUser> userOpt = userRepository.findByUsername(username);
-    return userOpt.map(this::mapAUserToUserResponse).orElse(null);
+    return userOpt
+        .map(this::mapAUserToUserResponse)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found."));
   }
 
   /////////////////////////////////////////////////////////////
@@ -50,22 +52,11 @@ public class UserService {
   /////////////////////////////////////////////////////////////
   public ClientResponseDto registerNewClient(ClientRequestDto request) {
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      return null;
+      // return null;
+      throw new IllegalArgumentException("Username already exists.");
     }
-    List<List<String>> infoAddress = request.getAddresses();
-    ArrayList<Address> addresses = new ArrayList<Address>();
-    for (List<String> info : infoAddress) {
-      if (info.size() != 3) {
-        return null;
-      } else {
-        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
-        addresses.add(newAdd);
-      }
-    }
-    if (addresses.isEmpty()) {
-      return null;
-    }
-
+    List<Address> addresses =
+        List.of(new Address(request.getStreet(), request.getCity(), request.getPostalCode()));
     Client client =
         new Client(
             request.getUsername(),
@@ -116,6 +107,39 @@ public class UserService {
     return userOpt.map(this::mapAUserToUserResponse).orElse(null);
   }
 
+  public List<UserResponseDto> searchBy(
+      String name, String userType, String orderNumber, String deliveryNumber) {
+    List<AUser> allUsers = userRepository.findAll();
+    if (name.isEmpty() && userType.isEmpty() && orderNumber.isEmpty() && userType.isEmpty()) {
+      return allUsers.stream().map(this::mapAUserToUserResponse).toList();
+    }
+    List<AUser> users = name.isEmpty() ? allUsers : userRepository.findAllByName(name);
+    switch (userType) {
+      case "Client":
+        List<Client> orders =
+            orderNumber.isEmpty()
+                ? userRepository.findAllClients()
+                : userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
+        users.retainAll(orders);
+        break;
+      case "Delivery Person":
+        List<DeliveryPerson> delies =
+            deliveryNumber.isEmpty()
+                ? userRepository.findAllDeliveryPersons()
+                : userRepository.findDeliveryPersonsWithDeliveryNumber(
+                    Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);
+        users.retainAll(delies);
+        break;
+      case "Admin":
+        List<Admin> admins = userRepository.findAllAdmins();
+        users.retainAll(admins);
+        break;
+      default:
+        break;
+    }
+    return users.stream().map(this::mapAUserToUserResponse).toList();
+  }
+
   /////////////////////////////////////////////////////////////
   /// PUT USER METHODS
   /////////////////////////////////////////////////////////////
@@ -150,22 +174,7 @@ public class UserService {
     client.setPhoneNumber(request.getPhoneNumber());
     client.setNif(request.getNif());
     client.setPassword(request.getPassword());
-
-    List<List<String>> infoAddress = request.getAddresses();
-    ArrayList<Address> addresses = new ArrayList<Address>();
-    for (List<String> info : infoAddress) {
-      if (info.size() != 3) {
-        return null;
-      } else {
-        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
-        addresses.add(newAdd);
-      }
-    }
-    if (addresses.isEmpty()) {
-      return null;
-    }
-
-    client.setAddresses(addresses);
+    client.addAddress(new Address(request.getStreet(), request.getCity(), request.getPostalCode()));
 
     Client saved = userRepository.save(client);
     return mapClientToClientResponse(saved);
@@ -250,8 +259,22 @@ public class UserService {
   /////////////////////////////////////////////////////////////
 
   private UserResponseDto mapAUserToUserResponse(AUser user) {
+    String role = null;
+    if (user instanceof DeliveryPerson) {
+      role = "DELIVERY_PERSON";
+    } else if (user instanceof Admin) {
+      role = "ADMIN";
+    } else if (user instanceof Client) {
+      role = "CLIENT";
+    }
+
     return new UserResponseDto(
-        user.getId(), user.getUsername(), user.getName(), user.getPhoneNumber(), user.getNif());
+        user.getId(),
+        user.getUsername(),
+        user.getName(),
+        user.getPhoneNumber(),
+        user.getNif(),
+        role);
   }
 
   private DeliveryPersonResponseDto mapDeliveryToDeliveryPersonResponse(
@@ -266,18 +289,15 @@ public class UserService {
   }
 
   private ClientResponseDto mapClientToClientResponse(Client client) {
-    List<Address> addresses = client.getAddresses();
-    List<List<String>> infoAddress = new ArrayList<List<String>>();
-    for (Address address : addresses) {
-      List<String> info = List.of(address.getCity(), address.getStreet(), address.getPostalCode());
-      infoAddress.add(info);
-    }
+    Address address = client.getAddresses().get(client.getAddresses().size() - 1);
     return new ClientResponseDto(
         client.getId(),
         client.getUsername(),
         client.getName(),
         client.getPhoneNumber(),
         client.getNif(),
-        infoAddress);
+        address.getStreet(),
+        address.getCity(),
+        address.getPostalCode());
   }
 }

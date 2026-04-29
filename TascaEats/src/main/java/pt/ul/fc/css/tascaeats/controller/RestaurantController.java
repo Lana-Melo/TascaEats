@@ -34,16 +34,23 @@ public class RestaurantController {
   }
 
   @GetMapping("/search")
-  @ApiOperation(
-      value = "Search restaurants",
-      notes = "Returns a list of all restaurants filtered by name or city.")
-  public ResponseEntity<List<RestaurantResponseDto>> searchRestaurant(
-      @RequestParam(required = false) String designation,
-      @RequestParam(required = false) String city) {
-    List<RestaurantResponseDto> restaurants =
-        restaurantHandler.searchByDesignationOrCity(designation, city);
-    return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
-  }
+    @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered a given category.")
+    public ResponseEntity<List<RestaurantResponseDto>> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city, 
+        @RequestParam(required = false) String street, @RequestParam(required = false) String postalCode, @RequestParam(required = false) String cuisine, 
+        @RequestParam(required = false) String orderNumber, @RequestParam(required = false) String reviewNumber, @RequestParam(required = false) String activeHour, 
+        @RequestParam(required = false) String average) {
+        List<RestaurantResponseDto> restaurants = restaurantHandler.searchBy(designation, city, street, postalCode, cuisine, 
+                                                                          orderNumber, reviewNumber, activeHour, average); 
+        return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
+    }      
+
+  @GetMapping("/products/search")
+    @ApiOperation(value = "Search products", notes = "Returns a list of all producrs filtered a given category.")
+    public ResponseEntity<List<ProductResponseDto>> searchProduct(@RequestParam(required = false) String designation, @RequestParam(required = false) String description, 
+        @RequestParam(required = false) String availability, @RequestParam(required = false) String timesOrdered) {
+        List<ProductResponseDto> products = restaurantHandler.searchProductBy(designation, description, availability, timesOrdered); 
+        return products != null ? ResponseEntity.ok(products) : ResponseEntity.notFound().build();
+    }
 
   @GetMapping
   @ApiOperation(value = "Get all restaurants", notes = "Returns a list of all restaurants.")
