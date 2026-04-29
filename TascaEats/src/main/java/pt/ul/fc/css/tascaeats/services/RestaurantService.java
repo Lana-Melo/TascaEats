@@ -201,7 +201,10 @@ public class RestaurantService {
     return productRepository
         .findAllByRestaurantId(restaurantId)
         .map(products -> products.stream().map(this::mapProductToProductResponse).toList())
-        .orElse(Collections.emptyList());
+        .orElseThrow(
+            () ->
+                new ResourceNotFoundException(
+                    "No products found for restaurant with id: " + restaurantId));
   }
 
   /////////////////////////////////////////////////////////////

@@ -42,7 +42,9 @@ public class UserService {
   @Transactional(readOnly = true)
   public UserResponseDto login(String username, String password) {
     Optional<AUser> userOpt = userRepository.findByUsername(username);
-    return userOpt.map(this::mapAUserToUserResponse).orElse(null);
+    return userOpt
+        .map(this::mapAUserToUserResponse)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found."));
   }
 
   /////////////////////////////////////////////////////////////
@@ -50,20 +52,22 @@ public class UserService {
   /////////////////////////////////////////////////////////////
   public ClientResponseDto registerNewClient(ClientRequestDto request) {
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      return null;
+      // return null;
+      throw new IllegalArgumentException("Username already exists.");
     }
     List<List<String>> infoAddress = request.getAddresses();
     ArrayList<Address> addresses = new ArrayList<Address>();
     for (List<String> info : infoAddress) {
       if (info.size() != 3) {
-        return null;
+        // return null;
+        throw new IllegalArgumentException("Invalid address format.");
       } else {
         Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
         addresses.add(newAdd);
       }
     }
     if (addresses.isEmpty()) {
-      return null;
+      throw new IllegalArgumentException("Client must have at least one address.");
     }
 
     Client client =
