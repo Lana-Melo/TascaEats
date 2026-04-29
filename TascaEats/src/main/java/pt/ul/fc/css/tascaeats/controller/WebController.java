@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -151,12 +152,12 @@ public class WebController {
   }
 
   // UC I - buscar produtos de um restaurante
-  @GetMapping("/restaurant/{restaurantId}/products")
+  @GetMapping("/restaurant/{restaurantId}/product")
   public String restaurantProducts(
-      @RequestParam Long restaurantId, Model model, RedirectAttributes ra) {
+      @PathVariable Long restaurantId, Model model, RedirectAttributes ra) {
     try {
-      model.addAttribute("products", restaurantService.getProducts(restaurantId));
-      return "products"; // returns the products.html template
+      model.addAttribute("product", restaurantService.getProducts(restaurantId));
+      return "product"; // returns the products.html template
     } catch (RuntimeException ex) {
       ra.addFlashAttribute("error", ex.getMessage());
       return "redirect:/restaurant";
