@@ -70,31 +70,38 @@ public class RestaurantService {
       String average) {
 
     List<Restaurant> restaurants =
-        designation.isEmpty()
+        (designation == null || designation.isEmpty())
             ? restaurantRepository.findAll()
-            : restaurantRepository.findAllByDesignation(designation);
+            : restaurantRepository
+                .findByDesignationContainingIgnoreCase(designation)
+                .orElse(new ArrayList<>());
 
-    if (!city.isEmpty() && !street.isEmpty() && !postalCode.isEmpty()) {
+    if (city != null
+        && !city.isEmpty()
+        && street != null
+        && !street.isEmpty()
+        && postalCode != null
+        && !postalCode.isEmpty()) {
       Address address = new Address(street, city, postalCode);
       restaurants.retainAll(restaurantRepository.findAllByAddress(address));
     }
-    if (!cuisine.isEmpty()) {
+    if (cuisine != null && !cuisine.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByMenu_CuisineIgnoreCase(cuisine));
     }
-    if (!orderNumber.isEmpty()) {
+    if (orderNumber != null && !orderNumber.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByOrderNumber(Integer.parseInt(orderNumber)));
     }
-    if (!reviewNumber.isEmpty()) {
+    if (reviewNumber != null && !reviewNumber.isEmpty()) {
       restaurants.retainAll(
           restaurantRepository.findByReviewNumber(Integer.parseInt(reviewNumber)));
     }
-    if (!activeHour.isEmpty()) {
+    if (activeHour != null && !activeHour.isEmpty()) {
       String[] hour = activeHour.split(":");
       restaurants.retainAll(
           restaurantRepository.findByActiveHours(
               LocalTime.of(Integer.parseInt(hour[0]), Integer.parseInt(hour[1]))));
     }
-    if (!average.isEmpty()) {
+    if (average != null && !average.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByAveragePrice(Double.parseDouble(average)));
     }
 

@@ -54,7 +54,7 @@ public class WebController {
       session.setAttribute("userId", userDto.id());
       // session.setAttribute("userType", userDto.userType()); //nao sei, talvez seja preciso
       ra.addFlashAttribute("message", "Login successful!");
-      return "redirect:/restaurants"; // quem fizer login pela interface web vai sempre para os
+      return "redirect:/restaurant"; // quem fizer login pela interface web vai sempre para os
       // restaurantes
 
     } catch (
@@ -109,22 +109,49 @@ public class WebController {
   // ---- RESTAURANT ----
 
   // UC E - buscar por restaurantes
-  @GetMapping("/restaurants")
-  public String restaurants(Model model) {
-    // model.addAttribute("restaurants", restaurantService.getAllRestaurants());
-    return "restaurants"; // returns the restaurants.html template
-  }
-
-  @GetMapping("/restaurants/search")
-  public String searchRestaurants(@RequestParam String query, Model model) {
-    // model.addAttribute("restaurants", restaurantService.searchRestaurants(query));
-    return "restaurants"; // returns the restaurants.html template
-    // voltar aqui o client tem q escolher o filtro q deseja, se quer filtar por nome, cidade, tipo
-    // de comida lalalal
+  @GetMapping("/restaurant")
+  public String restaurants(
+      @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String city,
+      @RequestParam(required = false) String street,
+      @RequestParam(required = false) String postalCode,
+      @RequestParam(required = false) String cuisine,
+      @RequestParam(required = false) String orderNumber,
+      @RequestParam(required = false) String reviewNumber,
+      @RequestParam(required = false) String activeHour,
+      @RequestParam(required = false) String average,
+      HttpSession session,
+      Model model) {
+    if (session.getAttribute("userId") == null) return "redirect:/login";
+    try {
+      model.addAttribute("designation", designation);
+      model.addAttribute("city", city);
+      model.addAttribute("cuisine", cuisine);
+      model.addAttribute("orderNumber", orderNumber);
+      model.addAttribute("reviewNumber", reviewNumber);
+      model.addAttribute("activeHour", activeHour);
+      model.addAttribute("average", average);
+      model.addAttribute(
+          "restaurant",
+          restaurantService.searchBy(
+              designation,
+              city,
+              street,
+              postalCode,
+              cuisine,
+              orderNumber,
+              reviewNumber,
+              activeHour,
+              average));
+      return "restaurant";
+    } catch (RuntimeException ex) {
+      model.addAttribute("error", ex.getMessage());
+      return "restaurant";
+    }
   }
 
   // UC I - buscar produtos de um restaurante
-  @GetMapping("/restaurants/{restaurantId}/products")
+  @GetMapping("/restaurant/{restaurantId}/products")
   public String restaurantProducts(
       @RequestParam Long restaurantId, Model model, RedirectAttributes ra) {
     try {
@@ -132,7 +159,7 @@ public class WebController {
       return "products"; // returns the products.html template
     } catch (RuntimeException ex) {
       ra.addFlashAttribute("error", ex.getMessage());
-      return "redirect:/restaurants";
+      return "redirect:/restaurant";
     }
   }
 
@@ -163,7 +190,7 @@ public class WebController {
       return "redirect:/orders"; // returns the orders.html template
     } catch (RuntimeException ex) { // mudar serviços pra lidar com as exceptions
       ra.addFlashAttribute("error", ex.getMessage());
-      return "redirect:/restaurants";
+      return "redirect:/restaurant";
     }
   }
 
