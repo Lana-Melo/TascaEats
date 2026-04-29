@@ -89,6 +89,20 @@ public class MenuService {
     return menuOpt.map(this::mapMenuToMenuResponse).orElse(null);
   }
 
+  public List<MenuResponseDto> searchBy(String name, String productNumber, String average) {
+    List<Menu> menus = name.isEmpty()? menuRepository.findAll() : menuRepository.findAllByName(name);
+
+    if (!productNumber.isEmpty()) {
+      menus.retainAll(menuRepository.findByProductNumber(Integer.parseInt(productNumber)));
+    }
+    if (!average.isEmpty()) {
+      menus.retainAll(menuRepository.findByAveragePrice(Double.parseDouble(average)));
+    }
+    return menus.stream()
+                .map(this::mapMenuToMenuResponse)
+                .toList();
+  }
+
   /////////////////////////////////////////////////////////////
   ///  DELETE MENU METHODS
   /////////////////////////////////////////////////////////////

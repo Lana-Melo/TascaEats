@@ -67,19 +67,19 @@ public class UserController {
   }
 
   @GetMapping("/{id}")
-    @ApiOperation(value = "Get user", notes = "Returns a user for a given id.")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {  
-        UserResponseDto user = userHandler.getUserById(id);
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
-    }
+  @ApiOperation(value = "Get user", notes = "Returns a user for a given id.")
+  public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {  
+    UserResponseDto user = userHandler.getUserById(id);
+    return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+  }
 
-    @GetMapping("/search")
-    @ApiOperation(value = "Search users", notes = "Returns a list users filtered by a given.")
-    public ResponseEntity<List<UserResponseDto>> searchUser(@RequestParam(required = false) String name, @RequestParam(required = false) String userType, 
-                                                         @RequestParam(required = false) String orderNumber, @RequestParam(required = false) String deliveryNumber) {  
-        List<UserResponseDto> users = userHandler.searchBy(name, userType, orderNumber, deliveryNumber);
-        return users != null ? ResponseEntity.ok(users) : ResponseEntity.notFound().build();
-    }
+  @GetMapping("/search")
+  @ApiOperation(value = "Search users", notes = "Returns a list of users filtered by a given id.")
+  public ResponseEntity<List<UserResponseDto>> searchUser(@RequestParam(required = false) String name, @RequestParam(required = false) String userType, 
+                                                  @RequestParam(required = false) String orderNumber, @RequestParam(required = false) String deliveryNumber) {  
+    List<UserResponseDto> users = userHandler.searchBy(name, userType, orderNumber, deliveryNumber);
+    return users != null ? ResponseEntity.ok(users) : ResponseEntity.notFound().build();
+  }
 
   @PutMapping("/client/{id}")
   @ApiOperation(value = "Update client", notes = "Updates an existing client.")

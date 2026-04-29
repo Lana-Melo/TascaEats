@@ -2,6 +2,9 @@ package pt.ul.fc.css.tascaeats.controller;
 
 import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
@@ -40,10 +44,18 @@ public class MenuController {
     return menu != null ? ResponseEntity.ok(menu) : ResponseEntity.notFound().build();
   }
 
-  @GetMapping("/{id}/")
+  @GetMapping("/{id}")
   @ApiOperation(value = "Get menu", notes = "Returns a menu for a given id.")
   public ResponseEntity<MenuResponseDto> getMenu(@PathVariable Long id) {
     MenuResponseDto menu = menuHandler.getMenu(id);
+    return menu != null ? ResponseEntity.ok(menu) : ResponseEntity.notFound().build();
+  }
+
+  @GetMapping("/search")
+  @ApiOperation(value = "Search menus", notes = "Returns a list of menus filtered by a given category.")
+  public ResponseEntity<List<MenuResponseDto>> searchUser(@RequestParam(required = false) String name, 
+      @RequestParam(required = false) String productType, @RequestParam(required = false) String average) {  
+    List<MenuResponseDto> menu = menuHandler.searchBy(name, productType, average);
     return menu != null ? ResponseEntity.ok(menu) : ResponseEntity.notFound().build();
   }
 

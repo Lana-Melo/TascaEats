@@ -34,7 +34,7 @@ public class RestaurantController {
   }
 
   @GetMapping("/search")
-    @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered by name or city.")
+    @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered a given category.")
     public ResponseEntity<List<RestaurantResponseDto>> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city, 
         @RequestParam(required = false) String street, @RequestParam(required = false) String postalCode, @RequestParam(required = false) String cuisine, 
         @RequestParam(required = false) String orderNumber, @RequestParam(required = false) String reviewNumber, @RequestParam(required = false) String activeHour, 
@@ -45,7 +45,7 @@ public class RestaurantController {
     }      
 
   @GetMapping("/products/search")
-    @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered by name or city.")
+    @ApiOperation(value = "Search products", notes = "Returns a list of all producrs filtered a given category.")
     public ResponseEntity<List<ProductResponseDto>> searchProduct(@RequestParam(required = false) String designation, @RequestParam(required = false) String description, 
         @RequestParam(required = false) String availability, @RequestParam(required = false) String timesOrdered) {
         List<ProductResponseDto> products = restaurantHandler.searchProductBy(designation, description, availability, timesOrdered); 
