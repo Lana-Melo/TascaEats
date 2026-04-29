@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package javafx;
+
+option java_package = "pt.ul.fc.css.tascaeats.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "TascaEatsProto";
+
+service SaleSysService {
+
+  rpc Login (LoginRequest) returns (UserResponse);
+}
+
+message Empty {}
+
+message LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message UserResponse {
+  int64 id = 1;
+  string username = 2;
+  string name = 3;
+  string phoneNumber = 4;
+  string nif = 5;
+}

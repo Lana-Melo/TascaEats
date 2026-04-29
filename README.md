@@ -29,13 +29,13 @@ Core features include:
 
 ---
 
-## Domain Model 
+## Domain Model
 ![Domain Model](DiagramaCSS.png)
 
 ## Running the Project
 
 The project has been tested and runs correctly on **Windows** and **Ubuntu**, provided **Docker is installed.**
- 
+
 > **macOS users:** Running the project on Mac would require a `docker-compose.override.yml` with platform-specific adjustments. Although one team member used such a file during development, we decided not to include it in the repository. The project is therefore intended to be run on Windows or Ubuntu only.
 
 From the project root, run:
@@ -98,6 +98,14 @@ The controller currently returns `404` both when a user is not found and when de
 
 ---
 
-## Demonstration Video 
+### **Contrato gRPC (`tascaeats.proto`):**
+
+| RPC | Request | Response | Descrição |
+|---|---|---|---|
+| `Login` | `LoginRequest` | `UserResponse` | Realiza login de um usuário |
+
+---
+
+## Demonstration Video
 
 > https://drive.google.com/drive/folders/1WTw22PetVufq2TXbswLgPwXUsL_1rdIK?usp=drive_link
