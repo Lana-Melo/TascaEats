@@ -41,7 +41,9 @@ public class UserService {
   @Transactional(readOnly = true)
   public UserResponseDto login(String username, String password) {
     Optional<AUser> userOpt = userRepository.findByUsername(username);
-    return userOpt.map(this::mapAUserToUserResponse).orElse(null);
+    return userOpt
+        .map(this::mapAUserToUserResponse)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found."));
   }
 
   /////////////////////////////////////////////////////////////
@@ -49,9 +51,23 @@ public class UserService {
   /////////////////////////////////////////////////////////////
   public ClientResponseDto registerNewClient(ClientRequestDto request) {
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      return null;
+      // return null;
+      throw new IllegalArgumentException("Username already exists.");
     }
-    List<Address> addresses = List.of(new Address(request.getStreet(), request.getCity(), request.getPostalCode()));
+    List<List<String>> infoAddress = request.getAddresses();
+    ArrayList<Address> addresses = new ArrayList<Address>();
+    for (List<String> info : infoAddress) {
+      if (info.size() != 3) {
+        // return null;
+        throw new IllegalArgumentException("Invalid address format.");
+      } else {
+        Address newAdd = new Address(info.get(0), info.get(1), info.get(2));
+        addresses.add(newAdd);
+      }
+    }
+    if (addresses.isEmpty()) {
+      throw new IllegalArgumentException("Client must have at least one address.");
+    }
 
     Client client =
         new Client(
@@ -103,21 +119,27 @@ public class UserService {
     return userOpt.map(this::mapAUserToUserResponse).orElse(null);
   }
 
-  public List<UserResponseDto> searchBy(String name, String userType, String orderNumber, String deliveryNumber) {
+  public List<UserResponseDto> searchBy(
+      String name, String userType, String orderNumber, String deliveryNumber) {
     List<AUser> allUsers = userRepository.findAll();
     if (name.isEmpty() && userType.isEmpty() && orderNumber.isEmpty() && userType.isEmpty()) {
-      return allUsers.stream()
-                     .map(this::mapAUserToUserResponse)
-                     .toList();
+      return allUsers.stream().map(this::mapAUserToUserResponse).toList();
     }
-    List<AUser> users = name.isEmpty()? allUsers : userRepository.findAllByName(name);
+    List<AUser> users = name.isEmpty() ? allUsers : userRepository.findAllByName(name);
     switch (userType) {
       case "Client":
-        List<Client> orders = orderNumber.isEmpty()? userRepository.findAllClients() : userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
+        List<Client> orders =
+            orderNumber.isEmpty()
+                ? userRepository.findAllClients()
+                : userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
         users.retainAll(orders);
         break;
       case "Delivery Person":
-        List<DeliveryPerson> delies = deliveryNumber.isEmpty()? userRepository.findAllDeliveryPersons() : userRepository.findDeliveryPersonsWithDeliveryNumber(Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);
+        List<DeliveryPerson> delies =
+            deliveryNumber.isEmpty()
+                ? userRepository.findAllDeliveryPersons()
+                : userRepository.findDeliveryPersonsWithDeliveryNumber(
+                    Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);
         users.retainAll(delies);
         break;
       case "Admin":
@@ -127,9 +149,7 @@ public class UserService {
       default:
         break;
     }
-    return users.stream()
-                .map(this::mapAUserToUserResponse)
-                .toList();
+    return users.stream().map(this::mapAUserToUserResponse).toList();
   }
 
   /////////////////////////////////////////////////////////////
@@ -267,7 +287,7 @@ public class UserService {
   }
 
   private ClientResponseDto mapClientToClientResponse(Client client) {
-    Address address = client.getAddresses().get(client.getAddresses().size()-1);
+    Address address = client.getAddresses().get(client.getAddresses().size() - 1);
     return new ClientResponseDto(
         client.getId(),
         client.getUsername(),
@@ -275,7 +295,7 @@ public class UserService {
         client.getPhoneNumber(),
         client.getNif(),
         address.getStreet(),
-        address.getCity(), 
+        address.getCity(),
         address.getPostalCode());
   }
 }

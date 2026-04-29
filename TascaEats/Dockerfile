@@ -2,7 +2,11 @@ FROM maven:3.9.14-eclipse-temurin-17-alpine as builder
 ADD pom.xml .
 RUN mvn dependency:go-offline
 COPY . .
+<<<<<<< HEAD:Dockerfile
+RUN mvn clean package -DskipTests
+=======
 RUN mvn clean package -Dmaven.test.skip=true
+>>>>>>> main:TascaEats/Dockerfile
 
 FROM docker.io/eclipse-temurin:17
 VOLUME /tmp
