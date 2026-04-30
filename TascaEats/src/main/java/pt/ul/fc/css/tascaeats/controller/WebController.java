@@ -168,8 +168,34 @@ public class WebController {
 
   // ------- ORDER -------
 
+  @GetMapping("/order")
+  public String orderPage(
+      @RequestParam(required = false) Long restaurantId,
+      @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String description,
+      @RequestParam(required = false) String availability,
+      @RequestParam(required = false) String timesOrdered,
+      HttpSession session,
+      Model model) {
+    if (session.getAttribute("userId") == null) return "redirect:/login";
+    try {
+      model.addAttribute("designation", designation);
+      model.addAttribute("description", description);
+      model.addAttribute("availability", availability);
+      model.addAttribute("timesOrdered", timesOrdered);
+      model.addAttribute(
+          "products",
+          restaurantService.searchProductBy(
+              restaurantId, designation, description, availability, timesOrdered));
+      return "order";
+    } catch (RuntimeException ex) {
+      model.addAttribute("error", ex.getMessage());
+      return "order";
+    }
+  }
+
   // UC J - criar pedido
-  @PostMapping("/orders")
+  @PostMapping("/order")
   public String createOrder(
       @RequestParam Long restaurantId,
       @RequestParam List<Long> productIds,
@@ -188,7 +214,7 @@ public class WebController {
       orderRequest.setPostalCode(postalCode);
       orderService.createOrder(orderRequest);
       ra.addFlashAttribute("message", "Order created successfully!");
-      return "redirect:/orders"; // returns the orders.html template
+      return "redirect:/order"; // returns the orders.html template
     } catch (RuntimeException ex) { // mudar serviços pra lidar com as exceptions
       ra.addFlashAttribute("error", ex.getMessage());
       return "redirect:/restaurant";
