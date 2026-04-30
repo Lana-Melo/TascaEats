@@ -154,10 +154,28 @@ public class WebController {
   // UC I - buscar produtos de um restaurante
   @GetMapping("/restaurant/{restaurantId}/product")
   public String restaurantProducts(
-      @PathVariable Long restaurantId, Model model, RedirectAttributes ra) {
+      @PathVariable Long restaurantId,
+      @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String description,
+      @RequestParam(required = false) String availability,
+      @RequestParam(required = false) String timesOrdered,
+      Model model,
+      RedirectAttributes ra) {
+
     try {
-      model.addAttribute("product", restaurantService.getProducts(restaurantId));
-      return "product"; // returns the products.html template
+      model.addAttribute("restaurantId", restaurantId);
+      model.addAttribute("designation", designation);
+      model.addAttribute("description", description);
+      model.addAttribute("availability", availability);
+      model.addAttribute("timesOrdered", timesOrdered);
+
+      model.addAttribute(
+          "products",
+          restaurantService.searchProductBy(
+              restaurantId, designation, description, availability, timesOrdered));
+
+      return "product";
+
     } catch (RuntimeException ex) {
       ra.addFlashAttribute("error", ex.getMessage());
       return "redirect:/restaurant";
@@ -170,15 +188,18 @@ public class WebController {
 
   @GetMapping("/order")
   public String orderPage(
-      @RequestParam(required = false) Long restaurantId,
       @RequestParam(required = false) String designation,
       @RequestParam(required = false) String description,
       @RequestParam(required = false) String availability,
       @RequestParam(required = false) String timesOrdered,
+      @RequestParam(required = false) String newOrder,
       HttpSession session,
       Model model) {
     if (session.getAttribute("userId") == null) return "redirect:/login";
+    Long clientId = (Long) session.getAttribute("userId");
     try {
+      model.addAttribute("orders", orderService.getOrdersByClient(clientId));
+      model.addAttribute("newOrder", newOrder);
       model.addAttribute("designation", designation);
       model.addAttribute("description", description);
       model.addAttribute("availability", availability);
@@ -186,7 +207,7 @@ public class WebController {
       model.addAttribute(
           "products",
           restaurantService.searchProductBy(
-              restaurantId, designation, description, availability, timesOrdered));
+              null, designation, description, availability, timesOrdered));
       return "order";
     } catch (RuntimeException ex) {
       model.addAttribute("error", ex.getMessage());
@@ -197,7 +218,6 @@ public class WebController {
   // UC J - criar pedido
   @PostMapping("/order")
   public String createOrder(
-      @RequestParam Long restaurantId,
       @RequestParam List<Long> productIds,
       @RequestParam String city,
       @RequestParam String street,
