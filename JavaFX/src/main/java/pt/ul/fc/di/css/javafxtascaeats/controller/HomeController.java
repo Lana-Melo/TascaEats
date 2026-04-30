@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import pt.ul.fc.di.css.javafxtascaeats.model.CurrentUser;
 import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
 public class HomeController implements ControllerWithModel {
@@ -22,17 +23,25 @@ public class HomeController implements ControllerWithModel {
   @FXML private Button restaurantsButton;
   @FXML private TextFlow clientMessageFlow;
 
-  public void initData(String name, String role) {
+  public void initData(CurrentUser currentUser) {
+    String name = currentUser.getName();
+    String role =
+        switch (currentUser.getClass().getSimpleName()) {
+          case "CurrentClient" -> "Client";
+          case "CurrentDeliveryPerson" -> "Delivery Person";
+          case "CurrentAdmin" -> "Admin";
+          default -> "UNKNOWN";
+        };
     welcomeLabel.setText("Welcome, " + name);
     roleLabel.setText("You're a " + role);
 
-    if ("CLIENT".equals(role)) {
+    if ("Client".equals(role)) {
       clientMessageFlow.setVisible(true);
       clientMessageFlow.setManaged(true);
-    } else if ("DELIVERY_PERSON".equals(role)) {
+    } else if ("Delivery Person".equals(role)) {
       ordersButton.setVisible(true);
       ordersButton.setManaged(true);
-    } else if ("ADMIN".equals(role)) {
+    } else if ("Admin".equals(role)) {
       restaurantsButton.setVisible(true);
       restaurantsButton.setManaged(true);
     }
@@ -63,7 +72,7 @@ public class HomeController implements ControllerWithModel {
     if (model.getCurrentUser() != null) {
       this.stage = stage;
       this.model = model;
-      initData(model.getCurrentUser().getName(), model.getCurrentUser().getRole());
+      initData(model.getCurrentUser());
     } else {
       welcomeLabel.setText("No user logged in");
     }

@@ -100,9 +100,11 @@ The controller currently returns `404` both when a user is not found and when de
 
 ### **Contrato gRPC (`tascaeats.proto`):**
 
-| RPC | Request | Response | Descrição |
+| RPC | Request | Response | Description |
 |---|---|---|---|
-| `Login` | `LoginRequest` | `UserResponse` | Realiza login de um usuário |
+| `Login` | `LoginRequest` | `UserResponse` | Execute an user login |
+| `RegisterAdmin` | `RegisterRequest` | `UserResponse` | Register a new admin |
+| `RegisterDeliveryPerson` | `RegisterRequest` | `DeliveryPersonResponse` | Register a new delivery person |
 
 ---
 

@@ -11,6 +11,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
+import pt.ul.fc.di.css.javafxtascaeats.model.CurrentAdmin;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentUser;
 import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
@@ -72,38 +73,40 @@ public class RegisterController implements ControllerWithModel {
     }
   }
 
-  private void handleDeliveryPersonRegister(
+  private void handleAdminRegister(
       String username, String password, String name, String phoneNumber, String nif) {
     UserResponse response = ApiClient.registerAdmin(username, password, name, phoneNumber, nif);
 
-    CurrentUser currentUser = new CurrentUser();
+    CurrentUser currentUser = new CurrentAdmin();
     currentUser.setId(response.getId());
     currentUser.setName(response.getName());
     currentUser.setPhoneNumber(response.getPhoneNumber());
     currentUser.setNif(response.getNif());
-    currentUser.setRole(response.getRole());
     currentUser.setUsername(response.getUsername());
+
     model.setCurrentUser(currentUser);
 
     UtilController.switchScene(
         stage, "/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml", "Home", model);
   }
 
-  private void handleAdminRegister(
+  private void handleDeliveryPersonRegister(
       String username, String password, String name, String phoneNumber, String nif) {
-    UserResponse response = ApiClient.registerAdmin(username, password, name, phoneNumber, nif);
+    // todo
+    /*
+    DeliveryPersonResponse response = ApiClient.registerDeliveryPerson(username, password, name, phoneNumber, nif);
 
-    CurrentUser currentUser = new CurrentUser();
-    currentUser.setId(response.getId());
-    currentUser.setName(response.getName());
-    currentUser.setPhoneNumber(response.getPhoneNumber());
-    currentUser.setNif(response.getNif());
-    currentUser.setRole(response.getRole());
-    currentUser.setUsername(response.getUsername());
-    model.setCurrentUser(currentUser);
+    CurrentDeliveryPerson currentDeliveryPerson = new CurrentDeliveryPerson();
+    currentDeliveryPerson.setId(response.getId());
+    currentDeliveryPerson.setName(response.getName());
+    currentDeliveryPerson.setPhoneNumber(response.getPhoneNumber());
+    currentDeliveryPerson.setNif(response.getNif());
+    currentDeliveryPerson.setRole(response.getRole());
+    currentDeliveryPerson.setUsername(response.getUsername());
+    model.setCurrentClient(currentDeliveryPerson);
 
     UtilController.switchScene(
-        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml", "Home", model);
+        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml", "Home", model);*/
   }
 
   @FXML

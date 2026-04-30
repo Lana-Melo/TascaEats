@@ -10,7 +10,6 @@ import javafx.beans.property.StringProperty;
 public class CurrentUser {
 
   private final LongProperty id = new SimpleLongProperty();
-  private final StringProperty role = new SimpleStringProperty();
   private final StringProperty username = new SimpleStringProperty();
   private final StringProperty name = new SimpleStringProperty();
   private final StringProperty phoneNumber = new SimpleStringProperty();
@@ -19,10 +18,6 @@ public class CurrentUser {
   // getters de propriedade
   public LongProperty idProperty() {
     return id;
-  }
-
-  public StringProperty roleProperty() {
-    return role;
   }
 
   public StringProperty usernameProperty() {
@@ -48,14 +43,6 @@ public class CurrentUser {
 
   public void setId(long v) {
     id.set(v);
-  }
-
-  public String getRole() {
-    return role.get();
-  }
-
-  public void setRole(String v) {
-    role.set(v);
   }
 
   public String getUsername() {

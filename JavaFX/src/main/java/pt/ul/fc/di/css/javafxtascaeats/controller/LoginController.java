@@ -8,6 +8,9 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
+import pt.ul.fc.di.css.javafxtascaeats.model.CurrentAdmin;
+import pt.ul.fc.di.css.javafxtascaeats.model.CurrentClient;
+import pt.ul.fc.di.css.javafxtascaeats.model.CurrentDeliveryPerson;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentUser;
 import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
@@ -34,12 +37,24 @@ public class LoginController implements ControllerWithModel {
     try {
       UserResponse response = ApiClient.login(email, "mock"); // login é mockado
 
-      CurrentUser currentUser = new CurrentUser();
+      CurrentUser currentUser;
+      switch (response.getRole()) {
+        case "CLIENT":
+          currentUser = new CurrentClient();
+          break;
+        case "DELIVERY_PERSON":
+          currentUser = new CurrentDeliveryPerson();
+          break;
+        case "ADMIN":
+          currentUser = new CurrentAdmin();
+          break;
+        default:
+          throw new IllegalArgumentException("Unknown role: " + response.getRole());
+      }
       currentUser.setId(response.getId());
       currentUser.setName(response.getName());
       currentUser.setPhoneNumber(response.getPhoneNumber());
       currentUser.setNif(response.getNif());
-      currentUser.setRole(response.getRole());
       currentUser.setUsername(response.getUsername());
 
       // guarda os dados do user logado no model, para que possam ser acedidos por outros
