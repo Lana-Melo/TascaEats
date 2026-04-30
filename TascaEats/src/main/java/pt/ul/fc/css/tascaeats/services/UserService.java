@@ -109,22 +109,19 @@ public class UserService {
 
   public List<UserResponseDto> searchBy(
       String name, String userType, String orderNumber, String deliveryNumber) {
-    List<AUser> allUsers = userRepository.findAll();
-    if (name.isEmpty() && userType.isEmpty() && orderNumber.isEmpty() && userType.isEmpty()) {
-      return allUsers.stream().map(this::mapAUserToUserResponse).toList();
-    }
-    List<AUser> users = name.isEmpty() ? allUsers : userRepository.findAllByName(name);
+    List<AUser> users = name.isEmpty() || name == null
+                      ? userRepository.findAll() : userRepository.findAllByNameContainingIgnoreCase(name);
     switch (userType) {
       case "Client":
         List<Client> orders =
-            orderNumber.isEmpty()
+            orderNumber.isEmpty() || orderNumber == null
                 ? userRepository.findAllClients()
                 : userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
         users.retainAll(orders);
         break;
       case "Delivery Person":
         List<DeliveryPerson> delies =
-            deliveryNumber.isEmpty()
+            deliveryNumber.isEmpty() || deliveryNumber == null
                 ? userRepository.findAllDeliveryPersons()
                 : userRepository.findDeliveryPersonsWithDeliveryNumber(
                     Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);

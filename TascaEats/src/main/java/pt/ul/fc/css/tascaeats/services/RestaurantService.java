@@ -25,7 +25,6 @@ import pt.ul.fc.css.tascaeats.entities.Review;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
-import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.MenuRepository;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
@@ -236,31 +235,30 @@ public class RestaurantService {
   }
 
   public List<ProductResponseDto> getProducts(Long restaurantId) {
-    return productRepository
-        .findAllByRestaurantId(restaurantId)
-        .map(products -> products.stream().map(this::mapProductToProductResponse).toList())
-        .orElseThrow(
-            () ->
-                new ResourceNotFoundException(
-                    "No products found for restaurant with id: " + restaurantId));
+    return productRepository.findAll().stream()
+        .map(this::mapProductToProductResponse)
+        .toList();
   }
 
   public List<ProductResponseDto> searchProductBy(
-      String designation, String description, String availability, String timesOrdered) {
+      Long restaurantId, String designation, String description, String availability, String timesOrdered) {
     List<Product> products =
-        designation.isEmpty()
+        designation.isEmpty() || designation == null
             ? productRepository.findAll()
-            : productRepository.findAllByDesignation(designation);
+            : productRepository.findByDesignationContainingIgnoreCase(designation);
 
-    if (!description.isEmpty()) {
-      products.retainAll(productRepository.findAllByDescription(description));
+    if (description != null && !description.isEmpty()) {
+      products.retainAll(productRepository.findByDescriptionContainingIgnoreCase(description));
     }
-    if (!availability.isEmpty()) {
+    if (availability != null && !availability.isEmpty()) {
       products.retainAll(
-          productRepository.findAllByAvailability(ProductStatus.valueOf(availability)));
+          productRepository.findByAvailabilityContainingIgnoreCase(ProductStatus.valueOf(availability)));
     }
-    if (!timesOrdered.isEmpty()) {
+    if (timesOrdered != null && !timesOrdered.isEmpty()) {
       products.retainAll(productRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));
+    }
+    if (restaurantId != null) {
+      products.retainAll(productRepository.findAllByRestaurantId(restaurantId));
     }
     return products.stream().map(this::mapProductToProductResponse).toList();
   }

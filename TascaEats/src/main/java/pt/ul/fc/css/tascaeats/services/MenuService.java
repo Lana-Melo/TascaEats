@@ -94,12 +94,13 @@ public class MenuService {
   }
 
   public List<MenuResponseDto> searchBy(String name, String productNumber, String average) {
-    List<Menu> menus = name.isEmpty()? menuRepository.findAll() : menuRepository.findAllByName(name);
+    List<Menu> menus = name.isEmpty() || name == null
+        ? menuRepository.findAll() : menuRepository.findByNameContainingIgnoreCase(name);
 
-    if (!productNumber.isEmpty()) {
+    if (!productNumber.isEmpty() && productNumber != null) {
       menus.retainAll(menuRepository.findByProductNumber(Integer.parseInt(productNumber)));
     }
-    if (!average.isEmpty()) {
+    if (!average.isEmpty() && average != null) {
       menus.retainAll(menuRepository.findByAveragePrice(Double.parseDouble(average)));
     }
     return menus.stream()

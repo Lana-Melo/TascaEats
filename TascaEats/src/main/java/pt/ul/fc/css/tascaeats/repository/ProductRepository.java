@@ -1,7 +1,6 @@
 package pt.ul.fc.css.tascaeats.repository;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,11 +12,11 @@ import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 public interface ProductRepository extends JpaRepository<Product, Long> {
   boolean existsByIdAndRestaurantId(Long productId, Long restaurantId);
 
-  Optional<List<Product>> findAllByRestaurantId(Long restaurantId);
+  List<Product> findAllByRestaurantId(Long restaurantId);
 
-  List<Product> findAllByDesignation(String designation);
-  List<Product> findAllByDescription(String description);
-  List<Product> findAllByAvailability(ProductStatus availability);
+  List<Product> findByDesignationContainingIgnoreCase(String designation);
+  List<Product> findByDescriptionContainingIgnoreCase(String description);
+  List<Product> findByAvailabilityContainingIgnoreCase(ProductStatus availability);
 
   @Query("""
       SELECT p
