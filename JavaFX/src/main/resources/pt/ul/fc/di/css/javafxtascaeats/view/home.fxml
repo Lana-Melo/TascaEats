@@ -23,6 +23,7 @@
       <menus>
         <Menu mnemonicParsing="false" text="Menu">
           <items>
+            <MenuItem mnemonicParsing="false" text="My Profile" onAction="#handleMyProfile"/>
             <MenuItem mnemonicParsing="false" text="About TascaEats" />
             <MenuItem mnemonicParsing="false" text="Logout" onAction="#handleLogout"/>
           </items>

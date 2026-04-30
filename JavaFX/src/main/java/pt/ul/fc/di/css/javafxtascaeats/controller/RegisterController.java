@@ -9,9 +9,11 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
+import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentAdmin;
+import pt.ul.fc.di.css.javafxtascaeats.model.CurrentDeliveryPerson;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentUser;
 import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
@@ -92,21 +94,20 @@ public class RegisterController implements ControllerWithModel {
 
   private void handleDeliveryPersonRegister(
       String username, String password, String name, String phoneNumber, String nif) {
-    // todo
-    /*
-    DeliveryPersonResponse response = ApiClient.registerDeliveryPerson(username, password, name, phoneNumber, nif);
 
-    CurrentDeliveryPerson currentDeliveryPerson = new CurrentDeliveryPerson();
-    currentDeliveryPerson.setId(response.getId());
-    currentDeliveryPerson.setName(response.getName());
-    currentDeliveryPerson.setPhoneNumber(response.getPhoneNumber());
-    currentDeliveryPerson.setNif(response.getNif());
-    currentDeliveryPerson.setRole(response.getRole());
-    currentDeliveryPerson.setUsername(response.getUsername());
-    model.setCurrentClient(currentDeliveryPerson);
+    DeliveryPersonResponse response =
+        ApiClient.registerDeliveryPerson(username, password, name, phoneNumber, nif);
+
+    CurrentUser currentUser = new CurrentDeliveryPerson();
+    currentUser.setId(response.getId());
+    currentUser.setName(response.getName());
+    currentUser.setPhoneNumber(response.getPhoneNumber());
+    currentUser.setNif(response.getNif());
+    currentUser.setUsername(response.getUsername());
+    model.setCurrentUser(currentUser);
 
     UtilController.switchScene(
-        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml", "Home", model);*/
+        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml", "Home", model);
   }
 
   @FXML

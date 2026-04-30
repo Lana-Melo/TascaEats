@@ -58,6 +58,15 @@ public class HomeController implements ControllerWithModel {
   }
 
   @FXML
+  void handleMyProfile(ActionEvent event) {
+    UtilController.switchScene(
+        stage,
+        "/pt/ul/fc/di/css/javafxtascaeats/view/profile-details.fxml",
+        "Profile Details",
+        model);
+  }
+
+  @FXML
   void handleLogout(ActionEvent event) {
     // limpa os dados do user logado no model
     model.setCurrentUser(null);

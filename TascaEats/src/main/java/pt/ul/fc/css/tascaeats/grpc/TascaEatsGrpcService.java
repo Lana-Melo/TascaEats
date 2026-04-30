@@ -4,12 +4,15 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
 import pt.ul.fc.css.tascaeats.services.UserService;
 
+// representa o servidor gRPC, onde implementamos os métodos definidos no .proto
 @GrpcService
 public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceImplBase {
 
@@ -56,6 +59,33 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       }
 
       UserResponse response = grpcMapper.mapUserResponseDtoToResponse(user);
+
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+
+    } catch (IllegalArgumentException e) {
+      responseObserver.onError(Status.Code.ALREADY_EXISTS.toStatus().asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Register Delivery Person ─────────────────────────────────────────────
+  @Override
+  public void registerDeliveryPerson(
+      RegisterRequest request, StreamObserver<DeliveryPersonResponse> responseObserver) {
+    try {
+      DeliveryPersonRequestDto requestDto =
+          grpcMapper.mapDeliveryPersonRegisterReqToReqDto(request);
+
+      DeliveryPersonResponseDto user = userService.registerNewDeliveryPerson(requestDto);
+
+      if (user == null) {
+        throw new IllegalArgumentException();
+      }
+
+      DeliveryPersonResponse response = grpcMapper.mapDeliveryPersonResponseDtoToResponse(user);
 
       responseObserver.onNext(response);
       responseObserver.onCompleted();

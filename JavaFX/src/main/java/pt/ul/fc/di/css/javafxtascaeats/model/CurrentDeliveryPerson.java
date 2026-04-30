@@ -9,4 +9,16 @@ public class CurrentDeliveryPerson extends CurrentUser {
   public CurrentDeliveryPerson() {
     super();
   }
+
+  public StringProperty statusProperty() {
+    return status;
+  }
+
+  public String getStatus() {
+    return status.get();
+  }
+
+  public void setStatus(String v) {
+    status.set(v);
+  }
 }

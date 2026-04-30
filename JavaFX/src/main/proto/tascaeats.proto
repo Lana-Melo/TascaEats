@@ -10,6 +10,7 @@ service TascaEatsService {
 
   rpc Login (LoginRequest) returns (UserResponse);
   rpc RegisterAdmin (RegisterRequest) returns (UserResponse);
+  rpc RegisterDeliveryPerson (RegisterRequest) returns (DeliveryPersonResponse);
 }
 
 message Empty {}
@@ -25,7 +26,7 @@ message UserResponse {
   string name = 3;
   string phoneNumber = 4;
   string nif = 5;
-  string role = 6;
+  string role = 6; // este campo só tem utilidade para o caso do login
 }
 
 message RegisterRequest {
@@ -34,4 +35,14 @@ message RegisterRequest {
   string name = 3;
   string phoneNumber = 4;
   string nif = 5;
+}
+
+message DeliveryPersonResponse {
+  int64 id = 1;
+  string username = 2;
+  string password = 3;
+  string name = 4;
+  string phoneNumber = 5;
+  string nif = 6;
+  string status = 7;
 }

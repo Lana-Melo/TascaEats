@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.RegisterRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
@@ -45,6 +46,26 @@ public class ApiClient {
             .build();
     try {
       return stub.registerAdmin(request);
+    } catch (StatusRuntimeException e) {
+      if (e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
+        throw new IllegalArgumentException("Username already exists");
+      }
+      throw e;
+    }
+  }
+
+  public static DeliveryPersonResponse registerDeliveryPerson(
+      String username, String password, String name, String phoneNumber, String nif) {
+    RegisterRequest request =
+        RegisterRequest.newBuilder()
+            .setUsername(username)
+            .setPassword(password)
+            .setName(name)
+            .setPhoneNumber(phoneNumber)
+            .setNif(nif)
+            .build();
+    try {
+      return stub.registerDeliveryPerson(request);
     } catch (StatusRuntimeException e) {
       if (e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
         throw new IllegalArgumentException("Username already exists");
