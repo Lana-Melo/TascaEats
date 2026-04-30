@@ -52,6 +52,8 @@
               <font><Font name="AppleGothic Regular" size="13.0"/></font>
             </PasswordField>
 
+            <Label fx:id="errorLabel" textFill="red" visible="false" managed="false" wrapText="true"/>
+
             <Button defaultButton="true" mnemonicParsing="false"
                     text="Login" textAlignment="CENTER" onAction="#handleLogin"
                     maxWidth="Infinity">

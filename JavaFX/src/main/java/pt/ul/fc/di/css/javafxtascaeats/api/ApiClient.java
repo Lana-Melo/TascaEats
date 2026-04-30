@@ -2,6 +2,8 @@ package pt.ul.fc.di.css.javafxtascaeats.api;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
@@ -18,9 +20,15 @@ public class ApiClient {
       TascaEatsServiceGrpc.newBlockingStub(channel);
 
   public static UserResponse login(String username, String password) {
-    System.out.println("TENTOU LOGIN");
     LoginRequest request =
         LoginRequest.newBuilder().setUsername(username).setPassword(password).build();
-    return stub.login(request);
+    try {
+      return stub.login(request);
+    } catch (StatusRuntimeException e) { // servidor não conseguiu autenticar
+      if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+        throw new IllegalArgumentException("Invalid credentials");
+      }
+      throw e;
+    }
   }
 }

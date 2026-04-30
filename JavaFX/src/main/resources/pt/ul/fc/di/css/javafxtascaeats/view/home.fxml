@@ -11,6 +11,8 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.text.Text?>
 
 <VBox prefHeight="400.0" prefWidth="640.0"
       xmlns="http://javafx.com/javafx/26"
@@ -19,9 +21,10 @@
   <children>
     <MenuBar VBox.vgrow="NEVER">
       <menus>
-        <Menu mnemonicParsing="false" text="Help">
+        <Menu mnemonicParsing="false" text="Menu">
           <items>
             <MenuItem mnemonicParsing="false" text="About TascaEats" />
+            <MenuItem mnemonicParsing="false" text="Logout" onAction="#handleLogout"/>
           </items>
         </Menu>
       </menus>
@@ -38,22 +41,18 @@
               <Insets top="20" bottom="20"/>
             </padding>
 
-            <Label fx:id="welcomeLabel">
+            <Label fx:id="welcomeLabel" wrapText="true" textAlignment="CENTER" style="-fx-font-weight: bold;">
               <font><Font name="AppleGothic Regular" size="22.0"/></font>
             </Label>
 
-            <Label fx:id="roleLabel">
-              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            <Label fx:id="roleLabel" wrapText="true" textAlignment="LEFT">
+              <font><Font name="AppleGothic Regular" size="9.0"/></font>
             </Label>
 
             <!-- CLIENT -->
-            <Label fx:id="clientMessageLabel" wrapText="true" textAlignment="CENTER"
-                   text="Sorry, go to TascaEats website to continue navigate as a Client. This portal is designed to admins and delivery persons."
-                   visible="false" managed="false">
-              <font><Font name="AppleGothic Regular" size="12.0"/></font>
-            </Label>
-            <Hyperlink fx:id="clientLink" text="http://localhost:8080/"
-                       visible="false" managed="false"/>
+            <TextFlow visible="false" managed="false" fx:id="clientMessageFlow" textAlignment="CENTER">
+                <Text text="This portal is designed to admins and delivery persons.&#10;Go to TascaEats website to continue navigating as a Client."/>
+            </TextFlow>
 
             <!-- DELIVERY_PERSON -->
             <Button fx:id="ordersButton" text="See my orders" maxWidth="Infinity"

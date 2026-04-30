@@ -5,6 +5,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import pt.ul.fc.di.css.javafxtascaeats.controller.LoginController;
+import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
 public class Main extends Application {
 
@@ -13,11 +15,12 @@ public class Main extends Application {
     String prefix = "/pt/ul/fc/di/css/javafxtascaeats/view/";
 
     BorderPane root = new BorderPane();
-    FXMLLoader initLoader = new FXMLLoader(getClass().getResource(prefix + "init.fxml"));
+    FXMLLoader initLoader = new FXMLLoader(getClass().getResource(prefix + "login.fxml"));
     root.setCenter(initLoader.load());
 
-    // O controller já é instanciado pelo FXMLLoader via fx:controller no FXML
-    // LoginController loginController = initLoader.getController();
+    DataModel modal = new DataModel();
+    LoginController loginController = initLoader.getController();
+    loginController.initModel(primaryStage, modal);
 
     Scene scene = new Scene(root, 280, 320);
     primaryStage.setScene(scene);
