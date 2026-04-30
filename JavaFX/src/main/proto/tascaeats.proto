@@ -11,6 +11,7 @@ service TascaEatsService {
   rpc Login (LoginRequest) returns (UserResponse);
   rpc RegisterAdmin (RegisterRequest) returns (UserResponse);
   rpc RegisterDeliveryPerson (RegisterRequest) returns (DeliveryPersonResponse);
+  rpc DeleteAccount (DeleteAccountRequest) returns (Empty);
 }
 
 message Empty {}
@@ -45,4 +46,8 @@ message DeliveryPersonResponse {
   string phoneNumber = 5;
   string nif = 6;
   string status = 7;
+}
+
+message DeleteAccountRequest {
+  int64 id = 1;
 }

@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.RegisterRequest;
@@ -70,6 +71,15 @@ public class ApiClient {
       if (e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
         throw new IllegalArgumentException("Username already exists");
       }
+      throw e;
+    }
+  }
+
+  public static void deleteAccount(Long userId) {
+    DeleteAccountRequest request = DeleteAccountRequest.newBuilder().setId(userId).build();
+    try {
+      stub.deleteAccount(request);
+    } catch (StatusRuntimeException e) {
       throw e;
     }
   }

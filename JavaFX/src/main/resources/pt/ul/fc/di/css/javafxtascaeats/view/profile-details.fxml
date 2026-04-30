@@ -97,18 +97,21 @@
               <font><Font name="AppleGothic Regular" size="13.0"/></font>
             </Button>
 
+            <Label fx:id="errorLabel" textFill="red" wrapText="true"
+                   visible="false" managed="false">
+              <font><Font name="AppleGothic Regular" size="12.0"/></font>
+            </Label>
 
             <Button defaultButton="true" text="Update" maxWidth="Infinity"
                     onAction="#handleUpdate">
               <font><Font name="AppleGothic Regular" size="13.0"/></font>
             </Button>
 
-            <Label fx:id="errorLabel" textFill="red" wrapText="true"
-                   visible="false" managed="false">
-              <font><Font name="AppleGothic Regular" size="12.0"/></font>
-            </Label>
-
-
+            <Button text="Delete Account" maxWidth="Infinity"
+                    onAction="#handleDeleteAccount"
+                    style="-fx-text-fill: red;">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </Button>
 
           </VBox>
         </VBox>

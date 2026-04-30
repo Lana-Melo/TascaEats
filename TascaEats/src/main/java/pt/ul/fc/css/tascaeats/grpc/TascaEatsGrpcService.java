@@ -97,4 +97,18 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
     }
   }
+
+  // ─── Delete Account ─────────────────────────────────────────────
+  @Override
+  public void deleteAccount(DeleteAccountRequest request, StreamObserver<Empty> responseObserver) {
+    try {
+      Long userId = request.getId();
+      userService.deleteUser(userId);
+      responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
 }

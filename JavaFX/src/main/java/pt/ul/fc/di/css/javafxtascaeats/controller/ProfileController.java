@@ -3,12 +3,15 @@ package pt.ul.fc.di.css.javafxtascaeats.controller;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentDeliveryPerson;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentUser;
@@ -70,6 +73,30 @@ public class ProfileController implements ControllerWithModel {
   @FXML
   void handleMyAddresses(ActionEvent event) {
     System.out.println("My addresses clicked");
+  }
+
+  @FXML
+  void handleDeleteAccount(ActionEvent event) {
+    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+    confirm.setTitle("Delete Account");
+    confirm.setHeaderText("Are you sure you want to delete your account?");
+    confirm.setContentText("This action cannot be undone.");
+
+    confirm
+        .showAndWait()
+        .ifPresent(
+            response -> {
+              if (response == ButtonType.OK) {
+                try {
+                  ApiClient.deleteAccount(model.getCurrentUser().getId());
+                  model.setCurrentUser(null);
+                  UtilController.switchScene(
+                      stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
+                } catch (Exception e) {
+                  showError("An error occurred, please try again later.");
+                }
+              }
+            });
   }
 
   @FXML

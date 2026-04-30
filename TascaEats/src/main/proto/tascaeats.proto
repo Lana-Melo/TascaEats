@@ -11,6 +11,11 @@ service TascaEatsService {
   rpc Login (LoginRequest) returns (UserResponse);
   rpc RegisterAdmin (RegisterRequest) returns (UserResponse);
   rpc RegisterDeliveryPerson (RegisterRequest) returns (DeliveryPersonResponse);
+  rpc DeleteAccount (DeleteAccountRequest) returns (Empty);
+}
+
+message DeleteAccountRequest {
+  int64 id = 1;
 }
 
 message Empty {}
