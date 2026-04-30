@@ -3,6 +3,7 @@ package pt.ul.fc.css.tascaeats.services;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
@@ -145,6 +146,15 @@ public class OrderService {
     Order saved = orderRepository.save(order);
 
     return mapOrderToOrderResponse(saved);
+  }
+
+  /////////////////////////////////////////////////////////////
+  ///  GET ORDER METHODS
+  /////////////////////////////////////////////////////////////
+  public List<OrderResponseDto> getOrdersByClient(Long clientId) {
+    return orderRepository.findByClientId(clientId).stream()
+        .map(this::mapOrderToOrderResponse)
+        .toList();
   }
 
   /////////////////////////////////////////////////////////////

@@ -18,7 +18,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
   List<Product> findByDescriptionContainingIgnoreCase(String description);
 
-  List<Product> findByAvailabilityContainingIgnoreCase(ProductStatus availability);
+  List<Product> findByAvailability(ProductStatus availability);
 
   @Query(
       """
