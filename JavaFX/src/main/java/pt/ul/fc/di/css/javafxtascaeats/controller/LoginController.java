@@ -63,6 +63,12 @@ public class LoginController implements ControllerWithModel {
     }
   }
 
+  @FXML
+  void handleCreateAccount(ActionEvent event) {
+    UtilController.switchScene(
+        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/register.fxml", "Register", model);
+  }
+
   @Override
   public void initModel(Stage stage, DataModel model) {
     if (this.model != null) {

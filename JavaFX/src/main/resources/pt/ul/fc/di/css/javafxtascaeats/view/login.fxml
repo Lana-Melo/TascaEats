@@ -60,7 +60,7 @@
               <font><Font name="AppleGothic Regular" size="13.0"/></font>
             </Button>
 
-            <Hyperlink text="Create account" textFill="#a1a1a1"/>
+            <Hyperlink text="Create account" textFill="#a1a1a1" onAction="#handleCreateAccount"/>
           </VBox>
 
         </VBox>

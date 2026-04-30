@@ -9,6 +9,7 @@ option java_outer_classname = "TascaEatsProto";
 service TascaEatsService {
 
   rpc Login (LoginRequest) returns (UserResponse);
+  rpc RegisterAdmin (RegisterRequest) returns (UserResponse);
 }
 
 message Empty {}
@@ -25,4 +26,12 @@ message UserResponse {
   string phoneNumber = 4;
   string nif = 5;
   string role = 6;
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+  string name = 3;
+  string phoneNumber = 4;
+  string nif = 5;
 }
