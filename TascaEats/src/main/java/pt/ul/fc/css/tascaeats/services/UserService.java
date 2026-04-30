@@ -52,7 +52,6 @@ public class UserService {
   /////////////////////////////////////////////////////////////
   public ClientResponseDto registerNewClient(ClientRequestDto request) {
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      // return null;
       throw new IllegalArgumentException("Username already exists.");
     }
     List<Address> addresses =
@@ -71,7 +70,7 @@ public class UserService {
 
   public UserResponseDto registerNewAdmin(UserRequestDto request) {
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      return null;
+      throw new IllegalArgumentException("Username already exists.");
     }
     Admin admin =
         new Admin(
@@ -86,7 +85,7 @@ public class UserService {
 
   public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      return null;
+      throw new IllegalArgumentException("Username already exists.");
     }
     DeliveryPerson deliveryPerson =
         new DeliveryPerson(
@@ -144,7 +143,7 @@ public class UserService {
   public UserResponseDto updateAdmin(Long id, UserRequestDto request) {
     Optional<AUser> userOpt = userRepository.findById(id);
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {
-      return null;
+      throw new ResourceNotFoundException("User not found");
     }
 
     Admin admin = (Admin) userOpt.get();
@@ -162,7 +161,7 @@ public class UserService {
   public ClientResponseDto updateClient(Long id, ClientRequestDto request) {
     Optional<AUser> userOpt = userRepository.findById(id);
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {
-      return null;
+      throw new ResourceNotFoundException("User not found");
     }
 
     Client client = (Client) userOpt.get();
@@ -181,7 +180,7 @@ public class UserService {
   public DeliveryPersonResponseDto updateDeliveryPerson(Long id, DeliveryPersonRequestDto request) {
     Optional<AUser> userOpt = userRepository.findById(id);
     if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
-      return null;
+      throw new ResourceNotFoundException("User not found");
     }
 
     DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
