@@ -204,10 +204,12 @@ public class WebController {
       model.addAttribute("description", description);
       model.addAttribute("availability", availability);
       model.addAttribute("timesOrdered", timesOrdered);
-      model.addAttribute(
-          "products",
-          restaurantService.searchProductBy(
-              null, designation, description, availability, timesOrdered));
+      if (newOrder != null) {
+        model.addAttribute(
+            "products",
+            restaurantService.searchProductBy(
+                null, designation, description, availability, timesOrdered));
+      }
       return "order";
     } catch (RuntimeException ex) {
       model.addAttribute("error", ex.getMessage());
@@ -242,6 +244,16 @@ public class WebController {
   }
 
   // UC N - cancelar pedido
+  @PostMapping("/order/{id}/cancel")
+  public String cancelOrder(@PathVariable Long id, RedirectAttributes ra) {
+    try {
+      orderService.cancelOrder(id);
+      ra.addFlashAttribute("message", "Order cancelled successfully!");
+    } catch (RuntimeException ex) {
+      ra.addFlashAttribute("error", ex.getMessage());
+    }
+    return "redirect:/order";
+  }
 
   // ---------------------
 

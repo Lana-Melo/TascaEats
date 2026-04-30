@@ -128,8 +128,17 @@
                 </div>
             </div>
 
-            <a th:href="@{/order(newOrder=true, designation=${designation}, description=${description}, availability=${availability}, timesOrdered=${timesOrdered})}"
-               class="btn btn-outline-secondary btn-sm mb-3">Search</a>
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="updateSearch()">Search</button>
+            <script>
+            function updateSearch() {
+                const params = new URLSearchParams();
+                params.set('newOrder', 'true');
+                document.querySelectorAll('[name=designation], [name=description], [name=availability], [name=timesOrdered]').forEach(el => {
+                    if (el.value) params.set(el.name, el.value);
+                });
+                window.location.href = '/order?' + params.toString();
+            }
+            </script>
 
             <!-- Lista de produtos com checkbox -->
             <div class="row row-cols-1 row-cols-md-3 g-3 mb-4" th:if="${products != null and not #lists.isEmpty(products)}">
@@ -157,7 +166,6 @@
 
 
 
-            <input type="hidden" name="newOrder" value="true"/>
             <button type="submit" class="btn btn-primary">Create Order</button>
             <a href="/order" class="btn btn-outline-secondary ms-2">Cancel</a>
 
