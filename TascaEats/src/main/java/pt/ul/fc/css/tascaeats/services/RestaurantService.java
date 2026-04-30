@@ -73,8 +73,7 @@ public class RestaurantService {
         (designation == null || designation.isEmpty())
             ? restaurantRepository.findAll()
             : restaurantRepository
-                .findByDesignationContainingIgnoreCase(designation)
-                .orElse(new ArrayList<>());
+                .findByDesignationContainingIgnoreCase(designation);
 
     if (city != null
         && !city.isEmpty()
@@ -82,11 +81,10 @@ public class RestaurantService {
         && !street.isEmpty()
         && postalCode != null
         && !postalCode.isEmpty()) {
-      Address address = new Address(street, city, postalCode);
-      restaurants.retainAll(restaurantRepository.findAllByAddress(address));
+      restaurants.retainAll(restaurantRepository.findByAddressCityContainingIgnoreCaseAndAddressStreetContainingIgnoreCaseAndAddressPostalCodeContainingIgnoreCase(city, street, postalCode));
     }
     if (cuisine != null && !cuisine.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByMenu_CuisineIgnoreCase(cuisine));
+      restaurants.retainAll(restaurantRepository.findByMenuCuisineContainingIgnoreCase(cuisine));
     }
     if (orderNumber != null && !orderNumber.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByOrderNumber(Integer.parseInt(orderNumber)));
