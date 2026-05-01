@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
+import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.services.OrderService;
@@ -66,6 +67,13 @@ public class WebController {
       model.addAttribute("error", ex.getMessage());
       return "login";
     }
+  }
+
+  @GetMapping("/logout")
+  public String logout(HttpSession session, RedirectAttributes ra) {
+    session.invalidate();
+    ra.addFlashAttribute("message", "Logged out successfully!");
+    return "redirect:/login";
   }
 
   @GetMapping("/welcome")
@@ -268,6 +276,30 @@ public class WebController {
       ra.addFlashAttribute("error", ex.getMessage());
     }
     return "redirect:/order";
+  }
+
+  @PostMapping("/restaurant/{restaurantId}/review")
+  public String addReview(
+      @PathVariable Long restaurantId,
+      @RequestParam int rating,
+      @RequestParam String comment,
+      HttpSession session,
+      RedirectAttributes ra) {
+    try {
+      Long clientId = (Long) session.getAttribute("userId");
+
+      if (clientId == null) return "redirect:/login";
+
+      ReviewRequestDto reviewRequest = new ReviewRequestDto();
+      reviewRequest.setRating(rating);
+      reviewRequest.setComment(comment);
+      reviewRequest.setClientId(clientId);
+      restaurantService.addReview(restaurantId, reviewRequest);
+      ra.addFlashAttribute("message", "Review added successfully!");
+    } catch (RuntimeException ex) {
+      ra.addFlashAttribute("error", ex.getMessage());
+    }
+    return "redirect:/restaurant";
   }
 
   // ---------------------

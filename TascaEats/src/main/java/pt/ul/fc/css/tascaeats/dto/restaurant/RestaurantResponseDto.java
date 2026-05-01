@@ -11,4 +11,6 @@ public record RestaurantResponseDto(
     String postalCode,
     String openHours,
     String closeHours,
-    Long menuId) {}
+    Long menuId,
+    Double averageRating,
+    int reviewCount) {}
