@@ -10,7 +10,7 @@ import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 public interface OrderRepository extends JpaRepository<Order, Long> {
   List<Order> findByClientId(Long clientId);
 
-  boolean existsByProductsId(Long productId);
+  boolean existsByProductItemsId(Long productId);
 
   boolean existsByClientId(Long clientId);
 
@@ -20,5 +20,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   boolean existsByDeliveryPersonIdAndStatusNotIn(Long id, List<OrderStatus> of);
 
-  boolean existsByProductsIdAndStatusNotIn(Long productId, List<OrderStatus> of);
+  boolean existsByProductItemsIdAndStatusNotIn(Long productId, List<OrderStatus> of);
 }

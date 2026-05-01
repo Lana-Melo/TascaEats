@@ -87,7 +87,7 @@ public class UserController {
   public ResponseEntity<UserResponseDto> updateClient(
       @PathVariable Long id, @RequestBody @Valid UserRequestDto request) {
     UserResponseDto client = userHandler.updateClient(id, request);
-    return client != null ? ResponseEntity.ok(client) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(client);
   }
 
   @PutMapping("/admin/{id}")
@@ -103,9 +103,7 @@ public class UserController {
   public ResponseEntity<DeliveryPersonResponseDto> updateDeliveryPerson(
       @PathVariable Long id, @RequestBody @Valid DeliveryPersonRequestDto request) {
     DeliveryPersonResponseDto deliveryPerson = userHandler.updateDeliveryPerson(id, request);
-    return deliveryPerson != null
-        ? ResponseEntity.ok(deliveryPerson)
-        : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(deliveryPerson);
   }
 
   @DeleteMapping("/{id}")

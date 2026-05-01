@@ -19,7 +19,7 @@ import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.MBWay;
 import pt.ul.fc.css.tascaeats.entities.Order;
-import pt.ul.fc.css.tascaeats.entities.Product;
+import pt.ul.fc.css.tascaeats.entities.ProductItem;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
@@ -29,7 +29,7 @@ import pt.ul.fc.css.tascaeats.exceptions.IncompleteInputException;
 import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
-import pt.ul.fc.css.tascaeats.repository.ProductRepository;
+import pt.ul.fc.css.tascaeats.repository.ProductItemRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 
@@ -39,17 +39,17 @@ public class OrderService {
   private final OrderRepository orderRepository;
   private final UserRepository userRepository;
   private final RestaurantRepository restaurantRepository;
-  private final ProductRepository productRepository;
+  private final ProductItemRepository productItemRepository;
 
   public OrderService(
       OrderRepository orderRepository,
       UserRepository userRepository,
       RestaurantRepository restaurantRepository,
-      ProductRepository productRepository) {
+      ProductItemRepository productItemRepository) {
     this.orderRepository = orderRepository;
     this.userRepository = userRepository;
     this.restaurantRepository = restaurantRepository;
-    this.productRepository = productRepository;
+    this.productItemRepository = productItemRepository;
   }
 
   /////////////////////////////////////////////////////////////
@@ -64,17 +64,17 @@ public class OrderService {
 
     Client client = (Client) userOpt.get();
 
-    ArrayList<Product> products = new ArrayList<>();
+    ArrayList<ProductItem> productItems = new ArrayList<>();
     ArrayList<Restaurant> restaurants = new ArrayList<>();
     for (Long id : request.getProductIds()) {
-      Optional<Product> prodOpt = productRepository.findById(id);
+      Optional<ProductItem> prodOpt = productItemRepository.findById(id);
       if (prodOpt.isEmpty()
           || prodOpt.get().getStatus() == ProductStatus.SOLD_OUT
           || prodOpt.get().getRestaurant().getStatus() == RestaurantStatus.CLOSED) {
         throw new ResourceNotFoundException("Product not found or unavailable");
       }
 
-      products.add(prodOpt.get());
+      productItems.add(prodOpt.get());
       if (!restaurants.contains(prodOpt.get().getRestaurant())) {
         restaurants.add(prodOpt.get().getRestaurant());
       }
@@ -87,7 +87,7 @@ public class OrderService {
     }
     Address address = new Address(request.getStreet(), request.getCity(), request.getPostalCode());
 
-    Order order = new Order(client, products, address);
+    Order order = new Order(client, productItems, address);
 
     Order saved = orderRepository.save(order);
 
@@ -122,21 +122,21 @@ public class OrderService {
     APayment payment;
     switch (request.getPaymentMethod()) {
       case "MBWay":
-        if (order.getTotalValue() != request.getAmount() || request.getPaymentInfo().equals(null)) {
+        if (Math.abs(order.getTotalValue() - request.getAmount()) >= 0.01 || request.getPaymentInfo() == null) {
           throw new RequirementsNotMetException(
               "Amount does not match payment/Payment info not included");
         }
         payment = new MBWay(request.getAmount(), order, request.getPaymentInfo());
         break;
       case "Card":
-        if (order.getTotalValue() != request.getAmount() || request.getPaymentInfo().equals(null)) {
+        if (Math.abs(order.getTotalValue() - request.getAmount()) >= 0.01 || request.getPaymentInfo() == null) {
           throw new RequirementsNotMetException(
               "Amount does not match payment/Payment info not included");
         }
         payment = new Card(request.getAmount(), order, request.getPaymentInfo());
         break;
       case "Cash":
-        if (order.getTotalValue() > request.getAmount() || !request.getPaymentInfo().equals(null)) {
+        if (order.getTotalValue() > request.getAmount() || request.getPaymentInfo() != null) {
           throw new RequirementsNotMetException(
               "Amount does not cover payment/Redundant info included");
         }
@@ -209,7 +209,7 @@ public class OrderService {
         }
         break;
       default:
-        throw new IllegalArgumentException("Invalid order status");
+        throw new IllegalArgumentException("Invalid or unchangeable order status");
     }
 
     if (ordStat == OrderStatus.DELIVERED && order.getDelivery() == null) {
@@ -271,7 +271,7 @@ public class OrderService {
       orderRepository.deleteById(id);
       return true;
     }
-    return true;
+    return false;
   }
 
   /////////////////////////////////////////////////////////////
@@ -281,7 +281,7 @@ public class OrderService {
   private OrderResponseDto mapOrderToOrderResponse(Order order) {
     ArrayList<Long> productIds = new ArrayList<Long>();
     ArrayList<Long> restaurantIds = new ArrayList<Long>();
-    for (Product p : order.getProducts()) {
+    for (ProductItem p : order.getProductItems()) {
       productIds.add(p.getId());
       if (!restaurantIds.contains(p.getRestaurant().getId())) {
         restaurantIds.add(p.getRestaurant().getId());

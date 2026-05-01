@@ -104,26 +104,29 @@ public class UserService {
   /////////////////////////////////////////////////////////////
   public UserResponseDto getUserById(Long id) {
     Optional<AUser> userOpt = userRepository.findById(id);
-    return userOpt.map(this::mapAUserToUserResponse).orElse(null);
+    if (userOpt.isEmpty()) {
+      throw new ResourceNotFoundException("User not found");
+    }
+    return mapAUserToUserResponse(userOpt.get());
   }
 
   public List<UserResponseDto> searchBy(
       String name, String userType, String orderNumber, String deliveryNumber) {
     List<AUser> users =
-        name.isEmpty() || name == null
+        name == null || name.isEmpty()
             ? userRepository.findAll()
             : userRepository.findAllByNameContainingIgnoreCase(name);
     switch (userType) {
       case "Client":
         List<Client> orders =
-            orderNumber.isEmpty() || orderNumber == null
+            orderNumber == null || orderNumber.isEmpty()
                 ? userRepository.findAllClients()
                 : userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
         users.retainAll(orders);
         break;
       case "Delivery Person":
         List<DeliveryPerson> delies =
-            deliveryNumber.isEmpty() || deliveryNumber == null
+            deliveryNumber == null || deliveryNumber.isEmpty()
                 ? userRepository.findAllDeliveryPersons()
                 : userRepository.findDeliveryPersonsWithDeliveryNumber(
                     Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);

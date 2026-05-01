@@ -47,7 +47,7 @@ public class Restaurant {
   private Address address;
 
   @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Product> products;
+  private List<ProductItem> productItems;
 
   @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
   private List<Review> reviews;
@@ -74,7 +74,7 @@ public class Restaurant {
     this.designation = designation;
     this.status = RestaurantStatus.OPEN;
     this.address = address;
-    this.products = new ArrayList<Product>();
+    this.productItems = new ArrayList<ProductItem>();
     this.orders = new ArrayList<Order>();
     this.reviews = new ArrayList<Review>();
     this.admin = admin;
@@ -114,12 +114,16 @@ public class Restaurant {
     return address;
   }
 
-  public List<Product> getProducts() {
-    return products;
+  public List<ProductItem> getProductItems() {
+    return productItems;
   }
 
-  public void setProducts(List<Product> products) {
-    this.products = products;
+  public void setProductItems(List<ProductItem> productItems) {
+    this.productItems = productItems;
+  }
+
+  public void addProductItem(ProductItem productItems) {
+    this.productItems.add(productItems);
   }
 
   public List<Review> getReviews() {
@@ -140,10 +144,6 @@ public class Restaurant {
 
   public void setAdmin(Admin admin) {
     this.admin = admin;
-  }
-
-  public void addProduct(Product product) {
-    this.products.add(product);
   }
 
   public List<Order> getOrders() {

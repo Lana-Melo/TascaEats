@@ -24,6 +24,7 @@ import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
@@ -63,8 +64,12 @@ class OrderServiceTest {
     return new Client("client", "pass", "Client", "912345678", "123456789", List.of(address()));
   }
 
-  private Product product(Restaurant r) {
-    return new Product(9.99, "Mussarela", "Pizza", r);
+  private Menu menu() {
+    return new Menu("menu", "italian", "italian");
+  }
+
+  private Product product(Menu m) {
+    return new Product(9.99, "Mussarela", "Pizza", m);
   }
 
   // --- CREATE ORDER ---

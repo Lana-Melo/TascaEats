@@ -14,12 +14,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import pt.ul.fc.css.tascaeats.dto.product.ProductRequestDto;
-import pt.ul.fc.css.tascaeats.dto.product.ProductResponseDto;
+
+import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewResponseDto;
+import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.services.RestaurantService;
 
@@ -34,29 +35,22 @@ public class RestaurantController {
   }
 
   @GetMapping("/search")
-    @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered a given category.")
-    public ResponseEntity<List<RestaurantResponseDto>> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city, 
-        @RequestParam(required = false) String street, @RequestParam(required = false) String postalCode, @RequestParam(required = false) String cuisine, 
-        @RequestParam(required = false) String orderNumber, @RequestParam(required = false) String reviewNumber, @RequestParam(required = false) String activeHour, 
-        @RequestParam(required = false) String average) {
-        List<RestaurantResponseDto> restaurants = restaurantHandler.searchBy(designation, city, street, postalCode, cuisine, 
-                                                                          orderNumber, reviewNumber, activeHour, average); 
-        return ResponseEntity.ok(restaurants);
-    }      
+  @ApiOperation(value = "Search restaurants", notes = "Returns a list of all restaurants filtered a given category.")
+  public ResponseEntity<List<RestaurantResponseDto>> searchRestaurant(@RequestParam(required = false) String designation, @RequestParam(required = false) String city, 
+      @RequestParam(required = false) String street, @RequestParam(required = false) String postalCode, @RequestParam(required = false) String cuisine, 
+      @RequestParam(required = false) String orderNumber, @RequestParam(required = false) String reviewNumber, @RequestParam(required = false) String activeHour, 
+      @RequestParam(required = false) String average) {
+      List<RestaurantResponseDto> restaurants = restaurantHandler.searchBy(designation, city, street, postalCode, cuisine, 
+                                                                        orderNumber, reviewNumber, activeHour, average); 
+      return ResponseEntity.ok(restaurants);
+  }      
 
-  @GetMapping("/products/search")
-    @ApiOperation(value = "Search products", notes = "Returns a list of all producrs filtered a given category.")
-    public ResponseEntity<List<ProductResponseDto>> searchProduct(@PathVariable(required = false) Long id, @RequestParam(required = false) String designation, @RequestParam(required = false) String description, 
-        @RequestParam(required = false) String availability, @RequestParam(required = false) String timesOrdered) {
-        List<ProductResponseDto> products = restaurantHandler.searchProductBy(id, designation, description, availability, timesOrdered); 
-        return ResponseEntity.ok(products);
-    }
-
-  @GetMapping
-  @ApiOperation(value = "Get all restaurants", notes = "Returns a list of all restaurants.")
-  public ResponseEntity<List<RestaurantResponseDto>> getAllRestaurants() {
-    List<RestaurantResponseDto> restaurants = restaurantHandler.getAllRestaurants();
-    return ResponseEntity.ok(restaurants);
+  @GetMapping("/{id}/products/search")
+  @ApiOperation(value = "Search products", notes = "Returns a list of all products filtered a given category.")
+  public ResponseEntity<List<ProductItemResponseDto>> searchProduct(@RequestParam(required = false) Long id, @RequestParam(required = false) String designation, @RequestParam(required = false) String description, 
+      @RequestParam(required = false) String availability, @RequestParam(required = false) String timesOrdered) {
+      List<ProductItemResponseDto> products = restaurantHandler.searchProductBy(id, designation, description, availability, timesOrdered); 
+      return ResponseEntity.ok(products);
   }
 
   @PostMapping
@@ -75,39 +69,22 @@ public class RestaurantController {
     return ResponseEntity.ok(restaurant);
   }
 
-  @PostMapping("/{id}/products")
-  @ApiOperation(value = "Add product to restaurant", notes = "Adds a new product")
-  public ResponseEntity<ProductResponseDto> addProduct(
-      @PathVariable Long id, @RequestBody @Valid ProductRequestDto request) {
-    ProductResponseDto product = restaurantHandler.addProduct(id, request);
-    return ResponseEntity.ok(product);
-  }
-
   @PutMapping("/{id}/products/{productId}")
-  @ApiOperation(value = "Update product", notes = "Updates an existing product")
-  public ResponseEntity<ProductResponseDto> updateProduct(
+  @ApiOperation(value = "Update product status", notes = "Updates status of an existing product")
+  public ResponseEntity<ProductItemResponseDto> updateProductStatus(
       @PathVariable Long id,
       @PathVariable Long productId,
-      @RequestBody @Valid ProductRequestDto request) {
-    ProductResponseDto product = restaurantHandler.updateProduct(id, productId, request);
+      @RequestParam ProductStatus status) {
+    ProductItemResponseDto product = restaurantHandler.updateProductStatus(id, productId, status);
     return ResponseEntity.ok(product);
   }
 
   @DeleteMapping("/{id}/products/{productId}")
   @ApiOperation(value = "Delete product", notes = "Deletes an existing product")
-  public ResponseEntity<Void> deleteProduct(@PathVariable Long id, @PathVariable Long productId) {
-    return restaurantHandler.deleteProduct(id, productId)
+  public ResponseEntity<Void> deleteProductItem(@PathVariable Long id, @PathVariable Long productId) {
+    return restaurantHandler.deleteProductItem(id, productId)
         ? ResponseEntity.noContent().build()
         : ResponseEntity.notFound().build();
-  }
-
-  @GetMapping("/{id}/products")
-  @ApiOperation(
-      value = "Get restaurant products",
-      notes = "Returns a list of products for a given restaurant.")
-  public ResponseEntity<List<ProductResponseDto>> getProducts(@PathVariable Long id) {
-    List<ProductResponseDto> products = restaurantHandler.getProducts(id);
-    return ResponseEntity.ok(products);
   }
 
   @PostMapping("/{id}/reviews")

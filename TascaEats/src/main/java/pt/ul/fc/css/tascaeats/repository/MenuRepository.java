@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 
@@ -12,7 +13,7 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     List<Menu> findByNameContainingIgnoreCase(String name);
 
     @Query ("SELECT m FROM Menu m WHERE SIZE(m.products) = :productNumber")
-    List<Menu> findByProductNumber(int product);
+    List<Menu> findByProductNumber(@Param("productNumber") int productNumber);
 
     @Query("""
       SELECT m FROM Menu m
@@ -20,5 +21,5 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
       GROUP BY m
       HAVING AVG(p.price) <= :average
     """)
-    List<Menu> findByAveragePrice(double average);
+    List<Menu> findByAveragePrice(@Param("average") double average);
 }

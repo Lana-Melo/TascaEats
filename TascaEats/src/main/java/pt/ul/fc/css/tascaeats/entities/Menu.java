@@ -48,11 +48,11 @@ public class Menu {
 
   protected Menu() {}
 
-  public Menu(String name, String cuisine, String description, List<Product> products) {
+  public Menu(String name, String cuisine, String description) {
     this.name = name;
     this.cuisine = cuisine;
     this.description = description;
-    this.products = products;
+    this.products = new ArrayList<>();
     this.restaurants = new ArrayList<>();
   }
 
