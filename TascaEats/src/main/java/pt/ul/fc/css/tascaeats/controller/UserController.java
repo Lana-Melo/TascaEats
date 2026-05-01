@@ -38,8 +38,7 @@ public class UserController {
   @ApiOperation(value = "Login", notes = "Mock login, any password is accepted if user is valid.")
   public ResponseEntity<UserResponseDto> login(@RequestBody @Valid LoginRequestDto request) {
     UserResponseDto user = userHandler.login(request.getUsername(), request.getPassword());
-    // return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
-    return ResponseEntity.ok(user); // not found ja nao é tratado aqui, service lança exceptions
+    return ResponseEntity.ok(user);
   }
 
   @PostMapping("/register/client")
@@ -47,15 +46,14 @@ public class UserController {
   public ResponseEntity<ClientResponseDto> registerClient(
       @RequestBody @Valid ClientRequestDto request) {
     ClientResponseDto user = userHandler.registerNewClient(request);
-    // return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
-    return ResponseEntity.ok(user); // bad request ja nao é tratado aqui, service lança exceptions
+    return ResponseEntity.ok(user);
   }
 
   @PostMapping("/register/admin")
   @ApiOperation(value = "Register admin", notes = "Register a new admin")
   public ResponseEntity<UserResponseDto> registerAdmin(@RequestBody @Valid UserRequestDto request) {
     UserResponseDto user = userHandler.registerNewAdmin(request);
-    return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(user);
   }
 
   @PostMapping("/register/delivery")
@@ -63,14 +61,14 @@ public class UserController {
   public ResponseEntity<DeliveryPersonResponseDto> registerDelivery(
       @RequestBody @Valid DeliveryPersonRequestDto request) {
     DeliveryPersonResponseDto user = userHandler.registerNewDeliveryPerson(request);
-    return user != null ? ResponseEntity.ok(user) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(user);
   }
 
   @GetMapping("/{id}")
   @ApiOperation(value = "Get user", notes = "Returns a user for a given id.")
   public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
     UserResponseDto user = userHandler.getUserById(id);
-    return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(user);
   }
 
   @GetMapping("/search")
@@ -81,7 +79,7 @@ public class UserController {
       @RequestParam(required = false) String orderNumber,
       @RequestParam(required = false) String deliveryNumber) {
     List<UserResponseDto> users = userHandler.searchBy(name, userType, orderNumber, deliveryNumber);
-    return users != null ? ResponseEntity.ok(users) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(users);
   }
 
   @PutMapping("/client/{id}")
@@ -89,7 +87,7 @@ public class UserController {
   public ResponseEntity<ClientResponseDto> updateClient(
       @PathVariable Long id, @RequestBody @Valid ClientRequestDto request) {
     ClientResponseDto client = userHandler.updateClient(id, request);
-    return client != null ? ResponseEntity.ok(client) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(client);
   }
 
   @PutMapping("/admin/{id}")
@@ -97,7 +95,7 @@ public class UserController {
   public ResponseEntity<UserResponseDto> updateAdmin(
       @PathVariable Long id, @RequestBody @Valid UserRequestDto request) {
     UserResponseDto admin = userHandler.updateAdmin(id, request);
-    return admin != null ? ResponseEntity.ok(admin) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(admin);
   }
 
   @PutMapping("/delivery/{id}")

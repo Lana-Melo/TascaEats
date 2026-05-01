@@ -33,7 +33,7 @@ public class MenuController {
   @ApiOperation(value = "Create menu", notes = "Creates a new menu.")
   public ResponseEntity<MenuResponseDto> createMenu(@RequestBody @Valid MenuRequestDto request) {
     MenuResponseDto menu = menuHandler.createMenu(request);
-    return menu != null ? ResponseEntity.ok(menu) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(menu);
   }
 
   @PutMapping("/{id}")
@@ -41,14 +41,14 @@ public class MenuController {
   public ResponseEntity<MenuResponseDto> updateMenu(
       @PathVariable Long id, @RequestBody @Valid MenuRequestDto request) {
     MenuResponseDto menu = menuHandler.updateMenu(id, request);
-    return menu != null ? ResponseEntity.ok(menu) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(menu);
   }
 
   @GetMapping("/{id}")
   @ApiOperation(value = "Get menu", notes = "Returns a menu for a given id.")
   public ResponseEntity<MenuResponseDto> getMenu(@PathVariable Long id) {
     MenuResponseDto menu = menuHandler.getMenu(id);
-    return menu != null ? ResponseEntity.ok(menu) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(menu);
   }
 
   @GetMapping("/search")
@@ -56,7 +56,7 @@ public class MenuController {
   public ResponseEntity<List<MenuResponseDto>> searchUser(@RequestParam(required = false) String name, 
       @RequestParam(required = false) String productType, @RequestParam(required = false) String average) {  
     List<MenuResponseDto> menu = menuHandler.searchBy(name, productType, average);
-    return menu != null ? ResponseEntity.ok(menu) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(menu);
   }
 
   @DeleteMapping("/{id}")

@@ -41,7 +41,7 @@ public class RestaurantController {
         @RequestParam(required = false) String average) {
         List<RestaurantResponseDto> restaurants = restaurantHandler.searchBy(designation, city, street, postalCode, cuisine, 
                                                                           orderNumber, reviewNumber, activeHour, average); 
-        return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(restaurants);
     }      
 
   @GetMapping("/products/search")
@@ -49,14 +49,14 @@ public class RestaurantController {
     public ResponseEntity<List<ProductResponseDto>> searchProduct(@PathVariable(required = false) Long id, @RequestParam(required = false) String designation, @RequestParam(required = false) String description, 
         @RequestParam(required = false) String availability, @RequestParam(required = false) String timesOrdered) {
         List<ProductResponseDto> products = restaurantHandler.searchProductBy(id, designation, description, availability, timesOrdered); 
-        return products != null ? ResponseEntity.ok(products) : ResponseEntity.notFound().build();
+        return ResponseEntity.ok(products);
     }
 
   @GetMapping
   @ApiOperation(value = "Get all restaurants", notes = "Returns a list of all restaurants.")
   public ResponseEntity<List<RestaurantResponseDto>> getAllRestaurants() {
     List<RestaurantResponseDto> restaurants = restaurantHandler.getAllRestaurants();
-    return restaurants != null ? ResponseEntity.ok(restaurants) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(restaurants);
   }
 
   @PostMapping
@@ -64,7 +64,7 @@ public class RestaurantController {
   public ResponseEntity<RestaurantResponseDto> createRestaurant(
       @RequestBody @Valid RestaurantRequestDto request) {
     RestaurantResponseDto restaurant = restaurantHandler.createRestaurant(request);
-    return restaurant != null ? ResponseEntity.ok(restaurant) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(restaurant);
   }
 
   @PatchMapping("/{id}/status")
@@ -72,7 +72,7 @@ public class RestaurantController {
   public ResponseEntity<RestaurantResponseDto> updateStatus(
       @PathVariable Long id, @RequestParam RestaurantStatus status) {
     RestaurantResponseDto restaurant = restaurantHandler.changeStatus(id, status.toString());
-    return restaurant != null ? ResponseEntity.ok(restaurant) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(restaurant);
   }
 
   @PostMapping("/{id}/products")
@@ -80,7 +80,7 @@ public class RestaurantController {
   public ResponseEntity<ProductResponseDto> addProduct(
       @PathVariable Long id, @RequestBody @Valid ProductRequestDto request) {
     ProductResponseDto product = restaurantHandler.addProduct(id, request);
-    return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(product);
   }
 
   @PutMapping("/{id}/products/{productId}")
@@ -90,7 +90,7 @@ public class RestaurantController {
       @PathVariable Long productId,
       @RequestBody @Valid ProductRequestDto request) {
     ProductResponseDto product = restaurantHandler.updateProduct(id, productId, request);
-    return product != null ? ResponseEntity.ok(product) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(product);
   }
 
   @DeleteMapping("/{id}/products/{productId}")
@@ -107,7 +107,7 @@ public class RestaurantController {
       notes = "Returns a list of products for a given restaurant.")
   public ResponseEntity<List<ProductResponseDto>> getProducts(@PathVariable Long id) {
     List<ProductResponseDto> products = restaurantHandler.getProducts(id);
-    return products != null ? ResponseEntity.ok(products) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(products);
   }
 
   @PostMapping("/{id}/reviews")
@@ -115,7 +115,7 @@ public class RestaurantController {
   public ResponseEntity<ReviewResponseDto> addReview(
       @PathVariable Long id, @RequestBody @Valid ReviewRequestDto request) {
     ReviewResponseDto review = restaurantHandler.addReview(id, request);
-    return review != null ? ResponseEntity.ok(review) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(review);
   }
 
   @GetMapping("/{id}/reviews")
@@ -124,7 +124,7 @@ public class RestaurantController {
       notes = "Returns a list of products for a given restaurant.")
   public ResponseEntity<List<ReviewResponseDto>> getReviews(@PathVariable Long id) {
     List<ReviewResponseDto> review = restaurantHandler.getReviews(id);
-    return review != null ? ResponseEntity.ok(review) : ResponseEntity.notFound().build();
+    return ResponseEntity.ok(review);
   }
 
   @PatchMapping("/{id}/menu/{menuId}")
@@ -132,6 +132,6 @@ public class RestaurantController {
   public ResponseEntity<RestaurantResponseDto> assignMenu(
       @PathVariable Long id, @PathVariable Long menuId) {
     RestaurantResponseDto restaurant = restaurantHandler.assignMenu(id, menuId);
-    return restaurant != null ? ResponseEntity.ok(restaurant) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(restaurant);
   }
 }
