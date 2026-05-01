@@ -53,10 +53,11 @@ public class WebController {
               password); // apesar de ser um cliente, o loginn retorna UserRequest mas n faz mal n
       // precisamos da morada
       session.setAttribute("userId", userDto.id());
+      session.setAttribute("userRole", userDto.role());
+      session.setAttribute("username", userDto.username());
       // session.setAttribute("userType", userDto.userType()); //nao sei, talvez seja preciso
       ra.addFlashAttribute("message", "Login successful!");
-      return "redirect:/restaurant"; // quem fizer login pela interface web vai sempre para os
-      // restaurantes
+      return "redirect:/welcome";
 
     } catch (
         RuntimeException
@@ -65,6 +66,18 @@ public class WebController {
       model.addAttribute("error", ex.getMessage());
       return "login";
     }
+  }
+
+  @GetMapping("/welcome")
+  public String welcome(HttpSession session, Model model) {
+
+    String role = (String) session.getAttribute("userRole");
+    String username = (String) session.getAttribute("username");
+
+    model.addAttribute("username", username);
+    model.addAttribute("userRole", role);
+
+    return "welcome";
   }
 
   // UC B - registar clientes
@@ -127,6 +140,8 @@ public class WebController {
     try {
       model.addAttribute("designation", designation);
       model.addAttribute("city", city);
+      model.addAttribute("street", street);
+      model.addAttribute("postalCode", postalCode);
       model.addAttribute("cuisine", cuisine);
       model.addAttribute("orderNumber", orderNumber);
       model.addAttribute("reviewNumber", reviewNumber);
@@ -204,10 +219,12 @@ public class WebController {
       model.addAttribute("description", description);
       model.addAttribute("availability", availability);
       model.addAttribute("timesOrdered", timesOrdered);
-      model.addAttribute(
-          "products",
-          restaurantService.searchProductBy(
-              null, designation, description, availability, timesOrdered));
+      if (newOrder != null) {
+        model.addAttribute(
+            "products",
+            restaurantService.searchProductBy(
+                null, designation, description, availability, timesOrdered));
+      }
       return "order";
     } catch (RuntimeException ex) {
       model.addAttribute("error", ex.getMessage());
@@ -242,6 +259,16 @@ public class WebController {
   }
 
   // UC N - cancelar pedido
+  @PostMapping("/order/{id}/cancel")
+  public String cancelOrder(@PathVariable Long id, RedirectAttributes ra) {
+    try {
+      orderService.updateOrderStatus(id, "CANCELLED");
+      ra.addFlashAttribute("message", "Order cancelled successfully!");
+    } catch (RuntimeException ex) {
+      ra.addFlashAttribute("error", ex.getMessage());
+    }
+    return "redirect:/order";
+  }
 
   // ---------------------
 

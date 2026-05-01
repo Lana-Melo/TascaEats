@@ -8,28 +8,29 @@
 </head>
 <body>
 
-  <div class="card" style="width: 400px; margin: 100px auto;">
-    <div class="card-body">
-      <h5 class="card-title">🍽️ TascaEats — Login</h5>
+<body class="bg-light">
 
-      <div th:if="${error}" th:text="${error}"></div>
-      <div th:if="${message}" th:text="${message}"></div>
+<div class="container vh-100 d-flex align-items-center justify-content-center">
+  <div class="card shadow-lg p-4" style="width: 420px; border-radius: 15px;">
 
-      <form action="/login" method="post">
-        <label>Username:</label>
-        <input type="text" name="username" required autofocus /><br />
+    <h4 class="mb-3 text-center">🍽️ TascaEats Login</h4>
 
-        <label>Password:</label>
-        <input type="password" name="password" required /><br />
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
 
-        <button type="submit" class="btn btn-primary">Entrar</button>
-      </form>
+    <form action="/login" method="post">
+      <input type="text" name="username" class="form-control mb-3" placeholder="Username" required autofocus />
+      <input type="password" name="password" class="form-control mb-3" placeholder="Password" required />
 
-      <p class="card-text">
-        Ainda não tem conta? <a href="/register">Registe-se</a>
-      </p>
-    </div>
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+
+    <p class="text-center mt-3">
+      No account? <a href="/register">Register</a>
+    </p>
+
   </div>
+</div>
 
 </body>
 </html>

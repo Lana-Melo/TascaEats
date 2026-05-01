@@ -89,22 +89,21 @@ public class OrderService {
 
     Order order = new Order(client, products, address);
 
+    Order saved = orderRepository.save(order);
+
     for (Restaurant res : restaurants) {
       Optional<Restaurant> resOpt = restaurantRepository.findById(res.getId());
       if (resOpt.isEmpty()) {
         throw new ResourceNotFoundException("Restaurant not found");
       }
       Restaurant restaurant = (Restaurant) resOpt.get();
-      restaurant.addOrder(order);
+      restaurant.addOrder(saved);
       restaurantRepository.save(restaurant);
     }
     if (!client.getAddresses().contains(address)) {
       client.addAddress(address);
       userRepository.save(client);
     }
-
-    Order saved = orderRepository.save(order);
-
     return mapOrderToOrderResponse(saved);
   }
 
@@ -124,19 +123,22 @@ public class OrderService {
     switch (request.getPaymentMethod()) {
       case "MBWay":
         if (order.getTotalValue() != request.getAmount() || request.getPaymentInfo().equals(null)) {
-          throw new RequirementsNotMetException("Amount does not match payment/Payment info not included");
+          throw new RequirementsNotMetException(
+              "Amount does not match payment/Payment info not included");
         }
         payment = new MBWay(request.getAmount(), order, request.getPaymentInfo());
         break;
       case "Card":
         if (order.getTotalValue() != request.getAmount() || request.getPaymentInfo().equals(null)) {
-          throw new RequirementsNotMetException("Amount does not match payment/Payment info not included");
+          throw new RequirementsNotMetException(
+              "Amount does not match payment/Payment info not included");
         }
         payment = new Card(request.getAmount(), order, request.getPaymentInfo());
         break;
       case "Cash":
         if (order.getTotalValue() > request.getAmount() || !request.getPaymentInfo().equals(null)) {
-          throw new RequirementsNotMetException("Amount does not cover payment/Redundant info included");
+          throw new RequirementsNotMetException(
+              "Amount does not cover payment/Redundant info included");
         }
         payment = new Cash(request.getAmount(), order, request.getAmount() - order.getTotalValue());
         break;
@@ -185,7 +187,8 @@ public class OrderService {
         break;
       case PREPARING:
         if (ordStat != OrderStatus.READY) {
-          throw new RequirementsNotMetException("Preparing order cannot update to specified status");
+          throw new RequirementsNotMetException(
+              "Preparing order cannot update to specified status");
         } else {
           Optional<DeliveryPerson> delOpt =
               userRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
@@ -210,7 +213,8 @@ public class OrderService {
     }
 
     if (ordStat == OrderStatus.DELIVERED && order.getDelivery() == null) {
-      throw new RequirementsNotMetException("Delivered order must have a delivery associated with it");
+      throw new RequirementsNotMetException(
+          "Delivered order must have a delivery associated with it");
     } else if (ordStat == OrderStatus.DELIVERED) {
       order.getDelivery().setDeliveryTimeStamp();
       DeliveryPerson del = order.getDeliveryPerson();
@@ -238,7 +242,8 @@ public class OrderService {
     Order order = ordOpt.get();
     if (del.getDeliveryPersonStatus() == DeliveryPersonStatus.BUSY
         || order.getOrderStatus() != OrderStatus.READY) {
-      throw new RequirementsNotMetException("Order must be ready/Delivery person must be available");
+      throw new RequirementsNotMetException(
+          "Order must be ready/Delivery person must be available");
     }
     Delivery delivery = new Delivery(LocalDateTime.now());
     order.setDelivery(delivery);

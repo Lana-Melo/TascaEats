@@ -82,7 +82,8 @@ public class RestaurantService {
       restaurants.retainAll(restaurantRepository.findByAddressStreetContainingIgnoreCase(street));
     }
     if (postalCode != null && !postalCode.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByAddressPostalCodeContainingIgnoreCase(postalCode));
+      restaurants.retainAll(
+          restaurantRepository.findByAddressPostalCodeContainingIgnoreCase(postalCode));
     }
     if (cuisine != null && !cuisine.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByMenuCuisineContainingIgnoreCase(cuisine));
