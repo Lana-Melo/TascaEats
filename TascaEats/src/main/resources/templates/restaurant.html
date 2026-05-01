@@ -35,6 +35,10 @@
                 th:checked="${designation != null and !designation.isEmpty()}"> Name</label>
             <label><input type="checkbox" class="filter-toggle" data-target="f-city"
                 th:checked="${city != null and !city.isEmpty()}"> City</label>
+                <label><input type="checkbox" class="filter-toggle" data-target="f-street"
+            th:checked="${street != null and !street.isEmpty()}"> Street</label>
+                <label><input type="checkbox" class="filter-toggle" data-target="f-postalCode"
+            th:checked="${postalCode != null and !postalCode.isEmpty()}"> Postal Code</label>
             <label><input type="checkbox" class="filter-toggle" data-target="f-cuisine"
                 th:checked="${cuisine != null and !cuisine.isEmpty()}"> Cuisine</label>
             <label><input type="checkbox" class="filter-toggle" data-target="f-orderNumber"
@@ -53,6 +57,12 @@
             </div>
             <div class="col-auto" th:classappend="${city == null or city.isEmpty()} ? 'd-none'" id="f-city">
                 <input type="text" name="city" class="form-control" placeholder="City" th:value="${city}"/>
+            </div>
+                        <div class="col-auto" th:classappend="${street == null or street.isEmpty()} ? 'd-none'" id="f-street">
+                <input type="text" name="street" class="form-control" placeholder="Street" th:value="${street}"/>
+            </div>
+                        <div class="col-auto" th:classappend="${postalCode == null or postalCode.isEmpty()} ? 'd-none'" id="f-postalCode">
+                <input type="text" name="postalCode" class="form-control" placeholder="Postal Code" th:value="${postalCode}"/>
             </div>
             <div class="col-auto" th:classappend="${cuisine == null or cuisine.isEmpty()} ? 'd-none'" id="f-cuisine">
                 <input type="text" name="cuisine" class="form-control" placeholder="Cuisine" th:value="${cuisine}"/>

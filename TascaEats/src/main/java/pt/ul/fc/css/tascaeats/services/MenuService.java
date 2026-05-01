@@ -5,9 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.stereotype.Service;
-
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.entities.Menu;
@@ -95,8 +93,10 @@ public class MenuService {
   }
 
   public List<MenuResponseDto> searchBy(String name, String productNumber, String average) {
-    List<Menu> menus = name.isEmpty() || name == null
-        ? menuRepository.findAll() : menuRepository.findByNameContainingIgnoreCase(name);
+    List<Menu> menus =
+        name.isEmpty() || name == null
+            ? menuRepository.findAll()
+            : menuRepository.findByNameContainingIgnoreCase(name);
 
     if (!productNumber.isEmpty() && productNumber != null) {
       menus.retainAll(menuRepository.findByProductNumber(Integer.parseInt(productNumber)));
@@ -104,9 +104,7 @@ public class MenuService {
     if (!average.isEmpty() && average != null) {
       menus.retainAll(menuRepository.findByAveragePrice(Double.parseDouble(average)));
     }
-    return menus.stream()
-                .map(this::mapMenuToMenuResponse)
-                .toList();
+    return menus.stream().map(this::mapMenuToMenuResponse).toList();
   }
 
   /////////////////////////////////////////////////////////////
