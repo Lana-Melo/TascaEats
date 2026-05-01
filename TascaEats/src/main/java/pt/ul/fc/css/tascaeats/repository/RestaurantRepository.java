@@ -12,8 +12,9 @@ import pt.ul.fc.css.tascaeats.entities.Restaurant;
 @Repository
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
-  List<Restaurant> findByAddressCityContainingIgnoreCaseAndAddressStreetContainingIgnoreCaseAndAddressPostalCodeContainingIgnoreCase(String city, String street, String postalCode);
-
+  List<Restaurant> findByAddressCityContainingIgnoreCase(String city);
+  List<Restaurant> findByAddressStreetContainingIgnoreCase(String street);
+  List<Restaurant> findByAddressPostalCodeContainingIgnoreCase(String postalCode);
   List<Restaurant> findByDesignationContainingIgnoreCase(String name);
 
   boolean existsByAdminId(Long id);

@@ -76,13 +76,14 @@ public class RestaurantService {
             : restaurantRepository
                 .findByDesignationContainingIgnoreCase(designation);
 
-    if (city != null
-        && !city.isEmpty()
-        && street != null
-        && !street.isEmpty()
-        && postalCode != null
-        && !postalCode.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByAddressCityContainingIgnoreCaseAndAddressStreetContainingIgnoreCaseAndAddressPostalCodeContainingIgnoreCase(city, street, postalCode));
+    if (city != null && !city.isEmpty()) {
+      restaurants.retainAll(restaurantRepository.findByAddressCityContainingIgnoreCase(city));
+    }
+    if (street != null && !street.isEmpty()) {
+      restaurants.retainAll(restaurantRepository.findByAddressStreetContainingIgnoreCase(street));
+    }
+    if (postalCode != null && !postalCode.isEmpty()) {
+      restaurants.retainAll(restaurantRepository.findByAddressPostalCodeContainingIgnoreCase(postalCode));
     }
     if (cuisine != null && !cuisine.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByMenuCuisineContainingIgnoreCase(cuisine));
