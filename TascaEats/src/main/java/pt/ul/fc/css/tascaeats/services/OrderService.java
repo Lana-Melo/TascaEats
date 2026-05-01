@@ -89,32 +89,21 @@ public class OrderService {
 
     Order order = new Order(client, products, address);
 
+    Order saved = orderRepository.save(order);
+
     for (Restaurant res : restaurants) {
       Optional<Restaurant> resOpt = restaurantRepository.findById(res.getId());
       if (resOpt.isEmpty()) {
         throw new ResourceNotFoundException("Restaurant not found");
       }
       Restaurant restaurant = (Restaurant) resOpt.get();
-      restaurant.addOrder(order);
+      restaurant.addOrder(saved);
       restaurantRepository.save(restaurant);
     }
     if (!client.getAddresses().contains(address)) {
       client.addAddress(address);
       userRepository.save(client);
     }
-
-    Order saved = orderRepository.save(order);
-
-    for (Restaurant res : restaurants) {
-      Optional<Restaurant> resOpt = restaurantRepository.findById(res.getId());
-      if (resOpt.isEmpty()) {
-        return null;
-      }
-      Restaurant restaurant = (Restaurant) resOpt.get();
-      restaurant.addOrder(saved);
-      restaurantRepository.save(restaurant);
-    }
-
     return mapOrderToOrderResponse(saved);
   }
 
