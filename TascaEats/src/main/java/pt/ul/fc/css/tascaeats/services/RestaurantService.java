@@ -73,8 +73,7 @@ public class RestaurantService {
     List<Restaurant> restaurants =
         (designation == null || designation.isEmpty())
             ? restaurantRepository.findAll()
-            : restaurantRepository
-                .findByDesignationContainingIgnoreCase(designation);
+            : restaurantRepository.findByDesignationContainingIgnoreCase(designation);
 
     if (city != null && !city.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByAddressCityContainingIgnoreCase(city));
@@ -238,15 +237,19 @@ public class RestaurantService {
   }
 
   public List<ProductResponseDto> getProducts(Long restaurantId) {
-    return productRepository.findAll().stream()
+    return productRepository.findAllByRestaurantId(restaurantId).stream()
         .map(this::mapProductToProductResponse)
         .toList();
   }
 
   public List<ProductResponseDto> searchProductBy(
-      Long restaurantId, String designation, String description, String availability, String timesOrdered) {
+      Long restaurantId,
+      String designation,
+      String description,
+      String availability,
+      String timesOrdered) {
     List<Product> products =
-        designation.isEmpty() || designation == null
+        (designation == null || designation.isEmpty())
             ? productRepository.findAll()
             : productRepository.findByDesignationContainingIgnoreCase(designation);
 
@@ -254,8 +257,7 @@ public class RestaurantService {
       products.retainAll(productRepository.findByDescriptionContainingIgnoreCase(description));
     }
     if (availability != null && !availability.isEmpty()) {
-      products.retainAll(
-          productRepository.findByAvailabilityContainingIgnoreCase(ProductStatus.valueOf(availability)));
+      products.retainAll(productRepository.findByAvailability(ProductStatus.valueOf(availability)));
     }
     if (timesOrdered != null && !timesOrdered.isEmpty()) {
       products.retainAll(productRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));

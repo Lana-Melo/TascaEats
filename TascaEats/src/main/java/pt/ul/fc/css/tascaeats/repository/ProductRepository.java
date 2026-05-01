@@ -15,15 +15,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   List<Product> findAllByRestaurantId(Long restaurantId);
 
   List<Product> findByDesignationContainingIgnoreCase(String designation);
-  List<Product> findByDescriptionContainingIgnoreCase(String description);
-  List<Product> findByAvailabilityContainingIgnoreCase(ProductStatus availability);
 
-  @Query("""
-      SELECT p
-      FROM Order o
-      JOIN o.products p
-      GROUP BY p
-      HAVING COUNT(p) >= :timesOrdered
-  """)
+  List<Product> findByDescriptionContainingIgnoreCase(String description);
+
+  List<Product> findByAvailability(ProductStatus availability);
+
+  @Query(
+      """
+          SELECT p
+          FROM Order o
+          JOIN o.products p
+          GROUP BY p
+          HAVING COUNT(p) >= :timesOrdered
+      """)
   List<Product> findByTimesOrdered(@Param("timesOrdered") int timesOrdered);
 }
