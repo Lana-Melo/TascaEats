@@ -9,9 +9,12 @@ option java_outer_classname = "TascaEatsProto";
 service TascaEatsService {
 
   rpc Login (LoginRequest) returns (UserResponse);
-  rpc RegisterAdmin (RegisterRequest) returns (UserResponse);
-  rpc RegisterDeliveryPerson (RegisterRequest) returns (DeliveryPersonResponse);
+  rpc RegisterAdmin (UserRequest) returns (UserResponse);
+  rpc RegisterDeliveryPerson (UserRequest) returns (DeliveryPersonResponse);
   rpc DeleteAccount (DeleteAccountRequest) returns (Empty);
+  rpc UpdateAdmin (UserRequest) returns (UserResponse);
+  rpc UpdateClient (UserRequest) returns (UserResponse);
+  rpc UpdateDeliveryPerson (DeliveryPersonUpdateRequest) returns (DeliveryPersonResponse);
 }
 
 message Empty {}
@@ -30,12 +33,23 @@ message UserResponse {
   string role = 6; // este campo só tem utilidade para o caso do login
 }
 
-message RegisterRequest {
-  string username = 1;
-  string password = 2;
-  string name = 3;
-  string phoneNumber = 4;
-  string nif = 5;
+message UserRequest {
+  int64 id = 1;
+  string username = 2;
+  string password = 3;
+  string name = 4;
+  string phoneNumber = 5;
+  string nif = 6;
+}
+
+message DeliveryPersonUpdateRequest {
+  int64 id = 1;
+  string username = 2;
+  string password = 3;
+  string name = 4;
+  string phoneNumber = 5;
+  string nif = 6;
+  string status = 7;
 }
 
 message DeliveryPersonResponse {

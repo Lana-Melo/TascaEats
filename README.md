@@ -103,8 +103,8 @@ The controller currently returns `404` both when a user is not found and when de
 | RPC | Request | Response | Description |
 |---|---|---|---|
 | `Login` | `LoginRequest` | `UserResponse` | Execute an user login |
-| `RegisterAdmin` | `RegisterRequest` | `UserResponse` | Register a new admin |
-| `RegisterDeliveryPerson` | `RegisterRequest` | `DeliveryPersonResponse` | Register a new delivery person |
+| `RegisterAdmin` | `UserRequest` | `UserResponse` | Register a new admin |
+| `RegisterDeliveryPerson` | `UserRequest` | `DeliveryPersonResponse` | Register a new delivery person |
 
 ---
 

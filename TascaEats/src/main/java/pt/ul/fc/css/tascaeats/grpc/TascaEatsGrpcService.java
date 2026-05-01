@@ -47,8 +47,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
 
   // ─── Register Admin ─────────────────────────────────────────────
   @Override
-  public void registerAdmin(
-      RegisterRequest request, StreamObserver<UserResponse> responseObserver) {
+  public void registerAdmin(UserRequest request, StreamObserver<UserResponse> responseObserver) {
     try {
       UserRequestDto requestDto = grpcMapper.mapAdminRegisterReqToReqDto(request);
 
@@ -74,7 +73,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   // ─── Register Delivery Person ─────────────────────────────────────────────
   @Override
   public void registerDeliveryPerson(
-      RegisterRequest request, StreamObserver<DeliveryPersonResponse> responseObserver) {
+      UserRequest request, StreamObserver<DeliveryPersonResponse> responseObserver) {
     try {
       DeliveryPersonRequestDto requestDto =
           grpcMapper.mapDeliveryPersonRegisterReqToReqDto(request);
@@ -92,6 +91,65 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
 
     } catch (IllegalArgumentException e) {
       responseObserver.onError(Status.Code.ALREADY_EXISTS.toStatus().asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Update Admin ─────────────────────────────────────────────
+  @Override
+  public void updateAdmin(UserRequest request, StreamObserver<UserResponse> responseObserver) {
+    try {
+      Long id = request.getId();
+      UserRequestDto requestDto = grpcMapper.mapAdminRegisterReqToReqDto(request);
+      UserResponseDto user = userService.updateAdmin(id, requestDto);
+      UserResponse response = grpcMapper.mapUserResponseDtoToResponse(user);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Update Client ─────────────────────────────────────────────
+  @Override
+  public void updateClient(UserRequest request, StreamObserver<UserResponse> responseObserver) {
+    try {
+      Long id = request.getId();
+      UserRequestDto requestDto = grpcMapper.mapAdminRegisterReqToReqDto(request);
+      UserResponseDto user = userService.updateClient(id, requestDto);
+      UserResponse response = grpcMapper.mapUserResponseDtoToResponse(user);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Update Delivery Person ─────────────────────────────────────────────
+  @Override
+  public void updateDeliveryPerson(
+      DeliveryPersonUpdateRequest request,
+      StreamObserver<DeliveryPersonResponse> responseObserver) {
+    try {
+      Long id = request.getId();
+      DeliveryPersonRequestDto requestDto = grpcMapper.mapDeliveryPersonUpdateReqToReqDto(request);
+      DeliveryPersonResponseDto user = userService.updateDeliveryPerson(id, requestDto);
+      DeliveryPersonResponse response = grpcMapper.mapDeliveryPersonResponseDtoToResponse(user);
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());

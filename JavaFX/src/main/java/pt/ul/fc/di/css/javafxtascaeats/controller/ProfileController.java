@@ -120,18 +120,36 @@ public class ProfileController implements ControllerWithModel {
     }
 
     CurrentUser user = model.getCurrentUser();
+    if (user == null) return;
+    String passwordToSend = changingPassword ? newPassword : "";
+
+    try {
+      if (user instanceof CurrentDeliveryPerson dp) { // pegar o status caso currUser seja delivery
+        String status = statusComboBox.getValue();
+        ApiClient.updateDeliveryPerson(
+            user.getId(), username, passwordToSend, name, phone, nif, status);
+        dp.setStatus(status);
+      } else if (user instanceof CurrentClient) {
+        ApiClient.updateClient(user.getId(), username, passwordToSend, name, phone, nif);
+      } else {
+        ApiClient.updateAdmin(user.getId(), username, passwordToSend, name, phone, nif);
+      }
+    } catch (Exception e) {
+      showError("An error occurred, please try again later.");
+      return;
+    }
+
+    // atualiza model que vai ser passado para outros controllers
     user.setUsername(username);
     user.setName(name);
     user.setPhoneNumber(phone);
     user.setNif(nif);
-
-    if (user instanceof CurrentDeliveryPerson dp) {
-      dp.setStatus(statusComboBox.getValue());
-    }
-
     hideError();
-    // TODO: call ApiClient.updateProfile(...) when the endpoint is available
-    System.out.println("Profile updated locally");
+    Alert success = new Alert(Alert.AlertType.INFORMATION);
+    success.setTitle("Profile Updated");
+    success.setHeaderText(null);
+    success.setContentText("Profile updated!");
+    success.showAndWait();
   }
 
   @Override
