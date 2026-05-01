@@ -25,6 +25,8 @@ import pt.ul.fc.css.tascaeats.entities.Review;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
+import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.MenuRepository;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
@@ -73,16 +75,15 @@ public class RestaurantService {
             ? restaurantRepository.findAll()
             : restaurantRepository.findByDesignationContainingIgnoreCase(designation);
 
-    if (city != null
-        && !city.isEmpty()
-        && street != null
-        && !street.isEmpty()
-        && postalCode != null
-        && !postalCode.isEmpty()) {
+    if (city != null && !city.isEmpty()) {
+      restaurants.retainAll(restaurantRepository.findByAddressCityContainingIgnoreCase(city));
+    }
+    if (street != null && !street.isEmpty()) {
+      restaurants.retainAll(restaurantRepository.findByAddressStreetContainingIgnoreCase(street));
+    }
+    if (postalCode != null && !postalCode.isEmpty()) {
       restaurants.retainAll(
-          restaurantRepository
-              .findByAddressCityContainingIgnoreCaseAndAddressStreetContainingIgnoreCaseAndAddressPostalCodeContainingIgnoreCase(
-                  city, street, postalCode));
+          restaurantRepository.findByAddressPostalCodeContainingIgnoreCase(postalCode));
     }
     if (cuisine != null && !cuisine.isEmpty()) {
       restaurants.retainAll(restaurantRepository.findByMenuCuisineContainingIgnoreCase(cuisine));
@@ -116,7 +117,7 @@ public class RestaurantService {
   public RestaurantResponseDto createRestaurant(RestaurantRequestDto restaurant) {
     Optional<AUser> userOpt = userRepository.findById(restaurant.getAdminId());
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Admin)) {
-      return null;
+      throw new ResourceNotFoundException("User not found");
     }
 
     String[] open = restaurant.getOpenHours().split(":");
@@ -144,7 +145,7 @@ public class RestaurantService {
   public RestaurantResponseDto changeStatus(Long id, String status) {
     Optional<Restaurant> resOpt = restaurantRepository.findById(id);
     if (!resOpt.isPresent()) {
-      return null;
+      throw new ResourceNotFoundException("Restaurant not found");
     }
 
     Restaurant restaurant = resOpt.get();
@@ -157,11 +158,11 @@ public class RestaurantService {
   public RestaurantResponseDto assignMenu(Long id, Long menuId) {
     Optional<Restaurant> resOpt = restaurantRepository.findById(id);
     if (!resOpt.isPresent()) {
-      return null;
+      throw new ResourceNotFoundException("Restaurant not found");
     }
     Optional<Menu> menuOpt = menuRepository.findById(menuId);
     if (!menuOpt.isPresent()) {
-      return null;
+      throw new ResourceNotFoundException("Menu not found");
     }
 
     Restaurant restaurant = resOpt.get();
@@ -181,7 +182,7 @@ public class RestaurantService {
   public ProductResponseDto addProduct(Long restaurantId, ProductRequestDto productRequest) {
     Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
     if (!resOpt.isPresent()) {
-      return null;
+      throw new ResourceNotFoundException("Restaurant not found");
     }
 
     Restaurant restaurant = resOpt.get();
@@ -202,7 +203,7 @@ public class RestaurantService {
       Long restaurantId, Long productId, ProductRequestDto productRequest) {
     Optional<Product> prodOpt = productRepository.findById(productId);
     if (!prodOpt.isPresent()) {
-      return null;
+      throw new ResourceNotFoundException("Product not found");
     }
 
     Product product = prodOpt.get();
@@ -274,11 +275,11 @@ public class RestaurantService {
   public ReviewResponseDto addReview(Long restaurantId, ReviewRequestDto reviewRequest) {
     Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
     if (!resOpt.isPresent()) {
-      return null;
+      throw new ResourceNotFoundException("Restaurant not found");
     }
     Optional<AUser> userOpt = userRepository.findById(reviewRequest.getClientId());
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {
-      return null;
+      throw new ResourceNotFoundException("User not found");
     }
 
     Restaurant restaurant = resOpt.get();
@@ -292,7 +293,7 @@ public class RestaurantService {
       }
     }
     if (!canReview || reviewRequest.getRating() < 1 || reviewRequest.getRating() > 5) {
-      return null;
+      throw new RequirementsNotMetException("Rating must be between 1 and 5");
     }
 
     Review review =
@@ -309,7 +310,7 @@ public class RestaurantService {
   public List<ReviewResponseDto> getReviews(Long restaurantId) {
     Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
     if (!resOpt.isPresent()) {
-      return null;
+      throw new ResourceNotFoundException("Restaurant not found");
     }
 
     Restaurant restaurant = resOpt.get();

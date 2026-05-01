@@ -5,13 +5,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.stereotype.Service;
-
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Product;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.MenuRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -42,7 +41,7 @@ public class MenuService {
     for (Long id : request.getProductIds()) {
       Optional<Product> prodOpt = productRepository.findById(id);
       if (prodOpt.isEmpty()) {
-        return null;
+        throw new ResourceNotFoundException("Product not found");
       }
 
       products.add(prodOpt.get());
@@ -62,7 +61,7 @@ public class MenuService {
   public MenuResponseDto updateMenu(Long id, MenuRequestDto request) {
     Optional<Menu> menuOpt = menuRepository.findById(id);
     if (menuOpt.isEmpty()) {
-      return null;
+      throw new ResourceNotFoundException("Menu not found");
     }
 
     Menu menu = (Menu) menuOpt.get();
@@ -74,7 +73,7 @@ public class MenuService {
     for (Long pid : request.getProductIds()) {
       Optional<Product> prodOpt = productRepository.findById(pid);
       if (prodOpt.isEmpty()) {
-        return null;
+        throw new ResourceNotFoundException("Product not found");
       }
 
       products.add(prodOpt.get());
@@ -94,8 +93,10 @@ public class MenuService {
   }
 
   public List<MenuResponseDto> searchBy(String name, String productNumber, String average) {
-    List<Menu> menus = name.isEmpty() || name == null
-        ? menuRepository.findAll() : menuRepository.findByNameContainingIgnoreCase(name);
+    List<Menu> menus =
+        name.isEmpty() || name == null
+            ? menuRepository.findAll()
+            : menuRepository.findByNameContainingIgnoreCase(name);
 
     if (!productNumber.isEmpty() && productNumber != null) {
       menus.retainAll(menuRepository.findByProductNumber(Integer.parseInt(productNumber)));
@@ -103,9 +104,7 @@ public class MenuService {
     if (!average.isEmpty() && average != null) {
       menus.retainAll(menuRepository.findByAveragePrice(Double.parseDouble(average)));
     }
-    return menus.stream()
-                .map(this::mapMenuToMenuResponse)
-                .toList();
+    return menus.stream().map(this::mapMenuToMenuResponse).toList();
   }
 
   /////////////////////////////////////////////////////////////
