@@ -9,7 +9,7 @@ import pt.ul.fc.css.tascaeats.entities.Menu;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, Long> {
-    List<Menu> findAllByName(String name);
+    List<Menu> findByNameContainingIgnoreCase(String name);
 
     @Query ("SELECT m FROM Menu m WHERE SIZE(m.products) = :productNumber")
     List<Menu> findByProductNumber(int product);

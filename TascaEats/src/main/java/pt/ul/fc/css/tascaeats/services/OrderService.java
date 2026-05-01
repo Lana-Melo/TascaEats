@@ -3,6 +3,7 @@ package pt.ul.fc.css.tascaeats.services;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
@@ -24,6 +25,9 @@ import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
+import pt.ul.fc.css.tascaeats.exceptions.IncompleteInputException;
+import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -55,7 +59,7 @@ public class OrderService {
   public OrderResponseDto createOrder(OrderRequestDto request) {
     Optional<AUser> userOpt = userRepository.findById(request.getClientId());
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {
-      return null;
+      throw new ResourceNotFoundException("User not found");
     }
 
     Client client = (Client) userOpt.get();
@@ -67,7 +71,7 @@ public class OrderService {
       if (prodOpt.isEmpty()
           || prodOpt.get().getStatus() == ProductStatus.SOLD_OUT
           || prodOpt.get().getRestaurant().getStatus() == RestaurantStatus.CLOSED) {
-        return null;
+        throw new ResourceNotFoundException("Product not found or unavailable");
       }
 
       products.add(prodOpt.get());
@@ -79,7 +83,7 @@ public class OrderService {
     if (request.getCity() == null
         || request.getStreet() == null
         || request.getPostalCode() == null) {
-      return null;
+      throw new IncompleteInputException("All fields for address need to be filled");
     }
     Address address = new Address(request.getStreet(), request.getCity(), request.getPostalCode());
 
@@ -88,7 +92,7 @@ public class OrderService {
     for (Restaurant res : restaurants) {
       Optional<Restaurant> resOpt = restaurantRepository.findById(res.getId());
       if (resOpt.isEmpty()) {
-        return null;
+        throw new ResourceNotFoundException("Restaurant not found");
       }
       Restaurant restaurant = (Restaurant) resOpt.get();
       restaurant.addOrder(order);
@@ -109,35 +113,35 @@ public class OrderService {
     Optional<Order> ordOpt = orderRepository.findById(request.getOrderId());
 
     if (ordOpt.isEmpty()) {
-      return null;
+      throw new ResourceNotFoundException("Order not found");
     }
     Order order = ordOpt.get();
     if (order.getOrderStatus() != OrderStatus.CREATED) {
-      return null;
+      throw new RequirementsNotMetException("Order already has a payment processed");
     }
 
     APayment payment;
     switch (request.getPaymentMethod()) {
       case "MBWay":
         if (order.getTotalValue() != request.getAmount() || request.getPaymentInfo().equals(null)) {
-          return null;
+          throw new RequirementsNotMetException("Amount does not match payment/Payment info not included");
         }
         payment = new MBWay(request.getAmount(), order, request.getPaymentInfo());
         break;
       case "Card":
         if (order.getTotalValue() != request.getAmount() || request.getPaymentInfo().equals(null)) {
-          return null;
+          throw new RequirementsNotMetException("Amount does not match payment/Payment info not included");
         }
         payment = new Card(request.getAmount(), order, request.getPaymentInfo());
         break;
       case "Cash":
         if (order.getTotalValue() > request.getAmount() || !request.getPaymentInfo().equals(null)) {
-          return null;
+          throw new RequirementsNotMetException("Amount does not cover payment/Redundant info included");
         }
         payment = new Cash(request.getAmount(), order, request.getAmount() - order.getTotalValue());
         break;
       default:
-        return null;
+        throw new IllegalArgumentException("Invalid payment method");
     }
 
     order.setPayment(payment);
@@ -148,13 +152,22 @@ public class OrderService {
   }
 
   /////////////////////////////////////////////////////////////
+  ///  GET ORDER METHODS
+  /////////////////////////////////////////////////////////////
+  public List<OrderResponseDto> getOrdersByClient(Long clientId) {
+    return orderRepository.findByClientId(clientId).stream()
+        .map(this::mapOrderToOrderResponse)
+        .toList();
+  }
+
+  /////////////////////////////////////////////////////////////
   ///  PATCH ORDER METHODS
   /////////////////////////////////////////////////////////////
   @Transactional
   public OrderResponseDto updateOrderStatus(Long id, String status) {
     Optional<Order> ordOpt = orderRepository.findById(id);
     if (ordOpt.isEmpty()) {
-      return null;
+      throw new ResourceNotFoundException("Order not found");
     }
     Order order = ordOpt.get();
 
@@ -162,17 +175,17 @@ public class OrderService {
     switch (order.getOrderStatus()) {
       case CREATED:
         if (ordStat != OrderStatus.PAID && ordStat != OrderStatus.CANCELLED) {
-          return null;
+          throw new RequirementsNotMetException("Created order cannot update to specified status");
         }
         break;
       case PAID:
         if (ordStat != OrderStatus.PREPARING && ordStat != OrderStatus.CANCELLED) {
-          return null;
+          throw new RequirementsNotMetException("Paid order cannot update to specified status");
         }
         break;
       case PREPARING:
         if (ordStat != OrderStatus.READY) {
-          return null;
+          throw new RequirementsNotMetException("Preparing order cannot update to specified status");
         } else {
           Optional<DeliveryPerson> delOpt =
               userRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
@@ -189,15 +202,15 @@ public class OrderService {
         break;
       case READY:
         if (ordStat != OrderStatus.DELIVERED) {
-          return null;
+          throw new RequirementsNotMetException("Ready order cannot update to specified status");
         }
         break;
       default:
-        return null;
+        throw new IllegalArgumentException("Invalid order status");
     }
 
     if (ordStat == OrderStatus.DELIVERED && order.getDelivery() == null) {
-      return null;
+      throw new RequirementsNotMetException("Delivered order must have a delivery associated with it");
     } else if (ordStat == OrderStatus.DELIVERED) {
       order.getDelivery().setDeliveryTimeStamp();
       DeliveryPerson del = order.getDeliveryPerson();
@@ -214,18 +227,18 @@ public class OrderService {
   public OrderResponseDto assignDeliveryPerson(Long id, Long deliveryPersonId) {
     Optional<Order> ordOpt = orderRepository.findById(id);
     if (ordOpt.isEmpty()) {
-      return null;
+      throw new ResourceNotFoundException("Order not found");
     }
     Optional<AUser> userOpt = userRepository.findById(deliveryPersonId);
     if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
-      return null;
+      throw new ResourceNotFoundException("User not found");
     }
 
     DeliveryPerson del = (DeliveryPerson) userOpt.get();
     Order order = ordOpt.get();
     if (del.getDeliveryPersonStatus() == DeliveryPersonStatus.BUSY
         || order.getOrderStatus() != OrderStatus.READY) {
-      return null;
+      throw new RequirementsNotMetException("Order must be ready/Delivery person must be available");
     }
     Delivery delivery = new Delivery(LocalDateTime.now());
     order.setDelivery(delivery);

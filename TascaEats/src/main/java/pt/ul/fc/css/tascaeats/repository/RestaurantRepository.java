@@ -2,32 +2,26 @@ package pt.ul.fc.css.tascaeats.repository;
 
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 
 @Repository
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
-  Optional<List<Restaurant>>
-      findByDesignationContainingIgnoreCaseAndAddressCityContainingIgnoreCase(
-          String designation, String city);
 
-  Optional<List<Restaurant>> findByAddressCityContainingIgnoreCase(String city);
-
-  Optional<List<Restaurant>> findByDesignationContainingIgnoreCase(String name);
+  List<Restaurant> findByAddressCityContainingIgnoreCase(String city);
+  List<Restaurant> findByAddressStreetContainingIgnoreCase(String street);
+  List<Restaurant> findByAddressPostalCodeContainingIgnoreCase(String postalCode);
+  List<Restaurant> findByDesignationContainingIgnoreCase(String name);
 
   boolean existsByAdminId(Long id);
 
   boolean existsByMenuId(Long id);
 
-  List<Restaurant> findAllByDesignation(String designation);
-  List<Restaurant> findAllByAddress(Address address);
-  List<Restaurant> findByMenu_CuisineIgnoreCase(String cuisine);
+  List<Restaurant> findByMenuCuisineContainingIgnoreCase(String cuisine);
 
   @Query("SELECT r FROM Restaurant r WHERE SIZE(r.orders) = :orderNumber")
   List<Restaurant> findByOrderNumber(@Param("orderNumber") int orderNumber);

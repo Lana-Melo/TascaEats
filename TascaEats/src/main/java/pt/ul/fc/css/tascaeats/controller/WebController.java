@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -54,7 +55,7 @@ public class WebController {
       session.setAttribute("userId", userDto.id());
       // session.setAttribute("userType", userDto.userType()); //nao sei, talvez seja preciso
       ra.addFlashAttribute("message", "Login successful!");
-      return "redirect:/restaurants"; // quem fizer login pela interface web vai sempre para os
+      return "redirect:/restaurant"; // quem fizer login pela interface web vai sempre para os
       // restaurantes
 
     } catch (
@@ -109,30 +110,75 @@ public class WebController {
   // ---- RESTAURANT ----
 
   // UC E - buscar por restaurantes
-  @GetMapping("/restaurants")
-  public String restaurants(Model model) {
-    // model.addAttribute("restaurants", restaurantService.getAllRestaurants());
-    return "restaurants"; // returns the restaurants.html template
-  }
-
-  @GetMapping("/restaurants/search")
-  public String searchRestaurants(@RequestParam String query, Model model) {
-    // model.addAttribute("restaurants", restaurantService.searchRestaurants(query));
-    return "restaurants"; // returns the restaurants.html template
-    // voltar aqui o client tem q escolher o filtro q deseja, se quer filtar por nome, cidade, tipo
-    // de comida lalalal
+  @GetMapping("/restaurant")
+  public String restaurants(
+      @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String city,
+      @RequestParam(required = false) String street,
+      @RequestParam(required = false) String postalCode,
+      @RequestParam(required = false) String cuisine,
+      @RequestParam(required = false) String orderNumber,
+      @RequestParam(required = false) String reviewNumber,
+      @RequestParam(required = false) String activeHour,
+      @RequestParam(required = false) String average,
+      HttpSession session,
+      Model model) {
+    if (session.getAttribute("userId") == null) return "redirect:/login";
+    try {
+      model.addAttribute("designation", designation);
+      model.addAttribute("city", city);
+      model.addAttribute("cuisine", cuisine);
+      model.addAttribute("orderNumber", orderNumber);
+      model.addAttribute("reviewNumber", reviewNumber);
+      model.addAttribute("activeHour", activeHour);
+      model.addAttribute("average", average);
+      model.addAttribute(
+          "restaurant",
+          restaurantService.searchBy(
+              designation,
+              city,
+              street,
+              postalCode,
+              cuisine,
+              orderNumber,
+              reviewNumber,
+              activeHour,
+              average));
+      return "restaurant";
+    } catch (RuntimeException ex) {
+      model.addAttribute("error", ex.getMessage());
+      return "restaurant";
+    }
   }
 
   // UC I - buscar produtos de um restaurante
-  @GetMapping("/restaurants/{restaurantId}/products")
+  @GetMapping("/restaurant/{restaurantId}/product")
   public String restaurantProducts(
-      @RequestParam Long restaurantId, Model model, RedirectAttributes ra) {
+      @PathVariable Long restaurantId,
+      @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String description,
+      @RequestParam(required = false) String availability,
+      @RequestParam(required = false) String timesOrdered,
+      Model model,
+      RedirectAttributes ra) {
+
     try {
-      model.addAttribute("products", restaurantService.getProducts(restaurantId));
-      return "products"; // returns the products.html template
+      model.addAttribute("restaurantId", restaurantId);
+      model.addAttribute("designation", designation);
+      model.addAttribute("description", description);
+      model.addAttribute("availability", availability);
+      model.addAttribute("timesOrdered", timesOrdered);
+
+      model.addAttribute(
+          "products",
+          restaurantService.searchProductBy(
+              restaurantId, designation, description, availability, timesOrdered));
+
+      return "product";
+
     } catch (RuntimeException ex) {
       ra.addFlashAttribute("error", ex.getMessage());
-      return "redirect:/restaurants";
+      return "redirect:/restaurant";
     }
   }
 
@@ -140,10 +186,38 @@ public class WebController {
 
   // ------- ORDER -------
 
+  @GetMapping("/order")
+  public String orderPage(
+      @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String description,
+      @RequestParam(required = false) String availability,
+      @RequestParam(required = false) String timesOrdered,
+      @RequestParam(required = false) String newOrder,
+      HttpSession session,
+      Model model) {
+    if (session.getAttribute("userId") == null) return "redirect:/login";
+    Long clientId = (Long) session.getAttribute("userId");
+    try {
+      model.addAttribute("orders", orderService.getOrdersByClient(clientId));
+      model.addAttribute("newOrder", newOrder);
+      model.addAttribute("designation", designation);
+      model.addAttribute("description", description);
+      model.addAttribute("availability", availability);
+      model.addAttribute("timesOrdered", timesOrdered);
+      model.addAttribute(
+          "products",
+          restaurantService.searchProductBy(
+              null, designation, description, availability, timesOrdered));
+      return "order";
+    } catch (RuntimeException ex) {
+      model.addAttribute("error", ex.getMessage());
+      return "order";
+    }
+  }
+
   // UC J - criar pedido
-  @PostMapping("/orders")
+  @PostMapping("/order")
   public String createOrder(
-      @RequestParam Long restaurantId,
       @RequestParam List<Long> productIds,
       @RequestParam String city,
       @RequestParam String street,
@@ -160,10 +234,10 @@ public class WebController {
       orderRequest.setPostalCode(postalCode);
       orderService.createOrder(orderRequest);
       ra.addFlashAttribute("message", "Order created successfully!");
-      return "redirect:/orders"; // returns the orders.html template
+      return "redirect:/order"; // returns the orders.html template
     } catch (RuntimeException ex) { // mudar serviços pra lidar com as exceptions
       ra.addFlashAttribute("error", ex.getMessage());
-      return "redirect:/restaurants";
+      return "redirect:/restaurant";
     }
   }
 

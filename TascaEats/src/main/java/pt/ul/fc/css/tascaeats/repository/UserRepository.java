@@ -15,11 +15,11 @@ import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 
 @Repository
 public interface UserRepository extends JpaRepository<AUser, Long> {
-  Optional<AUser> findByUsername(String username);
+    Optional<AUser> findByUsername(String username);
 
-  Optional<DeliveryPerson> findFirstByStatus(DeliveryPersonStatus status);
+    Optional<DeliveryPerson> findFirstByStatus(DeliveryPersonStatus status);
 
-  List<AUser> findAllByName(String name);
+    List<AUser> findAllByNameContainingIgnoreCase(String name);
 
     @Query("SELECT c FROM Client c")
     List<Client> findAllClients();
