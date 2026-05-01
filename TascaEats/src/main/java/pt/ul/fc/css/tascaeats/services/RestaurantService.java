@@ -268,16 +268,19 @@ public class RestaurantService {
         canReview = true;
       }
     }
-    if (!canReview || reviewRequest.getRating() < 1 || reviewRequest.getRating() > 5) {
-      throw new RequirementsNotMetException("Rating must be between 1 and 5/Client must order before giving a review");
+    if (!canReview) {
+      throw new RequirementsNotMetException("You cannot review this restaurant");
+    }
+    if (reviewRequest.getRating() < 1 || reviewRequest.getRating() > 5) {
+      throw new RequirementsNotMetException("Rating must be between 1 and 5");
     }
 
     Review review =
         new Review(reviewRequest.getRating(), reviewRequest.getComment(), client, restaurant);
 
-    client.addReview(review);
+    // client.addReview(review);
     restaurant.addReview(review);
-    userRepository.save(client);
+    // userRepository.save(client);
     restaurantRepository.save(restaurant);
 
     return mapReviewToReviewResponse(review);
@@ -312,6 +315,8 @@ public class RestaurantService {
 
   private RestaurantResponseDto mapRestaurantToRestaurantResponse(Restaurant restaurant) {
     Long menuId = restaurant.getMenu() == null ? null : restaurant.getMenu().getId();
+    Double av = restaurant.getReviews().stream().mapToInt(Review::getRating).average().orElse(0.0);
+    double roundedAv = Math.round(av * 100.0) / 100.0;
     return new RestaurantResponseDto(
         restaurant.getId(),
         restaurant.getDesignation(),
@@ -323,7 +328,9 @@ public class RestaurantService {
         restaurant.getAddress().getPostalCode(),
         restaurant.getOpenHours().toString(),
         restaurant.getCloseHours().toString(),
-        menuId);
+        menuId,
+        roundedAv,
+        restaurant.getReviews().size());
   }
 
   private ReviewResponseDto mapReviewToReviewResponse(Review review) {
