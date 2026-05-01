@@ -16,6 +16,7 @@ import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
@@ -160,7 +161,7 @@ public class UserService {
   }
 
   @Transactional
-  public ClientResponseDto updateClient(Long id, ClientRequestDto request) {
+  public UserResponseDto updateClient(Long id, UserRequestDto request) {
     Optional<AUser> userOpt = userRepository.findById(id);
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {
       throw new ResourceNotFoundException("User not found");
@@ -172,10 +173,9 @@ public class UserService {
     client.setPhoneNumber(request.getPhoneNumber());
     client.setNif(request.getNif());
     client.setPassword(request.getPassword());
-    client.addAddress(new Address(request.getStreet(), request.getCity(), request.getPostalCode()));
 
     Client saved = userRepository.save(client);
-    return mapClientToClientResponse(saved);
+    return mapAUserToUserResponse(saved);
   }
 
   @Transactional
@@ -191,6 +191,9 @@ public class UserService {
     deliveryPerson.setPhoneNumber(request.getPhoneNumber());
     deliveryPerson.setNif(request.getNif());
     deliveryPerson.setPassword(request.getPassword());
+    if (request.getStatus() != null && !request.getStatus().isEmpty()) {
+      deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus()));
+    }
 
     DeliveryPerson saved = userRepository.save(deliveryPerson);
     return mapDeliveryToDeliveryPersonResponse(saved);

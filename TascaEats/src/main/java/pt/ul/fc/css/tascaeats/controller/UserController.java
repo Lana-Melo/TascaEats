@@ -86,9 +86,9 @@ public class UserController {
 
   @PutMapping("/client/{id}")
   @ApiOperation(value = "Update client", notes = "Updates an existing client.")
-  public ResponseEntity<ClientResponseDto> updateClient(
-      @PathVariable Long id, @RequestBody @Valid ClientRequestDto request) {
-    ClientResponseDto client = userHandler.updateClient(id, request);
+  public ResponseEntity<UserResponseDto> updateClient(
+      @PathVariable Long id, @RequestBody @Valid UserRequestDto request) {
+    UserResponseDto client = userHandler.updateClient(id, request);
     return client != null ? ResponseEntity.ok(client) : ResponseEntity.notFound().build();
   }
 
