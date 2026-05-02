@@ -45,8 +45,8 @@
                 th:checked="${designation != null and !designation.isEmpty()}"> Name</label>
             <label><input type="checkbox" class="filter-toggle" data-target="f-description"
                 th:checked="${description != null and !description.isEmpty()}"> Description</label>
-            <label><input type="checkbox" class="filter-toggle" data-target="f-availability"
-                th:checked="${availability != null and !availability.isEmpty()}"> Availability</label>
+            <label><input type="checkbox" class="filter-toggle" data-target="f-price"
+                th:checked="${price != null and !price.isEmpty()}"> Max Price</label>
             <label><input type="checkbox" class="filter-toggle" data-target="f-timesOrdered"
                 th:checked="${timesOrdered != null and !timesOrdered.isEmpty()}"> Times Ordered</label>
         </div>
@@ -58,12 +58,8 @@
             <div class="col-auto" th:classappend="${description == null or description.isEmpty()} ? 'd-none'" id="f-description">
                 <input type="text" name="description" class="form-control" placeholder="Description" th:value="${description}"/>
             </div>
-            <div class="col-auto" th:classappend="${availability == null or availability.isEmpty()} ? 'd-none'" id="f-availability">
-                <select name="availability" class="form-select">
-                    <option value="">All</option>
-                    <option value="AVAILABLE" th:selected="${availability == 'AVAILABLE'}">Available</option>
-                    <option value="SOLD_OUT" th:selected="${availability == 'SOLD_OUT'}">Sold Out</option>
-                </select>
+            <div class="col-auto" th:classappend="${price == null or price.isEmpty()} ? 'd-none'" id="f-price">
+                <input type="number" step="0.01" name="price" class="form-control" placeholder="Max price (€)" th:value="${price}"/>
             </div>
             <div class="col-auto" th:classappend="${timesOrdered == null or timesOrdered.isEmpty()} ? 'd-none'" id="f-timesOrdered">
                 <input type="number" name="timesOrdered" class="form-control" placeholder="Min times ordered" th:value="${timesOrdered}"/>

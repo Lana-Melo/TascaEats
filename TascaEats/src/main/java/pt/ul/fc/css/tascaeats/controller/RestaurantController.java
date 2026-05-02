@@ -68,11 +68,13 @@ public class RestaurantController {
   public ResponseEntity<List<ProductItemResponseDto>> searchProduct(
       @RequestParam(required = false) Long id,
       @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String price,
       @RequestParam(required = false) String description,
       @RequestParam(required = false) String availability,
       @RequestParam(required = false) String timesOrdered) {
     List<ProductItemResponseDto> products =
-        restaurantHandler.searchProductBy(id, designation, description, availability, timesOrdered);
+        restaurantHandler.searchProductBy(
+            id, price, designation, description, availability, timesOrdered);
     return ResponseEntity.ok(products);
   }
 

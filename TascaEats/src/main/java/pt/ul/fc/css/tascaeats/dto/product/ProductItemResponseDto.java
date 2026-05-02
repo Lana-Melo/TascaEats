@@ -6,4 +6,5 @@ public record ProductItemResponseDto(
     Long restaurantId,
     String designation,
     String description,
-    String availability) {}
+    String availability,
+    Double price) {}

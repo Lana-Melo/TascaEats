@@ -252,8 +252,8 @@ public class WebController {
       @PathVariable Long restaurantId,
       @RequestParam(required = false) String designation,
       @RequestParam(required = false) String description,
-      @RequestParam(required = false) String availability,
       @RequestParam(required = false) String timesOrdered,
+      @RequestParam(required = false) String price,
       Model model,
       RedirectAttributes ra) {
 
@@ -261,13 +261,13 @@ public class WebController {
       model.addAttribute("restaurantId", restaurantId);
       model.addAttribute("designation", designation);
       model.addAttribute("description", description);
-      model.addAttribute("availability", availability);
       model.addAttribute("timesOrdered", timesOrdered);
+      model.addAttribute("price", price);
 
       model.addAttribute(
           "products",
           restaurantService.searchProductBy(
-              restaurantId, designation, description, availability, timesOrdered));
+              restaurantId, price, designation, description, "AVAILABLE", timesOrdered));
 
       return "product";
 
@@ -285,9 +285,9 @@ public class WebController {
   public String orderPage(
       @RequestParam(required = false) String designation,
       @RequestParam(required = false) String description,
-      @RequestParam(required = false) String availability,
       @RequestParam(required = false) String timesOrdered,
       @RequestParam(required = false) String newOrder,
+      @RequestParam(required = false) String price,
       HttpSession session,
       Model model) {
     if (session.getAttribute("userId") == null) return "redirect:/login";
@@ -297,13 +297,13 @@ public class WebController {
       model.addAttribute("newOrder", newOrder);
       model.addAttribute("designation", designation);
       model.addAttribute("description", description);
-      model.addAttribute("availability", availability);
       model.addAttribute("timesOrdered", timesOrdered);
+      model.addAttribute("price", price);
       if (newOrder != null) {
         model.addAttribute(
             "products",
             restaurantService.searchProductBy(
-                null, designation, description, availability, timesOrdered));
+                null, price, designation, description, "AVAILABLE", timesOrdered));
       }
       return "order";
     } catch (RuntimeException ex) {

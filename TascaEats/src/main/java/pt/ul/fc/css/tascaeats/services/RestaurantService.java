@@ -221,6 +221,7 @@ public class RestaurantService {
 
   public List<ProductItemResponseDto> searchProductBy(
       Long restaurantId,
+      String price,
       String designation,
       String description,
       String availability,
@@ -233,6 +234,10 @@ public class RestaurantService {
     if (description != null && !description.isEmpty()) {
       productItems.retainAll(
           productItemRepository.findByProductDescriptionContainingIgnoreCase(description));
+    }
+    if (price != null && !price.isEmpty()) {
+      productItems.retainAll(
+          productItemRepository.findByProductPriceLessThanEqual(Double.parseDouble(price)));
     }
     if (availability != null && !availability.isEmpty()) {
       productItems.retainAll(
@@ -313,10 +318,10 @@ public class RestaurantService {
         productItem.getId(),
         productItem.getProduct().getId(),
         productItem.getRestaurant().getId(),
-        productItem.getStatus().toString(),
         productItem.getProduct().getDesignation(),
         productItem.getProduct().getDescription(),
-        productItem.getStatus().toString());
+        productItem.getStatus().toString(),
+        productItem.getProduct().getPrice());
   }
 
   private RestaurantResponseDto mapRestaurantToRestaurantResponse(Restaurant restaurant) {

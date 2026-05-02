@@ -22,11 +22,10 @@ public interface ProductItemRepository extends JpaRepository<ProductItem, Long> 
 
   @Query(
       """
-          SELECT p
-          FROM Order o
-          JOIN o.productItems p
-          GROUP BY p
-          HAVING COUNT(p) >= :timesOrdered
-      """)
+    SELECT p FROM ProductItem p
+    WHERE (SELECT COUNT(o) FROM Order o WHERE p MEMBER OF o.productItems) >= :timesOrdered
+""")
   List<ProductItem> findByTimesOrdered(@Param("timesOrdered") int timesOrdered);
+
+  List<ProductItem> findByProductPriceLessThanEqual(double price);
 }
