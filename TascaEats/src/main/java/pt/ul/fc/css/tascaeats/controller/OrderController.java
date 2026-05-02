@@ -2,8 +2,10 @@ package pt.ul.fc.css.tascaeats.controller;
 
 import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -64,5 +66,11 @@ public class OrderController {
     return orderHandler.cancelOrder(id)
         ? ResponseEntity.noContent().build()
         : ResponseEntity.notFound().build();
+  }
+
+  @GetMapping
+  @ApiOperation(value = "Get all orders", notes = "Returns a list of all orders.")
+  public ResponseEntity<List<OrderResponseDto>> getAllOrders() {
+    return ResponseEntity.ok(orderHandler.getAllOrders());
   }
 }

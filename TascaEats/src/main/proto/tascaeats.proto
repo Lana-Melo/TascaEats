@@ -15,17 +15,22 @@ service TascaEatsService {
   rpc UpdateAdmin (UserRequest) returns (UserResponse);
   rpc UpdateClient (UserRequest) returns (UserResponse);
   rpc UpdateDeliveryPerson (DeliveryPersonUpdateRequest) returns (DeliveryPersonResponse);
+  rpc SearchUsers (SearchUsersRequest) returns (SearchUsersResponse);
+  rpc SearchRestaurants (SearchRestaurantsRequest) returns (RestaurantsResponse);
   rpc SearchAdminRestaurants (AdminRestaurantsRequest) returns (AdminRestaurantsResponse);
+  rpc SearchMenus (SearchMenusRequest) returns (MenusSearchResponse);
+  rpc SearchProducts (SearchProductsRequest) returns (ProductsSearchResponse);
   rpc GetAllMenus (Empty) returns (MenusResponse);
   rpc AssignMenu (AssignMenuRequest) returns (Empty);
   rpc ChangeRestaurantStatus (ChangeStatusRequest) returns (Empty);
   rpc CreateRestaurant (CreateRestaurantRequest) returns (RestaurantItem);
   rpc GetRestaurantProducts (GetRestaurantProductsRequest) returns (ProductsResponse);
   rpc UpdateProductStatus (UpdateProductStatusRequest) returns (Empty);
-}
+  rpc GetAllOrders (Empty) returns (OrdersResponse);
+  rpc ProcessPayment (PaymentRequest) returns (OrderResponse);
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
+  rpc CancelOrder (OrderIdRequest) returns (Empty);
 
-message DeleteAccountRequest {
-  int64 id = 1;
 }
 
 message AdminRestaurantsRequest {
@@ -160,4 +165,105 @@ message DeliveryPersonResponse {
   string phoneNumber = 5;
   string nif = 6;
   string status = 7;
+}
+
+message DeleteAccountRequest {
+  int64 id = 1;
+}
+
+message SearchUsersRequest {
+  string name = 1;
+  string userType = 2;
+  string orderNumber = 3;
+  string deliveryNumber = 4;
+}
+
+message SearchUsersResponse {
+  repeated UserResponse users = 1;
+}
+
+message OrderResponse {
+  int64 id = 1;
+  string status = 2;
+  double totalValue = 3;
+  int64 clientId = 4;
+  string clientName = 5;
+  string city = 6;
+  string street = 7;
+  string postalCode = 8;
+}
+
+message OrdersResponse {
+  repeated OrderResponse orders = 1;
+}
+
+message PaymentRequest {
+  int64 orderId = 1;
+  string paymentMethod = 2;
+  double amount = 3;
+  string paymentInfo = 4;
+}
+
+message UpdateOrderStatusRequest {
+  int64 orderId = 1;
+  string status = 2;
+}
+
+message OrderIdRequest {
+  int64 orderId = 1;
+}
+
+message SearchRestaurantsRequest {
+  string name = 1;
+  string city = 2;
+  string street = 3;
+  string postalCode = 4;
+  string cuisine = 5;
+  string minOrders = 6;
+  string minReviews = 7;
+  string activeAt = 8;
+  string maxAvgPrice = 9;
+}
+
+message RestaurantsResponse {
+  repeated RestaurantItem restaurants = 1;
+}
+
+message SearchMenusRequest {
+  string name = 1;
+  string productNumber = 2;
+  string average = 3;
+}
+
+message MenuSearchItem {
+  int64 id = 1;
+  string name = 2;
+  string cuisine = 3;
+  string description = 4;
+  int32 productCount = 5;
+}
+
+message MenusSearchResponse {
+  repeated MenuSearchItem menus = 1;
+}
+
+message SearchProductsRequest {
+  string designation = 1;
+  string price = 2;
+  string description = 3;
+  string availability = 4;
+  string timesOrdered = 5;
+}
+
+message ProductSearchItem {
+  int64 id = 1;
+  string designation = 2;
+  double price = 3;
+  string description = 4;
+  string availability = 5;
+  int32 timesOrdered = 6;
+}
+
+message ProductsSearchResponse {
+  repeated ProductSearchItem products = 1;
 }

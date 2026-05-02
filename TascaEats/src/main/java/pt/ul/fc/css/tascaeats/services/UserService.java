@@ -126,29 +126,39 @@ public class UserService {
         name == null || name.isEmpty()
             ? userRepository.findAll()
             : userRepository.findAllByNameContainingIgnoreCase(name);
-    switch (userType) {
+
+    // se tem orderNumber é pra ver nos clientes
+    if (orderNumber != null && !orderNumber.isEmpty()) {
+      List<Client> clients =
+          userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
+      users.retainAll(clients);
+      return users.stream().map(this::mapAUserToUserResponse).toList();
+    }
+
+    // se tem deliveryNumber é pra ver delivery persons
+    if (deliveryNumber != null && !deliveryNumber.isEmpty()) {
+      List<DeliveryPerson> delies =
+          userRepository.findDeliveryPersonsWithDeliveryNumber(
+              Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);
+      users.retainAll(delies);
+      return users.stream().map(this::mapAUserToUserResponse).toList();
+    }
+
+    // se não tem orderNumber nem deliveryNumber userType
+    switch (userType == null ? "" : userType) {
       case "Client":
-        List<Client> orders =
-            orderNumber == null || orderNumber.isEmpty()
-                ? userRepository.findAllClients()
-                : userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
-        users.retainAll(orders);
+        users.retainAll(userRepository.findAllClients());
         break;
       case "Delivery Person":
-        List<DeliveryPerson> delies =
-            deliveryNumber == null || deliveryNumber.isEmpty()
-                ? userRepository.findAllDeliveryPersons()
-                : userRepository.findDeliveryPersonsWithDeliveryNumber(
-                    Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);
-        users.retainAll(delies);
+        users.retainAll(userRepository.findAllDeliveryPersons());
         break;
       case "Admin":
-        List<Admin> admins = userRepository.findAllAdmins();
-        users.retainAll(admins);
+        users.retainAll(userRepository.findAllAdmins());
         break;
       default:
         break;
     }
+
     return users.stream().map(this::mapAUserToUserResponse).toList();
   }
 

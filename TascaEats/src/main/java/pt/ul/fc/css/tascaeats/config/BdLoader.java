@@ -123,6 +123,15 @@ public class BdLoader {
           productRepository.save(
               new Product(9.00, "a classica do norte", "francesinha", menuBudega));
 
+      // ── ADICIONAR PRODUTOS AOS MENUS ──────────────────────────────
+      menuBrunao.addProduct(arrozDoce);
+      menuBrunao.addProduct(batatafrita);
+      menuBrunao.addProduct(arroz);
+      menuRepository.save(menuBrunao);
+
+      menuBudega.addProduct(francesinha);
+      menuRepository.save(menuBudega);
+
       // ── RESTAURANTES ──────────────────────────────────────────────
       Restaurant tascaBrunao =
           restaurantRepository.save(

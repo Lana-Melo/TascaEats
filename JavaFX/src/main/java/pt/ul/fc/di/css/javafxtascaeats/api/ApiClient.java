@@ -17,13 +17,26 @@ import pt.ul.fc.css.tascaeats.grpc.Empty;
 import pt.ul.fc.css.tascaeats.grpc.GetRestaurantProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.MenusResponse;
+import pt.ul.fc.css.tascaeats.grpc.MenusSearchResponse;
+import pt.ul.fc.css.tascaeats.grpc.OrderIdRequest;
+import pt.ul.fc.css.tascaeats.grpc.OrderResponse;
+import pt.ul.fc.css.tascaeats.grpc.OrdersResponse;
+import pt.ul.fc.css.tascaeats.grpc.PaymentRequest;
 import pt.ul.fc.css.tascaeats.grpc.ProductsResponse;
+import pt.ul.fc.css.tascaeats.grpc.ProductsSearchResponse;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantItem;
+import pt.ul.fc.css.tascaeats.grpc.RestaurantsResponse;
+import pt.ul.fc.css.tascaeats.grpc.SearchMenusRequest;
+import pt.ul.fc.css.tascaeats.grpc.SearchProductsRequest;
+import pt.ul.fc.css.tascaeats.grpc.SearchRestaurantsRequest;
+import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
+import pt.ul.fc.css.tascaeats.grpc.UpdateOrderStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.UpdateProductStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.model.MenuModel;
+import pt.ul.fc.di.css.javafxtascaeats.model.OrderModel;
 import pt.ul.fc.di.css.javafxtascaeats.model.ProductModel;
 import pt.ul.fc.di.css.javafxtascaeats.model.RestaurantModel;
 
@@ -304,6 +317,172 @@ public class ApiClient {
                     item.getPostalCode(),
                     item.getOpenHours(),
                     item.getCloseHours()))
+        .toList();
+  }
+
+  public static List<UserResponse> searchUsers(
+      String name, String userType, String orderNumber, String deliveryNumber) {
+    SearchUsersRequest request =
+        SearchUsersRequest.newBuilder()
+            .setName(name != null ? name : "")
+            .setUserType(userType != null ? userType : "")
+            .setOrderNumber(orderNumber != null ? orderNumber : "")
+            .setDeliveryNumber(deliveryNumber != null ? deliveryNumber : "")
+            .build();
+    try {
+      return stub.searchUsers(request).getUsersList();
+    } catch (StatusRuntimeException e) {
+      throw e;
+    }
+  }
+
+  public static List<RestaurantModel> searchRestaurants(
+      String name,
+      String city,
+      String street,
+      String postalCode,
+      String cuisine,
+      String minOrders,
+      String minReviews,
+      String activeAt,
+      String maxAvgPrice) {
+    SearchRestaurantsRequest request =
+        SearchRestaurantsRequest.newBuilder()
+            .setName(name != null ? name : "")
+            .setCity(city != null ? city : "")
+            .setStreet(street != null ? street : "")
+            .setPostalCode(postalCode != null ? postalCode : "")
+            .setCuisine(cuisine != null ? cuisine : "")
+            .setMinOrders(minOrders != null ? minOrders : "")
+            .setMinReviews(minReviews != null ? minReviews : "")
+            .setActiveAt(activeAt != null ? activeAt : "")
+            .setMaxAvgPrice(maxAvgPrice != null ? maxAvgPrice : "")
+            .build();
+    RestaurantsResponse response = stub.searchRestaurants(request);
+    return response.getRestaurantsList().stream()
+        .map(
+            item ->
+                new RestaurantModel(
+                    item.getId(),
+                    item.getDesignation(),
+                    item.getStatus(),
+                    item.getNif(),
+                    item.getStreet(),
+                    item.getCity(),
+                    item.getPostalCode(),
+                    item.getOpenHours(),
+                    item.getCloseHours()))
+        .toList();
+  }
+
+  public static List<MenuModel> searchMenus(String name, String productNumber, String average) {
+    SearchMenusRequest request =
+        SearchMenusRequest.newBuilder()
+            .setName(name != null ? name : "")
+            .setProductNumber(productNumber != null ? productNumber : "")
+            .setAverage(average != null ? average : "")
+            .build();
+    MenusSearchResponse response = stub.searchMenus(request);
+    return response.getMenusList().stream()
+        .map(item -> new MenuModel(item.getId(), item.getName(), item.getCuisine(), List.of()))
+        .toList();
+  }
+
+  public static List<OrderModel> getAllOrders() {
+    OrdersResponse response = stub.getAllOrders(Empty.getDefaultInstance());
+    return response.getOrdersList().stream()
+        .map(
+            item ->
+                new OrderModel(
+                    item.getId(),
+                    item.getStatus(),
+                    item.getTotalValue(),
+                    item.getClientId(),
+                    item.getClientName(),
+                    item.getCity(),
+                    item.getStreet(),
+                    item.getPostalCode()))
+        .toList();
+  }
+
+  public static OrderModel processPayment(
+      Long orderId, String paymentMethod, double amount, String paymentInfo) {
+    PaymentRequest request =
+        PaymentRequest.newBuilder()
+            .setOrderId(orderId)
+            .setPaymentMethod(paymentMethod)
+            .setAmount(amount)
+            .setPaymentInfo(paymentInfo != null ? paymentInfo : "")
+            .build();
+    try {
+      OrderResponse response = stub.processPayment(request);
+      return new OrderModel(
+          response.getId(),
+          response.getStatus(),
+          response.getTotalValue(),
+          response.getClientId(),
+          response.getClientName(),
+          response.getCity(),
+          response.getStreet(),
+          response.getPostalCode());
+    } catch (StatusRuntimeException e) {
+      throw new IllegalArgumentException(e.getStatus().getDescription());
+    }
+  }
+
+  public static OrderModel updateOrderStatus(Long orderId, String status) {
+    UpdateOrderStatusRequest request =
+        UpdateOrderStatusRequest.newBuilder().setOrderId(orderId).setStatus(status).build();
+    try {
+      OrderResponse response = stub.updateOrderStatus(request);
+      return new OrderModel(
+          response.getId(),
+          response.getStatus(),
+          response.getTotalValue(),
+          response.getClientId(),
+          response.getClientName(),
+          response.getCity(),
+          response.getStreet(),
+          response.getPostalCode());
+    } catch (StatusRuntimeException e) {
+      throw new IllegalArgumentException(e.getStatus().getDescription());
+    }
+  }
+
+  public static void cancelOrder(Long orderId) {
+    OrderIdRequest request = OrderIdRequest.newBuilder().setOrderId(orderId).build();
+    try {
+      stub.cancelOrder(request);
+    } catch (StatusRuntimeException e) {
+      throw new IllegalArgumentException(e.getStatus().getDescription());
+    }
+  }
+
+  public static List<ProductModel> searchProducts(
+      String designation,
+      String price,
+      String description,
+      String availability,
+      String timesOrdered) {
+    SearchProductsRequest request =
+        SearchProductsRequest.newBuilder()
+            .setDesignation(designation != null ? designation : "")
+            .setPrice(price != null ? price : "")
+            .setDescription(description != null ? description : "")
+            .setAvailability(availability != null ? availability : "")
+            .setTimesOrdered(timesOrdered != null ? timesOrdered : "")
+            .build();
+    ProductsSearchResponse response = stub.searchProducts(request);
+    return response.getProductsList().stream()
+        .map(
+            item ->
+                new ProductModel(
+                    item.getId(),
+                    item.getPrice(),
+                    item.getDescription(),
+                    item.getDesignation(),
+                    "", // menu
+                    item.getAvailability()))
         .toList();
   }
 }

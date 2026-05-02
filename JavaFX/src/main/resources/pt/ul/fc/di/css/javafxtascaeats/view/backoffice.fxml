@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="400.0" prefWidth="640.0"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.BackOfficeController">
+  <children>
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu mnemonicParsing="false" text="Help">
+          <items>
+            <MenuItem mnemonicParsing="false" text="About TascaEats" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+
+    <AnchorPane VBox.vgrow="ALWAYS">
+      <children>
+        <VBox alignment="CENTER" spacing="12.0"
+              AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+              AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+          <VBox alignment="CENTER" spacing="10.0" maxWidth="200">
+            <padding><Insets top="20" bottom="20"/></padding>
+
+            <!-- Breadcrumb -->
+            <HBox spacing="4" alignment="CENTER_LEFT">
+              <Hyperlink text="Login" textFill="#a1a1a1" onAction="#handleGoLogin">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Hyperlink>
+              <Label text="/" textFill="#a1a1a1">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Label>
+              <Label text="Back Office">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Label>
+            </HBox>
+
+            <Label text="Back Office">
+              <font><Font name="AppleGothic Regular" size="22.0"/></font>
+            </Label>
+
+            <Button text="Users" maxWidth="Infinity" onAction="#handleUsers">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </Button>
+
+            <Button text="Restaurants" maxWidth="Infinity" onAction="#handleRestaurants">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </Button>
+
+            <Button text="Menus" maxWidth="Infinity" onAction="#handleMenus">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </Button>
+
+            <Button text="Products" maxWidth="Infinity" onAction="#handleProducts">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </Button>
+
+          </VBox>
+        </VBox>
+      </children>
+    </AnchorPane>
+
+    <ToolBar prefHeight="40.0" prefWidth="200.0" />
+  </children>
+</VBox>
