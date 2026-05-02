@@ -27,6 +27,14 @@
         <a href="/order" class="btn btn-primary btn-lg">
         📦 My Orders
         </a>
+
+        <a href="/profile" class="btn btn-primary btn-lg">
+        Update Profile
+        </a>
+
+        <a th:href="@{/logout}" class="text-decoration-underline">
+        Logout
+        </a>
       </div>
     </div>
 
@@ -38,9 +46,10 @@
 
       <p class="text-muted">Please use the internal application.</p>
 
-      <a href="/login" class="btn btn-secondary mt-2">
-        Back to Login
-      </a>
+
+        <a th:href="@{/logout}" class="text-decoration-underline">
+        Logout
+        </a>
     </div>
 
   </div>

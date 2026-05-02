@@ -36,8 +36,7 @@ public class Order {
   @Column(nullable = false)
   private OrderStatus status;
 
-  @Embedded
-  private Address address;
+  @Embedded private Address address;
 
   @ManyToOne
   @JoinColumn(name = "client_id", nullable = false)
@@ -45,17 +44,16 @@ public class Order {
 
   @ManyToMany
   @JoinTable(
-      name = "order_products",
+      name = "order_productitems",
       joinColumns = @JoinColumn(name = "order_id"),
-      inverseJoinColumns = @JoinColumn(name = "product_id"))
-  private List<Product> products;
+      inverseJoinColumns = @JoinColumn(name = "productitem_id"))
+  private List<ProductItem> productItems;
 
   @ManyToOne
   @JoinColumn(name = "delivery_person_id")
   private DeliveryPerson deliveryPerson;
 
-  @Embedded 
-  private Delivery delivery;
+  @Embedded private Delivery delivery;
 
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "payment_id")
@@ -63,16 +61,16 @@ public class Order {
 
   protected Order() {}
 
-  public Order(Client client, List<Product> products, Address address) {
+  public Order(Client client, List<ProductItem> productItems, Address address) {
     this.timestamp = LocalDateTime.now();
     this.status = OrderStatus.CREATED;
     this.client = client;
-    this.products = products;
+    this.productItems = productItems;
     this.address = address;
     this.totalValue = 0.0;
 
-    for (Product product : products) {
-      this.totalValue = this.totalValue + product.getPrice();
+    for (ProductItem productItem : productItems) {
+      this.totalValue = this.totalValue + productItem.getProduct().getPrice();
     }
   }
 
@@ -104,16 +102,16 @@ public class Order {
     return client;
   }
 
-  public List<Product> getProducts() {
-    return products;
+  public List<ProductItem> getProductItems() {
+    return productItems;
   }
 
-  public void addProduct(Product product) {
-    this.products.add(product);
+  public void setProductItems(List<ProductItem> productItems) {
+    this.productItems = productItems;
   }
 
-  public void setProducts(List<Product> products) {
-    this.products = products;
+  public void addProductItem(ProductItem productItems) {
+    this.productItems.add(productItems);
   }
 
   public Delivery getDelivery() {

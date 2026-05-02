@@ -184,7 +184,6 @@ public class ApiClient {
             .setActiveAt(activeAt != null ? activeAt : "")
             .setMaxAvgPrice(maxAvgPrice != null ? maxAvgPrice : "")
             .build();
-    System.out.println("name: " + request.getName());
     AdminRestaurantsResponse response = stub.searchAdminRestaurants(request);
     return response.getRestaurantsList().stream()
         .map(

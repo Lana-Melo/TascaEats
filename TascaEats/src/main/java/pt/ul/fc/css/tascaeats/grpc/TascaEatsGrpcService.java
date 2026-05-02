@@ -122,12 +122,12 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   }
 
   // ─── Update Client ─────────────────────────────────────────────
-  @Override
+  /* @Override
   public void updateClient(UserRequest request, StreamObserver<UserResponse> responseObserver) {
     try {
       Long id = request.getId();
       UserRequestDto requestDto = grpcMapper.mapAdminRegisterReqToReqDto(request);
-      UserResponseDto user = userService.updateClient(id, requestDto);
+      ClientResponseDto user = userService.updateClient(id, requestDto);
       UserResponse response = grpcMapper.mapUserResponseDtoToResponse(user);
       responseObserver.onNext(response);
       responseObserver.onCompleted();
@@ -138,7 +138,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
     }
-  }
+  }*/
 
   // ─── Update Delivery Person ─────────────────────────────────────────────
   @Override

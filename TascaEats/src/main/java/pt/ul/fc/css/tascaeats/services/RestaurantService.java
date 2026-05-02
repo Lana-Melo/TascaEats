@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import pt.ul.fc.css.tascaeats.dto.product.ProductRequestDto;
-import pt.ul.fc.css.tascaeats.dto.product.ProductResponseDto;
+import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequestDto;
@@ -24,6 +23,7 @@ import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.Product;
+import pt.ul.fc.css.tascaeats.entities.ProductItem;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.Review;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
@@ -33,7 +33,7 @@ import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.MenuRepository;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
-import pt.ul.fc.css.tascaeats.repository.ProductRepository;
+import pt.ul.fc.css.tascaeats.repository.ProductItemRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 
@@ -41,7 +41,7 @@ import pt.ul.fc.css.tascaeats.repository.UserRepository;
 public class RestaurantService {
 
   private final RestaurantRepository restaurantRepository;
-  private final ProductRepository productRepository;
+  private final ProductItemRepository productItemRepository;
   private final UserRepository userRepository;
   private final OrderRepository orderRepository;
   private final MenuRepository menuRepository;
@@ -50,10 +50,10 @@ public class RestaurantService {
       RestaurantRepository restaurantRepository,
       UserRepository userRepository,
       MenuRepository menuRepository,
-      ProductRepository productRepository,
+      ProductItemRepository productItemRepository,
       OrderRepository orderRepository) {
     this.restaurantRepository = restaurantRepository;
-    this.productRepository = productRepository;
+    this.productItemRepository = productItemRepository;
     this.userRepository = userRepository;
     this.orderRepository = orderRepository;
     this.menuRepository = menuRepository;
@@ -228,11 +228,11 @@ public class RestaurantService {
       if (average != null && !average.isEmpty()) {
         double avgValue = Double.parseDouble(average);
 
-        Join<Restaurant, Product> productJoin = root.join("products", JoinType.INNER);
+        Join<Restaurant, ProductItem> productItemJoin = root.join("productItems", JoinType.INNER);
 
-        query.groupBy(root.get("id"));
+        query.groupBy(root);
 
-        query.having(cb.le(cb.avg(productJoin.get("price")), avgValue));
+        query.having(cb.le(cb.avg(productItemJoin.get("product").get("price")), avgValue));
       }
 
       return cb.and(predicates.toArray(new Predicate[0]));
@@ -302,6 +302,15 @@ public class RestaurantService {
     menu.addRestaurant(restaurant);
 
     menuRepository.save(menu);
+
+    for (ProductItem productItem : restaurant.getProductItems()) {
+      deleteProductItem(restaurant.getId(), productItem.getId());
+    }
+    restaurant.setProductItems(new ArrayList<>());
+    for (Product product : menu.getProducts()) {
+      restaurant.addProductItem(new ProductItem(product, restaurant));
+    }
+
     Restaurant saved = restaurantRepository.save(restaurant);
     return mapRestaurantToRestaurantResponse(saved);
   }
@@ -310,94 +319,75 @@ public class RestaurantService {
   ///  CRUD PRODUCT'S METHODS
   /////////////////////////////////////////////////////////////
 
-  public ProductResponseDto addProduct(Long restaurantId, ProductRequestDto productRequest) {
-    Optional<Restaurant> resOpt = restaurantRepository.findById(restaurantId);
-    if (!resOpt.isPresent()) {
-      throw new ResourceNotFoundException("Restaurant not found");
-    }
-
-    Restaurant restaurant = resOpt.get();
-    Product product =
-        new Product(
-            productRequest.getPrice(),
-            productRequest.getDescription(),
-            productRequest.getDesignation(),
-            restaurant);
-
-    Product saved = productRepository.save(product);
-
-    return mapProductToProductResponse(saved);
-  }
-
   @Transactional
-  public ProductResponseDto updateProduct(
-      Long restaurantId, Long productId, ProductRequestDto productRequest) {
-    Optional<Product> prodOpt = productRepository.findById(productId);
+  public ProductItemResponseDto updateProductStatus(
+      Long restaurantId, Long productId, ProductStatus status) {
+    Optional<ProductItem> prodOpt = productItemRepository.findById(productId);
     if (!prodOpt.isPresent()) {
       throw new ResourceNotFoundException("Product not found");
     }
 
-    Product product = prodOpt.get();
-    product.setDescription(productRequest.getDescription());
-    product.setDesignation(productRequest.getDesignation());
-    product.setPrice(productRequest.getPrice());
-    product.setStatus(ProductStatus.valueOf(productRequest.getAvailability().toUpperCase()));
+    ProductItem productItem = prodOpt.get();
+    productItem.setStatus(status);
 
-    Product saved = productRepository.save(product);
+    ProductItem saved = productItemRepository.save(productItem);
 
-    return mapProductToProductResponse(saved);
+    return mapProductItemToProductItemResponse(saved);
   }
 
   @Transactional
-  public boolean deleteProduct(Long restaurantId, Long productId) {
-    boolean isFromRestaurant = productRepository.existsByIdAndRestaurantId(productId, restaurantId);
+  public boolean deleteProductItem(Long restaurantId, Long productId) {
+    boolean isFromRestaurant =
+        productItemRepository.existsByIdAndRestaurantId(productId, restaurantId);
 
     if (isFromRestaurant) {
-      if (!orderRepository.existsByProductsId(productId)) {
-        productRepository.deleteById(productId); // definitively delete
-      } else if (orderRepository.existsByProductsIdAndStatusNotIn(
+      if (!orderRepository.existsByProductItemsId(productId)) {
+        productItemRepository.deleteById(productId); // definitively delete
+      } else if (orderRepository.existsByProductItemsIdAndStatusNotIn(
           productId, List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))) {
         return false; // don't delete product associated with orders in progress
       } else {
-        Product product = productRepository.findById(productId).get();
-        product.setDeletedAt(LocalDateTime.now()); // soft delete
-        productRepository.save(product);
+        ProductItem productItem = productItemRepository.findById(productId).get();
+        productItem.setDeletedAt(LocalDateTime.now()); // soft delete
+        productItemRepository.save(productItem);
       }
       return true;
     }
     return false;
   }
 
-  public List<ProductResponseDto> getProducts(Long restaurantId) {
-    return productRepository.findAllByRestaurantId(restaurantId).stream()
-        .map(this::mapProductToProductResponse)
-        .toList();
-  }
-
-  public List<ProductResponseDto> searchProductBy(
+  public List<ProductItemResponseDto> searchProductBy(
       Long restaurantId,
+      String price,
       String designation,
       String description,
       String availability,
       String timesOrdered) {
-    List<Product> products =
+    List<ProductItem> productItems =
         (designation == null || designation.isEmpty())
-            ? productRepository.findAll()
-            : productRepository.findByDesignationContainingIgnoreCase(designation);
+            ? productItemRepository.findAll()
+            : productItemRepository.findByProductDesignationContainingIgnoreCase(designation);
 
     if (description != null && !description.isEmpty()) {
-      products.retainAll(productRepository.findByDescriptionContainingIgnoreCase(description));
+      productItems.retainAll(
+          productItemRepository.findByProductDescriptionContainingIgnoreCase(description));
+    }
+    if (price != null && !price.isEmpty()) {
+      productItems.retainAll(
+          productItemRepository.findByProductPriceLessThanEqual(Double.parseDouble(price)));
     }
     if (availability != null && !availability.isEmpty()) {
-      products.retainAll(productRepository.findByAvailability(ProductStatus.valueOf(availability)));
+      productItems.retainAll(
+          productItemRepository.findByAvailability(ProductStatus.valueOf(availability)));
     }
     if (timesOrdered != null && !timesOrdered.isEmpty()) {
-      products.retainAll(productRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));
+      productItems.retainAll(
+          productItemRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));
     }
     if (restaurantId != null) {
-      products.retainAll(productRepository.findAllByRestaurantId(restaurantId));
+      productItems.retainAll(productItemRepository.findAllByRestaurantId(restaurantId));
     }
-    return products.stream().map(this::mapProductToProductResponse).toList();
+    return productItems.stream().map(this::mapProductItemToProductItemResponse).toList();
   }
 
   /////////////////////////////////////////////////////////////
@@ -419,20 +409,23 @@ public class RestaurantService {
     boolean canReview = false;
 
     for (Order order : orders) {
-      if (order.getClient().getId() == client.getId()) {
+      if (order.getClient().getId().equals(client.getId())) {
         canReview = true;
       }
     }
-    if (!canReview || reviewRequest.getRating() < 1 || reviewRequest.getRating() > 5) {
+    if (!canReview) {
+      throw new RequirementsNotMetException("You cannot review this restaurant");
+    }
+    if (reviewRequest.getRating() < 1 || reviewRequest.getRating() > 5) {
       throw new RequirementsNotMetException("Rating must be between 1 and 5");
     }
 
     Review review =
         new Review(reviewRequest.getRating(), reviewRequest.getComment(), client, restaurant);
 
-    client.addReview(review);
+    // client.addReview(review);
     restaurant.addReview(review);
-    userRepository.save(client);
+    // userRepository.save(client);
     restaurantRepository.save(restaurant);
 
     return mapReviewToReviewResponse(review);
@@ -457,17 +450,21 @@ public class RestaurantService {
   /////////////////////////////////////////////////////////////
   ///  MAPPER METHODS
   /////////////////////////////////////////////////////////////
-  private ProductResponseDto mapProductToProductResponse(Product product) {
-    return new ProductResponseDto(
-        product.getId(),
-        product.getPrice(),
-        product.getDescription(),
-        product.getDesignation(),
-        product.getStatus().toString());
+  private ProductItemResponseDto mapProductItemToProductItemResponse(ProductItem productItem) {
+    return new ProductItemResponseDto(
+        productItem.getId(),
+        productItem.getProduct().getId(),
+        productItem.getRestaurant().getId(),
+        productItem.getProduct().getDesignation(),
+        productItem.getProduct().getDescription(),
+        productItem.getStatus().toString(),
+        productItem.getProduct().getPrice());
   }
 
   private RestaurantResponseDto mapRestaurantToRestaurantResponse(Restaurant restaurant) {
     Long menuId = restaurant.getMenu() == null ? null : restaurant.getMenu().getId();
+    Double av = restaurant.getReviews().stream().mapToInt(Review::getRating).average().orElse(0.0);
+    double roundedAv = Math.round(av * 100.0) / 100.0;
     return new RestaurantResponseDto(
         restaurant.getId(),
         restaurant.getDesignation(),
@@ -479,7 +476,9 @@ public class RestaurantService {
         restaurant.getAddress().getPostalCode(),
         restaurant.getOpenHours().toString(),
         restaurant.getCloseHours().toString(),
-        menuId);
+        menuId,
+        roundedAv,
+        restaurant.getReviews().size());
   }
 
   private ReviewResponseDto mapReviewToReviewResponse(Review review) {

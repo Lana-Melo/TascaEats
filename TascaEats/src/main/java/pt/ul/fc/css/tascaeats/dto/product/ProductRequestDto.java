@@ -7,7 +7,6 @@ public class ProductRequestDto {
   @NotNull private double price;
   @NotBlank private String description;
   @NotBlank private String designation;
-  @NotBlank private String availability;
 
   public ProductRequestDto() {}
 
@@ -33,13 +32,5 @@ public class ProductRequestDto {
 
   public void setDesignation(String designation) {
     this.designation = designation;
-  }
-
-  public String getAvailability() {
-    return availability;
-  }
-
-  public void setAvailability(String availability) {
-    this.availability = availability;
   }
 }
