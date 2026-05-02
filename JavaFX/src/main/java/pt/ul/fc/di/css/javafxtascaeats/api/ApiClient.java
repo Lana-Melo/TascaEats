@@ -14,13 +14,17 @@ import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
 import pt.ul.fc.css.tascaeats.grpc.Empty;
+import pt.ul.fc.css.tascaeats.grpc.GetRestaurantProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.MenusResponse;
+import pt.ul.fc.css.tascaeats.grpc.ProductsResponse;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantItem;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
+import pt.ul.fc.css.tascaeats.grpc.UpdateProductStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.model.MenuModel;
+import pt.ul.fc.di.css.javafxtascaeats.model.ProductModel;
 import pt.ul.fc.di.css.javafxtascaeats.model.RestaurantModel;
 
 public class ApiClient {
@@ -220,6 +224,46 @@ public class ApiClient {
         item.getPostalCode(),
         item.getOpenHours(),
         item.getCloseHours());
+  }
+
+  public static List<ProductModel> getRestaurantProducts(
+      long restaurantId,
+      String price,
+      String designation,
+      String description,
+      String availability,
+      String timesOrdered) {
+    GetRestaurantProductsRequest request =
+        GetRestaurantProductsRequest.newBuilder()
+            .setRestaurantId(restaurantId)
+            .setPrice(price != null ? price : "")
+            .setDesignation(designation != null ? designation : "")
+            .setDescription(description != null ? description : "")
+            .setAvailability(availability != null ? availability : "")
+            .setTimesOrdered(timesOrdered != null ? timesOrdered : "")
+            .build();
+    ProductsResponse response = stub.getRestaurantProducts(request);
+    return response.getProductsList().stream()
+        .map(
+            item ->
+                new ProductModel(
+                    item.getId(),
+                    item.getPrice(),
+                    item.getDescription(),
+                    item.getDesignation(),
+                    "",
+                    item.getStatus()))
+        .toList();
+  }
+
+  public static void updateProductStatus(long restaurantId, long productId, String status) {
+    UpdateProductStatusRequest request =
+        UpdateProductStatusRequest.newBuilder()
+            .setRestaurantId(restaurantId)
+            .setProductId(productId)
+            .setStatus(status)
+            .build();
+    stub.updateProductStatus(request);
   }
 
   public static List<RestaurantModel> searchAdminRestaurants(

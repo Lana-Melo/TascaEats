@@ -114,6 +114,8 @@ The controller currently returns `404` both when a user is not found and when de
 | `AssignMenu` | `AssignMenuRequest` | `Empty` | Assign a menu to a restaurant |
 | `ChangeRestaurantStatus` | `ChangeStatusRequest` | `Empty` | Change the status of a restaurant (OPEN / CLOSED) |
 | `CreateRestaurant` | `CreateRestaurantRequest` | `RestaurantItem` | Create a new restaurant for a given admin |
+| `GetRestaurantProducts` | `GetRestaurantProductsRequest` | `ProductsResponse` | Search products of a restaurant with optional filters |
+| `UpdateProductStatus` | `UpdateProductStatusRequest` | `Empty` | Update the availability status of a product item |
 
 ---
 

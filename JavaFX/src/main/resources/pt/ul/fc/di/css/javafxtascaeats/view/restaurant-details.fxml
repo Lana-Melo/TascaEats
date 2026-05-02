@@ -64,6 +64,11 @@
                             <font><Font name="AppleGothic Regular" size="13.0"/></font>
                         </Button>
 
+                        <Button fx:id="manageProductsButton" text="Manage Products" maxWidth="Infinity"
+                        onAction="#handleManageProducts" HBox.hgrow="ALWAYS">
+                            <font><Font name="AppleGothic Regular" size="13.0"/></font>
+                        </Button>
+
                     </VBox>
 
                 </VBox>

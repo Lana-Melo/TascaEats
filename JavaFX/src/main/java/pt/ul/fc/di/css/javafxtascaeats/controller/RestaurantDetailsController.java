@@ -34,6 +34,12 @@ public class RestaurantDetailsController implements ControllerWithModel {
   }
 
   @FXML
+  private void handleManageProducts(ActionEvent event) {
+    UtilController.switchScene(
+        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/restaurant-products.fxml", "Products", model);
+  }
+
+  @FXML
   private void handleManageRestaurant(ActionEvent event) {
     UtilController.switchScene(
         stage,

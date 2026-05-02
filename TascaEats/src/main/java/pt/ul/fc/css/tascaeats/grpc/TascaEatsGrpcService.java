@@ -5,12 +5,14 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
+import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
 import pt.ul.fc.css.tascaeats.services.RestaurantService;
@@ -256,6 +258,59 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
               .setCloseHours(result.closeHours())
               .build();
       responseObserver.onNext(item);
+      responseObserver.onCompleted();
+    } catch (pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Get Restaurant Products ─────────────────────────────────────
+  @Override
+  public void getRestaurantProducts(
+      GetRestaurantProductsRequest request, StreamObserver<ProductsResponse> responseObserver) {
+    try {
+      List<ProductItemResponseDto> results =
+          restaurantService.searchProductBy(
+              request.getRestaurantId(),
+              request.getPrice(),
+              request.getDesignation(),
+              request.getDescription(),
+              request.getAvailability(),
+              request.getTimesOrdered());
+
+      ProductsResponse.Builder builder = ProductsResponse.newBuilder();
+      for (ProductItemResponseDto dto : results) {
+        builder.addProducts(
+            ProductItemMessage.newBuilder()
+                .setId(dto.id())
+                .setDesignation(dto.designation())
+                .setDescription(dto.description())
+                .setStatus(dto.availability())
+                .setPrice(dto.price())
+                .build());
+      }
+      responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Update Product Status ────────────────────────────────────────
+  @Override
+  public void updateProductStatus(
+      UpdateProductStatusRequest request, StreamObserver<Empty> responseObserver) {
+    try {
+      restaurantService.updateProductStatus(
+          request.getRestaurantId(),
+          request.getProductId(),
+          ProductStatus.valueOf(request.getStatus().toUpperCase()));
+      responseObserver.onNext(Empty.getDefaultInstance());
       responseObserver.onCompleted();
     } catch (pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException e) {
       responseObserver.onError(

@@ -362,6 +362,7 @@ public class RestaurantService {
     return false;
   }
 
+  @Transactional
   public List<ProductItemResponseDto> searchProductBy(
       Long restaurantId,
       String price,

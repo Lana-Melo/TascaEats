@@ -20,6 +20,8 @@ service TascaEatsService {
   rpc AssignMenu (AssignMenuRequest) returns (Empty);
   rpc ChangeRestaurantStatus (ChangeStatusRequest) returns (Empty);
   rpc CreateRestaurant (CreateRestaurantRequest) returns (RestaurantItem);
+  rpc GetRestaurantProducts (GetRestaurantProductsRequest) returns (ProductsResponse);
+  rpc UpdateProductStatus (UpdateProductStatusRequest) returns (Empty);
 }
 
 message Empty {}
@@ -55,6 +57,33 @@ message CreateRestaurantRequest {
   string street = 6;
   string openHours = 7;
   string closeHours = 8;
+}
+
+message GetRestaurantProductsRequest {
+  int64 restaurantId = 1;
+  string price = 2;
+  string designation = 3;
+  string description = 4;
+  string availability = 5;
+  string timesOrdered = 6;
+}
+
+message ProductItemMessage {
+  int64 id = 1;
+  string designation = 2;
+  string description = 3;
+  string status = 4;
+  double price = 5;
+}
+
+message ProductsResponse {
+  repeated ProductItemMessage products = 1;
+}
+
+message UpdateProductStatusRequest {
+  int64 restaurantId = 1;
+  int64 productId = 2;
+  string status = 3;
 }
 
 message LoginRequest {
