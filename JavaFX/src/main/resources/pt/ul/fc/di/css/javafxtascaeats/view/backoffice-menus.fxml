@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="400.0" prefWidth="640.0"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.BackOfficeMenusController">
+  <children>
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu mnemonicParsing="false" text="Help">
+          <items>
+            <MenuItem mnemonicParsing="false" text="About TascaEats" />
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+
+    <AnchorPane VBox.vgrow="ALWAYS">
+      <children>
+        <VBox alignment="CENTER" spacing="12.0"
+              AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+              AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+
+          <VBox alignment="CENTER" spacing="10.0" maxWidth="400">
+            <padding><Insets top="20" bottom="20"/></padding>
+
+            <HBox spacing="4" alignment="CENTER_LEFT">
+              <Hyperlink text="Login" textFill="#a1a1a1" onAction="#handleGoLogin">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Hyperlink>
+              <Label text="/" textFill="#a1a1a1">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Label>
+              <Hyperlink text="Back Office" textFill="#a1a1a1" onAction="#handleGoBackOffice">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Hyperlink>
+              <Label text="/" textFill="#a1a1a1">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Label>
+              <Label text="Menus">
+                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+              </Label>
+            </HBox>
+
+            <Label text="Menus">
+              <font><Font name="AppleGothic Regular" size="22.0"/></font>
+            </Label>
+
+            <CheckBox fx:id="cbName" text="Name">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </CheckBox>
+            <TextField fx:id="nameField" promptText="Name" visible="false" managed="false">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </TextField>
+
+            <CheckBox fx:id="cbProductNumber" text="Min Number of Products">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </CheckBox>
+            <TextField fx:id="productNumberField" promptText="Min number of products" visible="false" managed="false">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </TextField>
+
+            <CheckBox fx:id="cbAverage" text="Max Avg Price">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </CheckBox>
+            <TextField fx:id="averageField" promptText="Max avg price" visible="false" managed="false">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </TextField>
+
+            <Button text="Search" maxWidth="Infinity" onAction="#handleSearch">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </Button>
+
+            <Label fx:id="errorLabel" textFill="red" wrapText="true"
+                   visible="false" managed="false">
+              <font><Font name="AppleGothic Regular" size="12.0"/></font>
+            </Label>
+
+          </VBox>
+
+          <TableView fx:id="menusTable" VBox.vgrow="ALWAYS"
+                     visible="false" managed="false">
+            <columns>
+              <TableColumn fx:id="colName" text="Name" prefWidth="200"/>
+              <TableColumn fx:id="colCuisine" text="Cuisine" prefWidth="200"/>
+            </columns>
+          </TableView>
+
+        </VBox>
+      </children>
+    </AnchorPane>
+
+    <ToolBar prefHeight="40.0" prefWidth="200.0" />
+  </children>
+</VBox>

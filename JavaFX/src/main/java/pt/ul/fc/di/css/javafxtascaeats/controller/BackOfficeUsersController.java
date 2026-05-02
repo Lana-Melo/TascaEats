@@ -18,8 +18,9 @@ import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
 public class BackOfficeUsersController implements ControllerWithModel {
 
-  private DataModel model;
-  private Stage stage;
+  private DataModel
+      model; // objeto que agrega todos os daddos que eu eventualmente precise usar ou setar
+  private Stage stage; // representa a janela atual, é necessário para mudar de cena
 
   @FXML private CheckBox cbUsername;
   @FXML private TextField usernameField;
