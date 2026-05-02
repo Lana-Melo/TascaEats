@@ -26,6 +26,11 @@
             <MenuItem mnemonicParsing="false" text="About TascaEats" />
           </items>
         </Menu>
+        <Menu mnemonicParsing="false" text="Back Office" >
+          <items>
+            <MenuItem mnemonicParsing="false" text="Open Back Office" onAction="#handleBackOffice" />
+          </items>
+      </Menu>
       </menus>
     </MenuBar>
 
@@ -67,6 +72,6 @@
       </children>
     </AnchorPane>
 
-    <ToolBar prefHeight="40.0" prefWidth="200.0" />
+    <ToolBar prefHeight="40.0" prefWidth="200.0"/>
   </children>
 </VBox>

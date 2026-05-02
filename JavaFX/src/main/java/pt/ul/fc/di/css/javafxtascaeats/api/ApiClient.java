@@ -15,6 +15,7 @@ import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
 import pt.ul.fc.css.tascaeats.grpc.Empty;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.MenusResponse;
+import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
 import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
@@ -226,5 +227,21 @@ public class ApiClient {
                     item.getOpenHours(),
                     item.getCloseHours()))
         .toList();
+  }
+
+  public static List<UserResponse> searchUsers(
+      String name, String userType, String orderNumber, String deliveryNumber) {
+    SearchUsersRequest request =
+        SearchUsersRequest.newBuilder()
+            .setName(name != null ? name : "")
+            .setUserType(userType != null ? userType : "")
+            .setOrderNumber(orderNumber != null ? orderNumber : "")
+            .setDeliveryNumber(deliveryNumber != null ? deliveryNumber : "")
+            .build();
+    try {
+      return stub.searchUsers(request).getUsersList();
+    } catch (StatusRuntimeException e) {
+      throw e;
+    }
   }
 }
