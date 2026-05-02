@@ -6,8 +6,10 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.response.AddressDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
@@ -107,6 +109,14 @@ public class UserService {
     return userOpt.map(this::mapAUserToUserResponse).orElse(null);
   }
 
+  public ClientResponseDto getClientById(Long id) {
+    AUser user =
+        userRepository
+            .findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    return mapClientToClientResponse((Client) user);
+  }
+
   public List<UserResponseDto> searchBy(
       String name, String userType, String orderNumber, String deliveryNumber) {
     List<AUser> users =
@@ -161,7 +171,7 @@ public class UserService {
   }
 
   @Transactional
-  public UserResponseDto updateClient(Long id, UserRequestDto request) {
+  public ClientResponseDto updateClient(Long id, ClientUpdateRequestDto request) {
     Optional<AUser> userOpt = userRepository.findById(id);
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {
       throw new ResourceNotFoundException("User not found");
@@ -175,7 +185,31 @@ public class UserService {
     client.setPassword(request.getPassword());
 
     Client saved = userRepository.save(client);
-    return mapAUserToUserResponse(saved);
+    return mapClientToClientResponse(saved);
+  }
+
+  @Transactional
+  public ClientResponseDto addAddress(Long id, String street, String city, String postalCode) {
+    Client client =
+        (Client)
+            userRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    client.addAddress(new Address(street, city, postalCode));
+    return mapClientToClientResponse(userRepository.save(client));
+  }
+
+  @Transactional
+  public ClientResponseDto removeAddress(Long id, int index) {
+    Client client =
+        (Client)
+            userRepository
+                .findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    if (client.getAddresses().size() <= 1)
+      throw new IllegalArgumentException("Must have at least one address");
+    client.getAddresses().remove(index);
+    return mapClientToClientResponse(userRepository.save(client));
   }
 
   @Transactional
@@ -290,15 +324,16 @@ public class UserService {
   }
 
   private ClientResponseDto mapClientToClientResponse(Client client) {
-    Address address = client.getAddresses().get(client.getAddresses().size() - 1);
+    List<AddressDto> addresses =
+        client.getAddresses().stream()
+            .map(a -> new AddressDto(a.getStreet(), a.getCity(), a.getPostalCode()))
+            .toList();
     return new ClientResponseDto(
         client.getId(),
         client.getUsername(),
         client.getName(),
         client.getPhoneNumber(),
         client.getNif(),
-        address.getStreet(),
-        address.getCity(),
-        address.getPostalCode());
+        addresses);
   }
 }

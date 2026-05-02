@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.services.OrderService;
 import pt.ul.fc.css.tascaeats.services.RestaurantService;
@@ -124,6 +125,77 @@ public class WebController {
       model.addAttribute("error", ex.getMessage());
       return "register";
     }
+  }
+
+  @GetMapping("/profile")
+  public String profilePage(HttpSession session, Model model) {
+    if (session.getAttribute("userId") == null) return "redirect:/login";
+    try {
+      Long clientId = (Long) session.getAttribute("userId");
+      model.addAttribute("client", userService.getClientById(clientId));
+      return "profile";
+    } catch (RuntimeException ex) {
+      model.addAttribute("error", ex.getMessage());
+      return "profile";
+    }
+  }
+
+  @PostMapping("/profile")
+  public String updateProfile(
+      @RequestParam String name,
+      @RequestParam String username,
+      @RequestParam String phoneNumber,
+      @RequestParam String nif,
+      @RequestParam String password,
+      HttpSession session,
+      RedirectAttributes ra) {
+    try {
+      Long clientId = (Long) session.getAttribute("userId");
+      ClientUpdateRequestDto dto = new ClientUpdateRequestDto();
+      dto.setName(name);
+      dto.setUsername(username);
+      dto.setPhoneNumber(phoneNumber);
+      dto.setNif(nif);
+      dto.setPassword(password);
+      userService.updateClient(clientId, dto);
+      session.setAttribute("username", username);
+      ra.addFlashAttribute("message", "Profile updated!");
+      return "redirect:/profile";
+
+    } catch (RuntimeException ex) {
+      ra.addFlashAttribute("error", ex.getMessage());
+      return "redirect:/profile";
+    }
+  }
+
+  @PostMapping("/profile/address")
+  public String addAddress(
+      @RequestParam String street,
+      @RequestParam String city,
+      @RequestParam String postalCode,
+      HttpSession session,
+      RedirectAttributes ra) {
+    try {
+      Long clientId = (Long) session.getAttribute("userId");
+      userService.addAddress(clientId, street, city, postalCode);
+      ra.addFlashAttribute("message", "Address added!");
+    } catch (RuntimeException ex) {
+      ra.addFlashAttribute("error", ex.getMessage());
+    }
+    return "redirect:/profile";
+  }
+
+  @PostMapping("/profile/address/{index}/delete")
+  public String removeAddress(@PathVariable int index, HttpSession session, RedirectAttributes ra) {
+    Long clientId = (Long) session.getAttribute("userId");
+    if (clientId == null) return "redirect:/login";
+    try {
+      userService.removeAddress(clientId, index);
+      ra.addFlashAttribute("message", "Address removed!");
+    } catch (RuntimeException ex) {
+      ra.addFlashAttribute("error", ex.getMessage());
+    }
+    return "redirect:/profile";
   }
 
   // ---------------------
