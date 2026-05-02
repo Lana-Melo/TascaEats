@@ -2,14 +2,17 @@ package pt.ul.fc.css.tascaeats.grpc;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
+import pt.ul.fc.css.tascaeats.services.RestaurantService;
 import pt.ul.fc.css.tascaeats.services.UserService;
 
 // representa o servidor gRPC, onde implementamos os métodos definidos no .proto
@@ -17,6 +20,8 @@ import pt.ul.fc.css.tascaeats.services.UserService;
 public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceImplBase {
 
   @Autowired private UserService userService;
+
+  @Autowired private RestaurantService restaurantService;
 
   @Autowired private GrpcMapper grpcMapper;
 
@@ -163,6 +168,49 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       Long userId = request.getId();
       userService.deleteUser(userId);
       responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Search Admin Restaurants ────────────────────────────────────
+  @Override
+  public void searchAdminRestaurants(
+      AdminRestaurantsRequest request, StreamObserver<AdminRestaurantsResponse> responseObserver) {
+    try {
+      List<RestaurantResponseDto> results =
+          restaurantService.searchByWithAdminId(
+              request.getAdminId(),
+              request.getName(),
+              request.getCity(),
+              request.getStreet(),
+              request.getPostalCode(),
+              request.getCuisine(),
+              request.getMinOrders(),
+              request.getMinReviews(),
+              request.getActiveAt(),
+              request.getMaxAvgPrice());
+
+      AdminRestaurantsResponse.Builder responseBuilder = AdminRestaurantsResponse.newBuilder();
+      for (RestaurantResponseDto dto : results) {
+        RestaurantItem item =
+            RestaurantItem.newBuilder()
+                .setId(dto.id())
+                .setDesignation(dto.designation())
+                .setStatus(dto.status())
+                .setNif(dto.nif())
+                .setStreet(dto.street())
+                .setCity(dto.city())
+                .setPostalCode(dto.postalCode())
+                .setOpenHours(dto.openHours())
+                .setCloseHours(dto.closeHours())
+                .build();
+        responseBuilder.addRestaurants(item);
+      }
+
+      responseObserver.onNext(responseBuilder.build());
       responseObserver.onCompleted();
     } catch (Exception e) {
       responseObserver.onError(

@@ -4,6 +4,9 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import java.util.List;
+import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsRequest;
+import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
@@ -11,6 +14,7 @@ import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
 import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
+import pt.ul.fc.di.css.javafxtascaeats.model.RestaurantModel;
 
 public class ApiClient {
 
@@ -154,5 +158,47 @@ public class ApiClient {
     } catch (StatusRuntimeException e) {
       throw e;
     }
+  }
+
+  public static List<RestaurantModel> searchAdminRestaurants(
+      long adminId,
+      String name,
+      String city,
+      String street,
+      String postalCode,
+      String cuisine,
+      String minOrders,
+      String minReviews,
+      String activeAt,
+      String maxAvgPrice) {
+    AdminRestaurantsRequest request =
+        AdminRestaurantsRequest.newBuilder()
+            .setAdminId(adminId)
+            .setName(name != null ? name : "")
+            .setCity(city != null ? city : "")
+            .setStreet(street != null ? street : "")
+            .setPostalCode(postalCode != null ? postalCode : "")
+            .setCuisine(cuisine != null ? cuisine : "")
+            .setMinOrders(minOrders != null ? minOrders : "")
+            .setMinReviews(minReviews != null ? minReviews : "")
+            .setActiveAt(activeAt != null ? activeAt : "")
+            .setMaxAvgPrice(maxAvgPrice != null ? maxAvgPrice : "")
+            .build();
+    System.out.println("name: " + request.getName());
+    AdminRestaurantsResponse response = stub.searchAdminRestaurants(request);
+    return response.getRestaurantsList().stream()
+        .map(
+            item ->
+                new RestaurantModel(
+                    item.getId(),
+                    item.getDesignation(),
+                    item.getStatus(),
+                    item.getNif(),
+                    item.getStreet(),
+                    item.getCity(),
+                    item.getPostalCode(),
+                    item.getOpenHours(),
+                    item.getCloseHours()))
+        .toList();
   }
 }
