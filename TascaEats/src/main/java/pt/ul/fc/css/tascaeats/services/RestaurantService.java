@@ -313,6 +313,9 @@ public class RestaurantService {
         productItem.getId(),
         productItem.getProduct().getId(),
         productItem.getRestaurant().getId(),
+        productItem.getStatus().toString(),
+        productItem.getProduct().getDesignation(),
+        productItem.getProduct().getDescription(),
         productItem.getStatus().toString());
   }
 
