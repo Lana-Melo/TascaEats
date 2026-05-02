@@ -94,20 +94,10 @@ public class BdLoader {
               new DeliveryPerson("entregador2", "777", "Lana Foguete", "945678902", "100000005"));
 
       // ── MENUS ──────────────────────────────────────────────
-      Menu menuBrunao =
-          menuRepository.save(
-              new Menu(
-                  "Menu do Brunao",
-                  "Britanico",
-                  "So good"));
+      Menu menuBrunao = menuRepository.save(new Menu("Menu do Brunao", "Britanico", "So good"));
 
-      Menu menuBudega =
-          menuRepository.save(
-              new Menu(
-                  "Menu da Budega",
-                  "Italiano",
-                  "Mama mia"));
-      
+      Menu menuBudega = menuRepository.save(new Menu("Menu da Budega", "Italiano", "Mama mia"));
+
       // ── PRODUTOS — Tasca do Brunao ─────────────────────────────
       // produto 1: disponivel — vai ser usado no pedido de demo
       Product arrozDoce =
@@ -140,15 +130,15 @@ public class BdLoader {
                   "6060606060",
                   "Tasca do Brunao",
                   new Address("rua sesamo", "Almada", "2078-317"),
-                  admin1, 
-                  LocalTime.of(11,0), 
-                  LocalTime.of(22,0)));
-        
+                  admin1,
+                  LocalTime.of(11, 0),
+                  LocalTime.of(22, 0)));
+
       tascaBrunao.setMenu(menuBrunao);
 
       ProductItem piArrozDoce = productItemRepository.save(new ProductItem(arrozDoce, tascaBrunao));
-      ProductItem piBatatas   = productItemRepository.save(new ProductItem(batatafrita, tascaBrunao));
-      ProductItem piArroz     = productItemRepository.save(new ProductItem(arroz, tascaBrunao));
+      ProductItem piBatatas = productItemRepository.save(new ProductItem(batatafrita, tascaBrunao));
+      ProductItem piArroz = productItemRepository.save(new ProductItem(arroz, tascaBrunao));
 
       piBatatas.setStatus(ProductStatus.SOLD_OUT);
       productItemRepository.save(piBatatas);
@@ -162,14 +152,12 @@ public class BdLoader {
                   "Cantinho da budega",
                   new Address("rua barriga cheia", "Porto", "1034-123"),
                   admin2,
-                  LocalTime.of(11,0), 
-                  LocalTime.of(22,0)));
+                  LocalTime.of(11, 0),
+                  LocalTime.of(22, 0)));
 
       cantinhoBudega.setMenu(menuBudega);
       productItemRepository.save(new ProductItem(francesinha, cantinhoBudega));
       restaurantRepository.save(cantinhoBudega);
-
-      
 
       System.out.println("\u001B[32m[DataLoader] Script pra popular bd concluido!\u001B[0m");
       System.out.println(

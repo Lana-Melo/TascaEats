@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.LoginRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
@@ -84,9 +85,9 @@ public class UserController {
 
   @PutMapping("/client/{id}")
   @ApiOperation(value = "Update client", notes = "Updates an existing client.")
-  public ResponseEntity<UserResponseDto> updateClient(
-      @PathVariable Long id, @RequestBody @Valid UserRequestDto request) {
-    UserResponseDto client = userHandler.updateClient(id, request);
+  public ResponseEntity<ClientResponseDto> updateClient(
+      @PathVariable Long id, @RequestBody @Valid ClientUpdateRequestDto request) {
+    ClientResponseDto client = userHandler.updateClient(id, request);
     return ResponseEntity.ok(client);
   }
 

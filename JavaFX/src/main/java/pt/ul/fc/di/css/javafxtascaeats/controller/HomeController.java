@@ -54,7 +54,11 @@ public class HomeController implements ControllerWithModel {
 
   @FXML
   void handleManageRestaurants(ActionEvent event) {
-    System.out.println("Manage restaurants clicado");
+    UtilController.switchScene(
+        stage,
+        "/pt/ul/fc/di/css/javafxtascaeats/view/restaurant-list.fxml",
+        "Restaurant List",
+        model);
   }
 
   @FXML

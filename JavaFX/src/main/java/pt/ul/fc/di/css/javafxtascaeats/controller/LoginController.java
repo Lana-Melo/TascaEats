@@ -79,6 +79,12 @@ public class LoginController implements ControllerWithModel {
   }
 
   @FXML
+  void handleBackOffice(ActionEvent event) {
+    UtilController.switchScene(
+        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/backoffice.fxml", "Back Office", model);
+  }
+
+  @FXML
   void handleCreateAccount(ActionEvent event) {
     UtilController.switchScene(
         stage, "/pt/ul/fc/di/css/javafxtascaeats/view/register.fxml", "Register", model);

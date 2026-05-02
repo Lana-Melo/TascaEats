@@ -2,9 +2,7 @@ package pt.ul.fc.css.tascaeats.controller;
 
 import io.swagger.annotations.ApiOperation;
 import jakarta.validation.Valid;
-
 import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,9 +52,13 @@ public class MenuController {
   }
 
   @GetMapping("/search")
-  @ApiOperation(value = "Search menus", notes = "Returns a list of menus filtered by a given category.")
-  public ResponseEntity<List<MenuResponseDto>> searchMenu(@RequestParam(required = false) String name, 
-      @RequestParam(required = false) String productNumber, @RequestParam(required = false) String average) {  
+  @ApiOperation(
+      value = "Search menus",
+      notes = "Returns a list of menus filtered by a given category.")
+  public ResponseEntity<List<MenuResponseDto>> searchMenu(
+      @RequestParam(required = false) String name,
+      @RequestParam(required = false) String productNumber,
+      @RequestParam(required = false) String average) {
     List<MenuResponseDto> menu = menuHandler.searchBy(name, productNumber, average);
     return ResponseEntity.ok(menu);
   }
@@ -89,17 +91,22 @@ public class MenuController {
 
   @DeleteMapping("/{id}/products/{productId}")
   @ApiOperation(value = "Delete product", notes = "Deletes an existing product")
-  public ResponseEntity<Void> deleteProductItem(@PathVariable Long id, @PathVariable Long productId) {
+  public ResponseEntity<Void> deleteProductItem(
+      @PathVariable Long id, @PathVariable Long productId) {
     return menuHandler.deleteProduct(id, productId)
         ? ResponseEntity.noContent().build()
         : ResponseEntity.notFound().build();
   }
 
   @GetMapping("/products/search")
-  @ApiOperation(value = "Search products", notes = "Returns a list of all products filtered a given category.")
-  public ResponseEntity<List<ProductResponseDto>> searchProduct(@RequestParam(required = false) Long id, @RequestParam(required = false) String designation, 
-  @RequestParam(required = false) String description) {
-      List<ProductResponseDto> products = menuHandler.searchProductBy(id, designation, description); 
-      return ResponseEntity.ok(products);
+  @ApiOperation(
+      value = "Search products",
+      notes = "Returns a list of all products filtered a given category.")
+  public ResponseEntity<List<ProductResponseDto>> searchProduct(
+      @RequestParam(required = false) Long id,
+      @RequestParam(required = false) String designation,
+      @RequestParam(required = false) String description) {
+    List<ProductResponseDto> products = menuHandler.searchProductBy(id, designation, description);
+    return ResponseEntity.ok(products);
   }
 }

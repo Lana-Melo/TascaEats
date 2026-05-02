@@ -122,14 +122,16 @@ public class OrderService {
     APayment payment;
     switch (request.getPaymentMethod()) {
       case "MBWay":
-        if (Math.abs(order.getTotalValue() - request.getAmount()) >= 0.01 || request.getPaymentInfo() == null) {
+        if (Math.abs(order.getTotalValue() - request.getAmount()) >= 0.01
+            || request.getPaymentInfo() == null) {
           throw new RequirementsNotMetException(
               "Amount does not match payment/Payment info not included");
         }
         payment = new MBWay(request.getAmount(), order, request.getPaymentInfo());
         break;
       case "Card":
-        if (Math.abs(order.getTotalValue() - request.getAmount()) >= 0.01 || request.getPaymentInfo() == null) {
+        if (Math.abs(order.getTotalValue() - request.getAmount()) >= 0.01
+            || request.getPaymentInfo() == null) {
           throw new RequirementsNotMetException(
               "Amount does not match payment/Payment info not included");
         }

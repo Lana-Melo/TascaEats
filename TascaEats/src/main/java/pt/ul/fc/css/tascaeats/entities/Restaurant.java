@@ -14,7 +14,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +42,7 @@ public class Restaurant {
   @Column(nullable = false)
   private LocalTime closeHours;
 
-  @Embedded
-  private Address address;
+  @Embedded private Address address;
 
   @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ProductItem> productItems;
@@ -69,7 +67,13 @@ public class Restaurant {
 
   protected Restaurant() {}
 
-  public Restaurant(String nif, String designation, Address address, Admin admin, LocalTime openHours, LocalTime closeHours) {
+  public Restaurant(
+      String nif,
+      String designation,
+      Address address,
+      Admin admin,
+      LocalTime openHours,
+      LocalTime closeHours) {
     this.nif = nif;
     this.designation = designation;
     this.status = RestaurantStatus.OPEN;
@@ -175,7 +179,7 @@ public class Restaurant {
   }
 
   public LocalTime getCloseHours() {
-      return closeHours;
+    return closeHours;
   }
 
   public void setCloseHours(LocalTime closeHours) {

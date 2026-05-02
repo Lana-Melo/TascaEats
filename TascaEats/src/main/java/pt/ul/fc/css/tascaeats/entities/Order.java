@@ -36,8 +36,7 @@ public class Order {
   @Column(nullable = false)
   private OrderStatus status;
 
-  @Embedded
-  private Address address;
+  @Embedded private Address address;
 
   @ManyToOne
   @JoinColumn(name = "client_id", nullable = false)
@@ -54,8 +53,7 @@ public class Order {
   @JoinColumn(name = "delivery_person_id")
   private DeliveryPerson deliveryPerson;
 
-  @Embedded 
-  private Delivery delivery;
+  @Embedded private Delivery delivery;
 
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "payment_id")

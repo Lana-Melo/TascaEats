@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.Embeddable;
+import java.util.Objects;
 
 @Embeddable
 public class Address {
@@ -29,5 +30,20 @@ public class Address {
 
   public String getPostalCode() {
     return postalCode;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Address)) return false;
+    Address address = (Address) o;
+    return Objects.equals(street, address.street)
+        && Objects.equals(city, address.city)
+        && Objects.equals(postalCode, address.postalCode);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(street, city, postalCode);
   }
 }

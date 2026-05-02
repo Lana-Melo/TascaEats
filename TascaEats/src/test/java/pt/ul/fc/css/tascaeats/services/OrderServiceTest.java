@@ -1,37 +1,17 @@
 package pt.ul.fc.css.tascaeats.services;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
-import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
-import pt.ul.fc.css.tascaeats.entities.Delivery;
-import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.Menu;
-import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
-import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
-import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
-import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
-import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -57,7 +37,8 @@ class OrderServiceTest {
   }
 
   private Restaurant restaurant() {
-    return new Restaurant("123456789", "Cantina", address(), admin(), LocalTime.of(11,0), LocalTime.of(22,0));
+    return new Restaurant(
+        "123456789", "Cantina", address(), admin(), LocalTime.of(11, 0), LocalTime.of(22, 0));
   }
 
   private Client client() {

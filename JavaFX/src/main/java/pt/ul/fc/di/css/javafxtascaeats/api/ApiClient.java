@@ -4,13 +4,23 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import java.util.List;
+import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsRequest;
+import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsResponse;
+import pt.ul.fc.css.tascaeats.grpc.AssignMenuRequest;
+import pt.ul.fc.css.tascaeats.grpc.ChangeStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
+import pt.ul.fc.css.tascaeats.grpc.Empty;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
+import pt.ul.fc.css.tascaeats.grpc.MenusResponse;
+import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
 import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
+import pt.ul.fc.di.css.javafxtascaeats.model.MenuModel;
+import pt.ul.fc.di.css.javafxtascaeats.model.RestaurantModel;
 
 public class ApiClient {
 
@@ -151,6 +161,85 @@ public class ApiClient {
     DeleteAccountRequest request = DeleteAccountRequest.newBuilder().setId(userId).build();
     try {
       stub.deleteAccount(request);
+    } catch (StatusRuntimeException e) {
+      throw e;
+    }
+  }
+
+  public static List<MenuModel> getAllMenus() {
+    MenusResponse response = stub.getAllMenus(Empty.getDefaultInstance());
+    return response.getMenusList().stream()
+        .map(
+            item ->
+                new MenuModel(
+                    item.getId(), item.getName(), item.getCuisine(), item.getProductIdsList()))
+        .toList();
+  }
+
+  public static void assignMenu(long restaurantId, long menuId) {
+    AssignMenuRequest request =
+        AssignMenuRequest.newBuilder().setRestaurantId(restaurantId).setMenuId(menuId).build();
+    stub.assignMenu(request);
+  }
+
+  public static void changeRestaurantStatus(long restaurantId, String status) {
+    ChangeStatusRequest request =
+        ChangeStatusRequest.newBuilder().setRestaurantId(restaurantId).setStatus(status).build();
+    stub.changeRestaurantStatus(request);
+  }
+
+  public static List<RestaurantModel> searchAdminRestaurants(
+      long adminId,
+      String name,
+      String city,
+      String street,
+      String postalCode,
+      String cuisine,
+      String minOrders,
+      String minReviews,
+      String activeAt,
+      String maxAvgPrice) {
+    AdminRestaurantsRequest request =
+        AdminRestaurantsRequest.newBuilder()
+            .setAdminId(adminId)
+            .setName(name != null ? name : "")
+            .setCity(city != null ? city : "")
+            .setStreet(street != null ? street : "")
+            .setPostalCode(postalCode != null ? postalCode : "")
+            .setCuisine(cuisine != null ? cuisine : "")
+            .setMinOrders(minOrders != null ? minOrders : "")
+            .setMinReviews(minReviews != null ? minReviews : "")
+            .setActiveAt(activeAt != null ? activeAt : "")
+            .setMaxAvgPrice(maxAvgPrice != null ? maxAvgPrice : "")
+            .build();
+    AdminRestaurantsResponse response = stub.searchAdminRestaurants(request);
+    return response.getRestaurantsList().stream()
+        .map(
+            item ->
+                new RestaurantModel(
+                    item.getId(),
+                    item.getDesignation(),
+                    item.getStatus(),
+                    item.getNif(),
+                    item.getStreet(),
+                    item.getCity(),
+                    item.getPostalCode(),
+                    item.getOpenHours(),
+                    item.getCloseHours()))
+        .toList();
+  }
+
+  public static List<UserResponse> searchUsers(
+      String name, String userType, String orderNumber, String deliveryNumber) {
+    SearchUsersRequest request =
+        SearchUsersRequest.newBuilder()
+            .setName(name != null ? name : "")
+            .setUserType(userType != null ? userType : "")
+            .setOrderNumber(orderNumber != null ? orderNumber : "")
+            .setDeliveryNumber(deliveryNumber != null ? deliveryNumber : "")
+            .build();
+    try {
+      return stub.searchUsers(request).getUsersList();
     } catch (StatusRuntimeException e) {
       throw e;
     }

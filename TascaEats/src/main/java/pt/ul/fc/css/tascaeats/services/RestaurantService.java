@@ -1,13 +1,16 @@
 package pt.ul.fc.css.tascaeats.services;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
@@ -70,7 +73,21 @@ public class RestaurantService {
       String reviewNumber,
       String activeHour,
       String average) {
-
+    Specification<Restaurant> spec =
+        getSearchSpec(
+            designation,
+            city,
+            street,
+            postalCode,
+            cuisine,
+            orderNumber,
+            reviewNumber,
+            activeHour,
+            average);
+    List<Restaurant> restaurants = restaurantRepository.findAll(spec);
+    return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();
+    /*
+    DEPRECATED
     List<Restaurant> restaurants =
         (designation == null || designation.isEmpty())
             ? restaurantRepository.findAll()
@@ -106,7 +123,126 @@ public class RestaurantService {
       restaurants.retainAll(restaurantRepository.findByAveragePrice(Double.parseDouble(average)));
     }
 
+    return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();*/
+  }
+
+  @Transactional
+  public List<RestaurantResponseDto> searchByWithAdminId(
+      Long adminId,
+      String designation,
+      String city,
+      String street,
+      String postalCode,
+      String cuisine,
+      String orderNumber,
+      String reviewNumber,
+      String activeHour,
+      String average) {
+
+    // para ficar mais eficiente a busca na bd, em vez de buscar tudo e depois filtrar, fazemos uma
+    // Specification para filtrar já na query
+    Specification<Restaurant> spec =
+        Specification.where(
+                hasAdminId(adminId)) // primeiro predicado deve ser o restaurante ser do admin
+            .and(
+                getSearchSpec(
+                    designation,
+                    city,
+                    street,
+                    postalCode,
+                    cuisine,
+                    orderNumber,
+                    reviewNumber,
+                    activeHour,
+                    average));
+
+    List<Restaurant> restaurants = restaurantRepository.findAll(spec);
+
     return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();
+  }
+
+  private Specification<Restaurant> hasAdminId(Long adminId) {
+    return (root, query, cb) -> cb.equal(root.get("admin").get("id"), adminId);
+  }
+
+  private Specification<Restaurant> getSearchSpec(
+      String designation,
+      String city,
+      String street,
+      String postalCode,
+      String cuisine,
+      String orderNumber,
+      String reviewNumber,
+      String activeHour,
+      String average) {
+    return (root,
+        query,
+        cb) -> { // root é o Restaurante, query é o resultado final da query, cb é o CriteriaBuilder
+      // para construir as condições (os predicados)
+      List<Predicate> predicates = new ArrayList<>();
+      // o cb ajuda a construir um predicado, recebe a coisa com que temos de comparar e a
+      // operacao (se deve ser igual, diferente, maior, menos, etc)
+
+      if (designation != null && !designation.isEmpty()) {
+        predicates.add(
+            cb.like(cb.upper(root.get("designation")), "%" + designation.toUpperCase() + "%"));
+      }
+
+      if (city != null && !city.isEmpty()) {
+        predicates.add(
+            cb.like(cb.upper(root.get("address").get("city")), "%" + city.toUpperCase() + "%"));
+      }
+      if (street != null && !street.isEmpty()) {
+        predicates.add(
+            cb.like(cb.upper(root.get("address").get("street")), "%" + street.toUpperCase() + "%"));
+      }
+      if (postalCode != null && !postalCode.isEmpty()) {
+        predicates.add(
+            cb.like(
+                cb.upper(root.get("address").get("postalCode")),
+                "%" + postalCode.toUpperCase() + "%"));
+      }
+
+      if (cuisine != null && !cuisine.isEmpty()) {
+        Join<Restaurant, Menu> menuJoin = root.join("menu", JoinType.INNER);
+        predicates.add(
+            cb.like(cb.upper(menuJoin.get("cuisine")), "%" + cuisine.toUpperCase() + "%"));
+      }
+
+      if (orderNumber != null && !orderNumber.isEmpty()) {
+        predicates.add(
+            cb.greaterThanOrEqualTo(cb.size(root.get("orders")), Integer.parseInt(orderNumber)));
+      }
+
+      if (reviewNumber != null && !reviewNumber.isEmpty()) {
+        predicates.add(
+            cb.greaterThanOrEqualTo(cb.size(root.get("reviews")), Integer.parseInt(reviewNumber)));
+      }
+
+      if (activeHour != null && !activeHour.isEmpty()) {
+        String[] parts = activeHour.split(":");
+        LocalTime time = LocalTime.of(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+        predicates.add(cb.between(cb.literal(time), root.get("openHours"), root.get("closeHours")));
+      }
+
+      if (average != null && !average.isEmpty()) {
+        double avgValue = Double.parseDouble(average);
+
+        Join<Restaurant, ProductItem> productItemJoin = root.join("productItems", JoinType.INNER);
+
+        query.groupBy(root);
+
+        query.having(cb.le(cb.avg(productItemJoin.get("product").get("price")), avgValue));
+      }
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    };
+  }
+
+  public List<RestaurantResponseDto> getAllRestaurants() {
+    return restaurantRepository.findAll().stream()
+        .map(this::mapRestaurantToRestaurantResponse)
+        .toList();
   }
 
   public RestaurantResponseDto createRestaurant(RestaurantRequestDto restaurant) {
@@ -167,13 +303,19 @@ public class RestaurantService {
 
     menuRepository.save(menu);
 
+    restaurant.getProductItems().clear(); // limpa a lista nova, mas mantém a ref ao mesmo obj
+
+    for (Product product : menu.getProducts()) {
+      restaurant.addProductItem(new ProductItem(product, restaurant));
+    }
+    /* DEPRECATED porque tava a dar excecao do reassingment a uma nova lista de productItems
     for (ProductItem productItem : restaurant.getProductItems()) {
       deleteProductItem(restaurant.getId(), productItem.getId());
     }
     restaurant.setProductItems(new ArrayList<>());
     for (Product product : menu.getProducts()) {
-      restaurant.addProductItem(new ProductItem(product, restaurant)); 
-    }
+      restaurant.addProductItem(new ProductItem(product, restaurant));
+    }*/
 
     Restaurant saved = restaurantRepository.save(restaurant);
     return mapRestaurantToRestaurantResponse(saved);
@@ -201,7 +343,8 @@ public class RestaurantService {
 
   @Transactional
   public boolean deleteProductItem(Long restaurantId, Long productId) {
-    boolean isFromRestaurant = productItemRepository.existsByIdAndRestaurantId(productId, restaurantId);
+    boolean isFromRestaurant =
+        productItemRepository.existsByIdAndRestaurantId(productId, restaurantId);
 
     if (isFromRestaurant) {
       if (!orderRepository.existsByProductItemsId(productId)) {
@@ -232,16 +375,20 @@ public class RestaurantService {
             : productItemRepository.findByProductDesignationContainingIgnoreCase(designation);
 
     if (description != null && !description.isEmpty()) {
-      productItems.retainAll(productItemRepository.findByProductDescriptionContainingIgnoreCase(description));
+      productItems.retainAll(
+          productItemRepository.findByProductDescriptionContainingIgnoreCase(description));
     }
     if (price != null && !price.isEmpty()) {
-      productItems.retainAll(productItemRepository.findByProductPrice(Double.parseDouble(price)));
+      productItems.retainAll(
+          productItemRepository.findByProductPriceLessThanEqual(Double.parseDouble(price)));
     }
     if (availability != null && !availability.isEmpty()) {
-      productItems.retainAll(productItemRepository.findByAvailability(ProductStatus.valueOf(availability)));
+      productItems.retainAll(
+          productItemRepository.findByAvailability(ProductStatus.valueOf(availability)));
     }
     if (timesOrdered != null && !timesOrdered.isEmpty()) {
-      productItems.retainAll(productItemRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));
+      productItems.retainAll(
+          productItemRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));
     }
     if (restaurantId != null) {
       productItems.retainAll(productItemRepository.findAllByRestaurantId(restaurantId));
@@ -312,7 +459,10 @@ public class RestaurantService {
         productItem.getId(),
         productItem.getProduct().getId(),
         productItem.getRestaurant().getId(),
-        productItem.getStatus().toString());
+        productItem.getProduct().getDesignation(),
+        productItem.getProduct().getDescription(),
+        productItem.getStatus().toString(),
+        productItem.getProduct().getPrice());
   }
 
   private RestaurantResponseDto mapRestaurantToRestaurantResponse(Restaurant restaurant) {

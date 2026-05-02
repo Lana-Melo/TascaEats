@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="500.0" prefWidth="750.0"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.RestaurantManagementController">
+
+    <children>
+        <MenuBar VBox.vgrow="NEVER">
+            <menus>
+                <Menu text="Menu">
+                    <items>
+                        <MenuItem text="About TascaEats"/>
+                        <MenuItem text="Logout" onAction="#handleLogout"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox alignment="CENTER" spacing="15.0" prefWidth="750.0">
+
+                    <VBox spacing="10.0" maxWidth="350">
+                        <padding>
+                            <Insets top="20" bottom="20"/>
+                        </padding>
+
+                        <HBox spacing="4">
+                            <Hyperlink text="Home" textFill="#a1a1a1" onAction="#handleGoHome">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1"/>
+                            <Hyperlink text="Restaurants" textFill="#a1a1a1" onAction="#handleGoRestaurants">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1"/>
+                            <Hyperlink text="Details" textFill="#a1a1a1" onAction="#handleGoDetails">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1"/>
+                            <Label text="Management"/>
+                        </HBox>
+
+                        <Label fx:id="titleLabel">
+                            <font><Font name="AppleGothic Regular" size="22.0"/></font>
+                        </Label>
+
+                        <Label text="Change Status"/>
+                        <ComboBox fx:id="statusComboBox" maxWidth="Infinity"/>
+
+                        <Label text="Change Menu"/>
+                        <ComboBox fx:id="menuComboBox" maxWidth="Infinity"/>
+
+                        <Button fx:id="updateButton" text="Update" maxWidth="Infinity"
+                                onAction="#handleUpdate">
+                            <font><Font name="AppleGothic Regular" size="13.0"/></font>
+                        </Button>
+
+                    </VBox>
+
+                </VBox>
+            </content>
+        </ScrollPane>
+
+        <ToolBar prefHeight="40.0"/>
+    </children>
+</VBox>
