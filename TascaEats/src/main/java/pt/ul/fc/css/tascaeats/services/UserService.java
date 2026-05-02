@@ -198,7 +198,10 @@ public class UserService {
             userRepository
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-    client.addAddress(new Address(street, city, postalCode));
+    Address newAddress = new Address(street, city, postalCode);
+    if (!client.getAddresses().contains(newAddress)) {
+      client.addAddress(newAddress);
+    }
     return mapClientToClientResponse(userRepository.save(client));
   }
 
