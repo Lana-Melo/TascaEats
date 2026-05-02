@@ -32,10 +32,6 @@ public class ProductItem {
     @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
-
     @OneToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;

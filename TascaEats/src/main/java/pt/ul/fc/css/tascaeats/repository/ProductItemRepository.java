@@ -16,6 +16,8 @@ public interface ProductItemRepository extends JpaRepository<ProductItem, Long> 
 
     List<ProductItem> findAllByRestaurantId(Long restaurantId);
 
+    List<ProductItem> findByProductPrice(double price);
+
     List<ProductItem> findByProductDesignationContainingIgnoreCase(String designation);
 
     List<ProductItem> findByProductDescriptionContainingIgnoreCase(String description);
@@ -24,9 +26,8 @@ public interface ProductItemRepository extends JpaRepository<ProductItem, Long> 
 
     @Query(
         """
-            SELECT p
-            FROM Order o
-            JOIN o.productItems p
+            SELECT p FROM ProductItem p, Order o
+            WHERE o.productItems = p
             GROUP BY p
             HAVING COUNT(p) >= :timesOrdered
         """)

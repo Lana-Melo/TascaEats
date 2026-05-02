@@ -221,6 +221,7 @@ public class RestaurantService {
 
   public List<ProductItemResponseDto> searchProductBy(
       Long restaurantId,
+      String price,
       String designation,
       String description,
       String availability,
@@ -232,6 +233,9 @@ public class RestaurantService {
 
     if (description != null && !description.isEmpty()) {
       productItems.retainAll(productItemRepository.findByProductDescriptionContainingIgnoreCase(description));
+    }
+    if (price != null && !price.isEmpty()) {
+      productItems.retainAll(productItemRepository.findByProductPrice(Double.parseDouble(price)));
     }
     if (availability != null && !availability.isEmpty()) {
       productItems.retainAll(productItemRepository.findByAvailability(ProductStatus.valueOf(availability)));
@@ -278,9 +282,7 @@ public class RestaurantService {
     Review review =
         new Review(reviewRequest.getRating(), reviewRequest.getComment(), client, restaurant);
 
-    // client.addReview(review);
     restaurant.addReview(review);
-    // userRepository.save(client);
     restaurantRepository.save(restaurant);
 
     return mapReviewToReviewResponse(review);

@@ -10,8 +10,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
@@ -42,7 +43,11 @@ public class Order {
   @JoinColumn(name = "client_id", nullable = false)
   private Client client;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @ManyToMany
+  @JoinTable(
+      name = "order_productitems",
+      joinColumns = @JoinColumn(name = "order_id"),
+      inverseJoinColumns = @JoinColumn(name = "productitem_id"))
   private List<ProductItem> productItems;
 
   @ManyToOne
