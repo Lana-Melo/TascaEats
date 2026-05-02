@@ -1,11 +1,15 @@
 package pt.ul.fc.css.tascaeats.services;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.dto.product.ProductRequestDto;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponseDto;
@@ -69,7 +73,21 @@ public class RestaurantService {
       String reviewNumber,
       String activeHour,
       String average) {
-
+    Specification<Restaurant> spec =
+        getSearchSpec(
+            designation,
+            city,
+            street,
+            postalCode,
+            cuisine,
+            orderNumber,
+            reviewNumber,
+            activeHour,
+            average);
+    List<Restaurant> restaurants = restaurantRepository.findAll(spec);
+    return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();
+    /*
+    DEPRECATED
     List<Restaurant> restaurants =
         (designation == null || designation.isEmpty())
             ? restaurantRepository.findAll()
@@ -105,7 +123,120 @@ public class RestaurantService {
       restaurants.retainAll(restaurantRepository.findByAveragePrice(Double.parseDouble(average)));
     }
 
+    return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();*/
+  }
+
+  @Transactional
+  public List<RestaurantResponseDto> searchByWithAdminId(
+      Long adminId,
+      String designation,
+      String city,
+      String street,
+      String postalCode,
+      String cuisine,
+      String orderNumber,
+      String reviewNumber,
+      String activeHour,
+      String average) {
+
+    // para ficar mais eficiente a busca na bd, em vez de buscar tudo e depois filtrar, fazemos uma
+    // Specification para filtrar já na query
+    Specification<Restaurant> spec =
+        Specification.where(
+                hasAdminId(adminId)) // primeiro predicado deve ser o restaurante ser do admin
+            .and(
+                getSearchSpec(
+                    designation,
+                    city,
+                    street,
+                    postalCode,
+                    cuisine,
+                    orderNumber,
+                    reviewNumber,
+                    activeHour,
+                    average));
+
+    List<Restaurant> restaurants = restaurantRepository.findAll(spec);
+
     return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();
+  }
+
+  private Specification<Restaurant> hasAdminId(Long adminId) {
+    return (root, query, cb) -> cb.equal(root.get("admin").get("id"), adminId);
+  }
+
+  private Specification<Restaurant> getSearchSpec(
+      String designation,
+      String city,
+      String street,
+      String postalCode,
+      String cuisine,
+      String orderNumber,
+      String reviewNumber,
+      String activeHour,
+      String average) {
+    return (root,
+        query,
+        cb) -> { // root é o Restaurante, query é o resultado final da query, cb é o CriteriaBuilder
+      // para construir as condições (os predicados)
+      List<Predicate> predicates = new ArrayList<>();
+      // o cb ajuda a construir um predicado, recebe a coisa com que temos de comparar e a
+      // operacao (se deve ser igual, diferente, maior, menos, etc)
+
+      if (designation != null && !designation.isEmpty()) {
+        predicates.add(
+            cb.like(cb.upper(root.get("designation")), "%" + designation.toUpperCase() + "%"));
+      }
+
+      if (city != null && !city.isEmpty()) {
+        predicates.add(
+            cb.like(cb.upper(root.get("address").get("city")), "%" + city.toUpperCase() + "%"));
+      }
+      if (street != null && !street.isEmpty()) {
+        predicates.add(
+            cb.like(cb.upper(root.get("address").get("street")), "%" + street.toUpperCase() + "%"));
+      }
+      if (postalCode != null && !postalCode.isEmpty()) {
+        predicates.add(
+            cb.like(
+                cb.upper(root.get("address").get("postalCode")),
+                "%" + postalCode.toUpperCase() + "%"));
+      }
+
+      if (cuisine != null && !cuisine.isEmpty()) {
+        Join<Restaurant, Menu> menuJoin = root.join("menu", JoinType.INNER);
+        predicates.add(
+            cb.like(cb.upper(menuJoin.get("cuisine")), "%" + cuisine.toUpperCase() + "%"));
+      }
+
+      if (orderNumber != null && !orderNumber.isEmpty()) {
+        predicates.add(
+            cb.greaterThanOrEqualTo(cb.size(root.get("orders")), Integer.parseInt(orderNumber)));
+      }
+
+      if (reviewNumber != null && !reviewNumber.isEmpty()) {
+        predicates.add(
+            cb.greaterThanOrEqualTo(cb.size(root.get("reviews")), Integer.parseInt(reviewNumber)));
+      }
+
+      if (activeHour != null && !activeHour.isEmpty()) {
+        String[] parts = activeHour.split(":");
+        LocalTime time = LocalTime.of(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+        predicates.add(cb.between(cb.literal(time), root.get("openHours"), root.get("closeHours")));
+      }
+
+      if (average != null && !average.isEmpty()) {
+        double avgValue = Double.parseDouble(average);
+
+        Join<Restaurant, Product> productJoin = root.join("products", JoinType.INNER);
+
+        query.groupBy(root.get("id"));
+
+        query.having(cb.le(cb.avg(productJoin.get("price")), avgValue));
+      }
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    };
   }
 
   public List<RestaurantResponseDto> getAllRestaurants() {
