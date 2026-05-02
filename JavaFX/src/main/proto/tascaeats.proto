@@ -19,6 +19,7 @@ service TascaEatsService {
   rpc GetAllMenus (Empty) returns (MenusResponse);
   rpc AssignMenu (AssignMenuRequest) returns (Empty);
   rpc ChangeRestaurantStatus (ChangeStatusRequest) returns (Empty);
+  rpc CreateRestaurant (CreateRestaurantRequest) returns (RestaurantItem);
 }
 
 message Empty {}
@@ -43,6 +44,17 @@ message AssignMenuRequest {
 message ChangeStatusRequest {
   int64 restaurantId = 1;
   string status = 2;
+}
+
+message CreateRestaurantRequest {
+  int64 adminId = 1;
+  string designation = 2;
+  string nif = 3;
+  string city = 4;
+  string postalCode = 5;
+  string street = 6;
+  string openHours = 7;
+  string closeHours = 8;
 }
 
 message LoginRequest {

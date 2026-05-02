@@ -9,12 +9,14 @@ import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsRequest;
 import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsResponse;
 import pt.ul.fc.css.tascaeats.grpc.AssignMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.ChangeStatusRequest;
+import pt.ul.fc.css.tascaeats.grpc.CreateRestaurantRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
 import pt.ul.fc.css.tascaeats.grpc.Empty;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
 import pt.ul.fc.css.tascaeats.grpc.MenusResponse;
+import pt.ul.fc.css.tascaeats.grpc.RestaurantItem;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
 import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
@@ -185,6 +187,39 @@ public class ApiClient {
     ChangeStatusRequest request =
         ChangeStatusRequest.newBuilder().setRestaurantId(restaurantId).setStatus(status).build();
     stub.changeRestaurantStatus(request);
+  }
+
+  public static RestaurantModel createRestaurant(
+      long adminId,
+      String designation,
+      String nif,
+      String city,
+      String postalCode,
+      String street,
+      String openHours,
+      String closeHours) {
+    CreateRestaurantRequest request =
+        CreateRestaurantRequest.newBuilder()
+            .setAdminId(adminId)
+            .setDesignation(designation)
+            .setNif(nif)
+            .setCity(city)
+            .setPostalCode(postalCode)
+            .setStreet(street)
+            .setOpenHours(openHours)
+            .setCloseHours(closeHours)
+            .build();
+    RestaurantItem item = stub.createRestaurant(request);
+    return new RestaurantModel(
+        item.getId(),
+        item.getDesignation(),
+        item.getStatus(),
+        item.getNif(),
+        item.getStreet(),
+        item.getCity(),
+        item.getPostalCode(),
+        item.getOpenHours(),
+        item.getCloseHours());
   }
 
   public static List<RestaurantModel> searchAdminRestaurants(

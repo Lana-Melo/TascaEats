@@ -148,7 +148,11 @@ public class RestaurantListController implements ControllerWithModel {
 
   @FXML
   private void handleCreateNew(ActionEvent event) {
-    System.out.println("Create New clicado");
+    UtilController.switchScene(
+        stage,
+        "/pt/ul/fc/di/css/javafxtascaeats/view/create-restaurant.fxml",
+        "Create Restaurant",
+        model);
   }
 
   @Override

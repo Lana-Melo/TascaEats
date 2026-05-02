@@ -5,6 +5,7 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
@@ -225,6 +226,36 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
     try {
       restaurantService.changeStatus(request.getRestaurantId(), request.getStatus());
       responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Create Restaurant ───────────────────────────────────────────
+  @Override
+  public void createRestaurant(
+      CreateRestaurantRequest request, StreamObserver<RestaurantItem> responseObserver) {
+    try {
+      RestaurantRequestDto requestDto = grpcMapper.mapCreateRestaurantRequestToDto(request);
+      RestaurantResponseDto result = restaurantService.createRestaurant(requestDto);
+      RestaurantItem item =
+          RestaurantItem.newBuilder()
+              .setId(result.id())
+              .setDesignation(result.designation())
+              .setStatus(result.status())
+              .setNif(result.nif())
+              .setStreet(result.street())
+              .setCity(result.city())
+              .setPostalCode(result.postalCode())
+              .setOpenHours(result.openHours())
+              .setCloseHours(result.closeHours())
+              .build();
+      responseObserver.onNext(item);
       responseObserver.onCompleted();
     } catch (pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException e) {
       responseObserver.onError(
