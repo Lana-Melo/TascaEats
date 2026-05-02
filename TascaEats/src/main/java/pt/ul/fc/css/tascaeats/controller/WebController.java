@@ -299,6 +299,7 @@ public class WebController {
       model.addAttribute("description", description);
       model.addAttribute("timesOrdered", timesOrdered);
       model.addAttribute("price", price);
+      model.addAttribute("clientAddresses", userService.getClientById(clientId).addresses());
       if (newOrder != null) {
         model.addAttribute(
             "products",
