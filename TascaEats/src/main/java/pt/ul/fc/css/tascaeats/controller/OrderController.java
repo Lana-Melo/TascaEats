@@ -31,7 +31,7 @@ public class OrderController {
   @ApiOperation(value = "Create order", notes = "Creates a new order.")
   public ResponseEntity<OrderResponseDto> createOrder(@RequestBody @Valid OrderRequestDto request) {
     OrderResponseDto order = orderHandler.createOrder(request);
-    return order != null ? ResponseEntity.ok(order) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(order);
   }
 
   @PostMapping("/payment")
@@ -39,7 +39,7 @@ public class OrderController {
   public ResponseEntity<OrderResponseDto> processPayment(
       @RequestBody @Valid PaymentRequestDto request) {
     OrderResponseDto order = orderHandler.processPayment(request);
-    return order != null ? ResponseEntity.ok(order) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(order);
   }
 
   @PatchMapping("/{id}/status")
@@ -47,7 +47,7 @@ public class OrderController {
   public ResponseEntity<OrderResponseDto> updateOrderStatus(
       @PathVariable Long id, @RequestParam OrderStatus status) {
     OrderResponseDto order = orderHandler.updateOrderStatus(id, status.toString());
-    return order != null ? ResponseEntity.ok(order) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(order);
   }
 
   @PatchMapping("/{id}/deliveryPerson/{deliveryPersonId}")
@@ -55,7 +55,7 @@ public class OrderController {
   public ResponseEntity<OrderResponseDto> assignDeliveryPerson(
       @PathVariable Long id, @PathVariable Long deliveryPersonId) {
     OrderResponseDto order = orderHandler.assignDeliveryPerson(id, deliveryPersonId);
-    return order != null ? ResponseEntity.ok(order) : ResponseEntity.badRequest().build();
+    return ResponseEntity.ok(order);
   }
 
   @DeleteMapping("/{id}")
