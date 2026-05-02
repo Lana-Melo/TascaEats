@@ -16,6 +16,9 @@ service TascaEatsService {
   rpc UpdateClient (UserRequest) returns (UserResponse);
   rpc UpdateDeliveryPerson (DeliveryPersonUpdateRequest) returns (DeliveryPersonResponse);
   rpc SearchAdminRestaurants (AdminRestaurantsRequest) returns (AdminRestaurantsResponse);
+  rpc GetAllMenus (Empty) returns (MenusResponse);
+  rpc AssignMenu (AssignMenuRequest) returns (Empty);
+  rpc ChangeRestaurantStatus (ChangeStatusRequest) returns (Empty);
 }
 
 message DeleteAccountRequest {
@@ -52,6 +55,28 @@ message AdminRestaurantsResponse {
 }
 
 message Empty {}
+
+message MenuItemMessage {
+  int64 id = 1;
+  string name = 2;
+  string cuisine = 3;
+  string description = 4;
+  repeated int64 productIds = 5;
+}
+
+message MenusResponse {
+  repeated MenuItemMessage menus = 1;
+}
+
+message AssignMenuRequest {
+  int64 restaurantId = 1;
+  int64 menuId = 2;
+}
+
+message ChangeStatusRequest {
+  int64 restaurantId = 1;
+  string status = 2;
+}
 
 message LoginRequest {
     string username = 1;

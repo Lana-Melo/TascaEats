@@ -303,13 +303,19 @@ public class RestaurantService {
 
     menuRepository.save(menu);
 
+    restaurant.getProductItems().clear(); // limpa a lista nova, mas mantém a ref ao mesmo obj
+
+    for (Product product : menu.getProducts()) {
+      restaurant.addProductItem(new ProductItem(product, restaurant));
+    }
+    /* DEPRECATED porque tava a dar excecao do reassingment a uma nova lista de productItems
     for (ProductItem productItem : restaurant.getProductItems()) {
       deleteProductItem(restaurant.getId(), productItem.getId());
     }
     restaurant.setProductItems(new ArrayList<>());
     for (Product product : menu.getProducts()) {
       restaurant.addProductItem(new ProductItem(product, restaurant));
-    }
+    }*/
 
     Restaurant saved = restaurantRepository.save(restaurant);
     return mapRestaurantToRestaurantResponse(saved);

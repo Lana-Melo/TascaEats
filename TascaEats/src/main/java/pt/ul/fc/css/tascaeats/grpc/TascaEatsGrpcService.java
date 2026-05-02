@@ -23,6 +23,8 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
 
   @Autowired private RestaurantService restaurantService;
 
+  @Autowired private pt.ul.fc.css.tascaeats.services.MenuService menuService;
+
   @Autowired private GrpcMapper grpcMapper;
 
   // ─── Login ───────────────────────────────────────────────────────
@@ -169,6 +171,64 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       userService.deleteUser(userId);
       responseObserver.onNext(Empty.getDefaultInstance());
       responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Get All Menus ───────────────────────────────────────────────
+  @Override
+  public void getAllMenus(Empty request, StreamObserver<MenusResponse> responseObserver) {
+    try {
+      java.util.List<pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto> menus =
+          menuService.searchBy("", "", "");
+      MenusResponse.Builder builder = MenusResponse.newBuilder();
+      for (pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto dto : menus) {
+        builder.addMenus(
+            MenuItemMessage.newBuilder()
+                .setId(dto.id())
+                .setName(dto.name())
+                .setCuisine(dto.cuisine())
+                .setDescription(dto.description())
+                .addAllProductIds(dto.productIds())
+                .build());
+      }
+      responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Assign Menu ─────────────────────────────────────────────────
+  @Override
+  public void assignMenu(AssignMenuRequest request, StreamObserver<Empty> responseObserver) {
+    try {
+      restaurantService.assignMenu(request.getRestaurantId(), request.getMenuId());
+      responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Change Restaurant Status ─────────────────────────────────────
+  @Override
+  public void changeRestaurantStatus(
+      ChangeStatusRequest request, StreamObserver<Empty> responseObserver) {
+    try {
+      restaurantService.changeStatus(request.getRestaurantId(), request.getStatus());
+      responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());

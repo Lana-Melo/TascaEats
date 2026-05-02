@@ -1,10 +1,14 @@
 package pt.ul.fc.css.tascaeats.services;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
@@ -68,19 +72,36 @@ public class MenuService {
     return mapMenuToMenuResponse(menuOpt.get());
   }
 
+  @Transactional
   public List<MenuResponseDto> searchBy(String name, String productNumber, String average) {
-    List<Menu> menus =
-        name == null || name.isEmpty()
-            ? menuRepository.findAll()
-            : menuRepository.findByNameContainingIgnoreCase(name);
-
-    if (!productNumber.isEmpty() && productNumber != null) {
-      menus.retainAll(menuRepository.findByProductNumber(Integer.parseInt(productNumber)));
-    }
-    if (!average.isEmpty() && average != null) {
-      menus.retainAll(menuRepository.findByAveragePrice(Double.parseDouble(average)));
-    }
+    Specification<Menu> spec = getSearchSpec(name, productNumber, average);
+    List<Menu> menus = menuRepository.findAll(spec);
     return menus.stream().map(this::mapMenuToMenuResponse).toList();
+  }
+
+  private Specification<Menu> getSearchSpec(String name, String productNumber, String average) {
+    return (root, query, cb) -> {
+      List<Predicate> predicates = new ArrayList<>();
+
+      if (name != null && !name.isEmpty()) {
+        predicates.add(cb.like(cb.upper(root.get("name")), "%" + name.toUpperCase() + "%"));
+      }
+
+      if (productNumber != null && !productNumber.isEmpty()) {
+        predicates.add(
+            cb.greaterThanOrEqualTo(
+                cb.size(root.get("products")), Integer.parseInt(productNumber)));
+      }
+
+      if (average != null && !average.isEmpty()) {
+        double avgValue = Double.parseDouble(average);
+        Join<Menu, Product> productJoin = root.join("products", JoinType.INNER);
+        query.groupBy(root);
+        query.having(cb.le(cb.avg(productJoin.get("price")), avgValue));
+      }
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    };
   }
 
   @Transactional

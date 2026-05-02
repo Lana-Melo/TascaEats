@@ -35,7 +35,11 @@ public class RestaurantDetailsController implements ControllerWithModel {
 
   @FXML
   private void handleManageRestaurant(ActionEvent event) {
-    System.out.println("Manage Restaurant clicked");
+    UtilController.switchScene(
+        stage,
+        "/pt/ul/fc/di/css/javafxtascaeats/view/restaurant-management.fxml",
+        "Restaurant Management",
+        model);
   }
 
   @FXML
