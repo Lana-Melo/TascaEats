@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
+import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
@@ -446,6 +447,40 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
                 .setProductCount(dto.productIds().size())
                 .build();
         builder.addMenus(item);
+      }
+      responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Search Products ─────────────────────────────────────────
+  @Override
+  public void searchProducts(
+      SearchProductsRequest request, StreamObserver<ProductsSearchResponse> responseObserver) {
+    try {
+      List<ProductItemResponseDto> products =
+          restaurantService.searchProductBy(
+              null,
+              request.getPrice().isEmpty() ? null : request.getPrice(),
+              request.getDesignation().isEmpty() ? null : request.getDesignation(),
+              request.getDescription().isEmpty() ? null : request.getDescription(),
+              request.getAvailability().isEmpty() ? null : request.getAvailability(),
+              request.getTimesOrdered().isEmpty() ? null : request.getTimesOrdered());
+
+      ProductsSearchResponse.Builder builder = ProductsSearchResponse.newBuilder();
+      for (ProductItemResponseDto dto : products) {
+        ProductSearchItem item =
+            ProductSearchItem.newBuilder()
+                .setId(dto.id())
+                .setDesignation(dto.designation())
+                .setPrice(dto.price())
+                .setDescription(dto.description())
+                .setAvailability(dto.availability())
+                .build();
+        builder.addProducts(item);
       }
       responseObserver.onNext(builder.build());
       responseObserver.onCompleted();

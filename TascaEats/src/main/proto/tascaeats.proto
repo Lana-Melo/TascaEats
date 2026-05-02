@@ -19,6 +19,7 @@ service TascaEatsService {
   rpc SearchRestaurants (SearchRestaurantsRequest) returns (RestaurantsResponse);
   rpc SearchAdminRestaurants (AdminRestaurantsRequest) returns (AdminRestaurantsResponse);
   rpc SearchMenus (SearchMenusRequest) returns (MenusSearchResponse);
+  rpc SearchProducts (SearchProductsRequest) returns (ProductsSearchResponse);
   rpc GetAllMenus (Empty) returns (MenusResponse);
   rpc AssignMenu (AssignMenuRequest) returns (Empty);
   rpc ChangeRestaurantStatus (ChangeStatusRequest) returns (Empty);
@@ -203,4 +204,25 @@ message MenuSearchItem {
 
 message MenusSearchResponse {
   repeated MenuSearchItem menus = 1;
+}
+
+message SearchProductsRequest {
+  string designation = 1;
+  string price = 2;
+  string description = 3;
+  string availability = 4;
+  string timesOrdered = 5;
+}
+
+message ProductSearchItem {
+  int64 id = 1;
+  string designation = 2;
+  double price = 3;
+  string description = 4;
+  string availability = 5;
+  int32 timesOrdered = 6;
+}
+
+message ProductsSearchResponse {
+  repeated ProductSearchItem products = 1;
 }
