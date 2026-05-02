@@ -5,6 +5,9 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
+import pt.ul.fc.css.tascaeats.dto.order.OrderResponseDto;
+import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
@@ -12,6 +15,7 @@ import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
+import pt.ul.fc.css.tascaeats.services.OrderService;
 import pt.ul.fc.css.tascaeats.services.RestaurantService;
 import pt.ul.fc.css.tascaeats.services.UserService;
 
@@ -22,6 +26,8 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   @Autowired private UserService userService;
 
   @Autowired private RestaurantService restaurantService;
+
+  @Autowired private OrderService orderService;
 
   @Autowired private pt.ul.fc.css.tascaeats.services.MenuService menuService;
 
@@ -297,6 +303,151 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       }
 
       responseObserver.onNext(responseBuilder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void searchRestaurants(
+      SearchRestaurantsRequest request, StreamObserver<RestaurantsResponse> responseObserver) {
+    try {
+      List<RestaurantResponseDto> results =
+          restaurantService.searchBy(
+              request.getName(),
+              request.getCity(),
+              request.getStreet(),
+              request.getPostalCode(),
+              request.getCuisine(),
+              request.getMinOrders(),
+              request.getMinReviews(),
+              request.getActiveAt(),
+              request.getMaxAvgPrice());
+
+      RestaurantsResponse.Builder builder = RestaurantsResponse.newBuilder();
+      for (RestaurantResponseDto dto : results) {
+        RestaurantItem item =
+            RestaurantItem.newBuilder()
+                .setId(dto.id())
+                .setDesignation(dto.designation())
+                .setStatus(dto.status())
+                .setNif(dto.nif())
+                .setStreet(dto.street())
+                .setCity(dto.city())
+                .setPostalCode(dto.postalCode())
+                .setOpenHours(dto.openHours())
+                .setCloseHours(dto.closeHours())
+                .build();
+        builder.addRestaurants(item);
+      }
+      responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Get All Orders ───────────────────────────────────────────────
+  @Override
+  public void getAllOrders(Empty request, StreamObserver<OrdersResponse> responseObserver) {
+    try {
+      List<OrderResponseDto> orders = orderService.getAllOrders();
+      OrdersResponse.Builder builder = OrdersResponse.newBuilder();
+      for (OrderResponseDto dto : orders) {
+        builder.addOrders(grpcMapper.mapOrderResponseDtoToResponse(dto));
+      }
+      responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Process Payment ─────────────────────────────────────────────
+  @Override
+  public void processPayment(
+      PaymentRequest request, StreamObserver<OrderResponse> responseObserver) {
+    try {
+      PaymentRequestDto dto = new PaymentRequestDto();
+      dto.setOrderId(request.getOrderId());
+      dto.setPaymentMethod(request.getPaymentMethod());
+      dto.setAmount(request.getAmount());
+      dto.setPaymentInfo(request.getPaymentInfo().isEmpty() ? null : request.getPaymentInfo());
+      OrderResponseDto order = orderService.processPayment(dto);
+      responseObserver.onNext(grpcMapper.mapOrderResponseDtoToResponse(order));
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Update Order Status ─────────────────────────────────────
+  @Override
+  public void updateOrderStatus(
+      UpdateOrderStatusRequest request, StreamObserver<OrderResponse> responseObserver) {
+    try {
+      OrderResponseDto order =
+          orderService.updateOrderStatus(request.getOrderId(), request.getStatus());
+      responseObserver.onNext(grpcMapper.mapOrderResponseDtoToResponse(order));
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Cancel Order ─────────────────────────────────────────────
+  @Override
+  public void cancelOrder(OrderIdRequest request, StreamObserver<Empty> responseObserver) {
+    try {
+      boolean cancelled = orderService.cancelOrder(request.getOrderId());
+      if (!cancelled) {
+        responseObserver.onError(
+            Status.FAILED_PRECONDITION
+                .withDescription("Order cannot be cancelled")
+                .asRuntimeException());
+        return;
+      }
+      responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Search Menus ─────────────────────────────────────────────
+  @Override
+  public void searchMenus(
+      SearchMenusRequest request, StreamObserver<MenusSearchResponse> responseObserver) {
+    try {
+      List<MenuResponseDto> menus =
+          menuService.searchBy(request.getName(), request.getProductNumber(), request.getAverage());
+
+      MenusSearchResponse.Builder builder = MenusSearchResponse.newBuilder();
+      for (MenuResponseDto dto : menus) {
+        MenuSearchItem item =
+            MenuSearchItem.newBuilder()
+                .setId(dto.id())
+                .setName(dto.name())
+                .setCuisine(dto.cuisine())
+                .setDescription(dto.description())
+                .setProductCount(dto.productIds().size())
+                .build();
+        builder.addMenus(item);
+      }
+      responseObserver.onNext(builder.build());
       responseObserver.onCompleted();
     } catch (Exception e) {
       responseObserver.onError(

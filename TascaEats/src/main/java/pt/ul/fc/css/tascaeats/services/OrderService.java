@@ -164,6 +164,10 @@ public class OrderService {
         .toList();
   }
 
+  public List<OrderResponseDto> getAllOrders() {
+    return orderRepository.findAll().stream().map(this::mapOrderToOrderResponse).toList();
+  }
+
   /////////////////////////////////////////////////////////////
   ///  PATCH ORDER METHODS
   /////////////////////////////////////////////////////////////

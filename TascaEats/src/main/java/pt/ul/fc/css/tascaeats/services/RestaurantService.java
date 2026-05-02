@@ -62,7 +62,7 @@ public class RestaurantService {
   /////////////////////////////////////////////////////////////
   ///  CRUD RESTAURANT'S METHODS
   /////////////////////////////////////////////////////////////
-
+  @Transactional
   public List<RestaurantResponseDto> searchBy(
       String designation,
       String city,
