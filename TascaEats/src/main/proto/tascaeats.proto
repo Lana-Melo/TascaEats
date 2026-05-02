@@ -15,10 +15,7 @@ service TascaEatsService {
   rpc UpdateAdmin (UserRequest) returns (UserResponse);
   rpc UpdateClient (UserRequest) returns (UserResponse);
   rpc UpdateDeliveryPerson (DeliveryPersonUpdateRequest) returns (DeliveryPersonResponse);
-}
-
-message DeleteAccountRequest {
-  int64 id = 1;
+  rpc SearchUsers (SearchUsersRequest) returns (SearchUsersResponse);
 }
 
 message Empty {}
@@ -64,4 +61,19 @@ message DeliveryPersonResponse {
   string phoneNumber = 5;
   string nif = 6;
   string status = 7;
+}
+
+message DeleteAccountRequest {
+  int64 id = 1;
+}
+
+message SearchUsersRequest {
+  string name = 1;
+  string userType = 2;
+  string orderNumber = 3;
+  string deliveryNumber = 4;
+}
+
+message SearchUsersResponse {
+  repeated UserResponse users = 1;
 }

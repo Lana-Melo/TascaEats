@@ -2,6 +2,7 @@ package pt.ul.fc.css.tascaeats.grpc;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
@@ -163,6 +164,32 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       Long userId = request.getId();
       userService.deleteUser(userId);
       responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Search Users ─────────────────────────────────────────────
+  @Override
+  public void searchUsers(
+      SearchUsersRequest request, StreamObserver<SearchUsersResponse> responseObserver) {
+    try {
+      String name = request.getName();
+      String userType = request.getUserType();
+      String orderNumber = request.getOrderNumber();
+      String deliveryNumber = request.getDeliveryNumber();
+
+      List<UserResponseDto> users =
+          userService.searchBy(name, userType, orderNumber, deliveryNumber);
+
+      SearchUsersResponse.Builder responseBuilder = SearchUsersResponse.newBuilder();
+      for (UserResponseDto u : users) {
+        responseBuilder.addUsers(grpcMapper.mapUserResponseDtoToResponse(u));
+      }
+
+      responseObserver.onNext(responseBuilder.build());
       responseObserver.onCompleted();
     } catch (Exception e) {
       responseObserver.onError(
