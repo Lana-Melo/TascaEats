@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="500.0" prefWidth="750.0"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.RestaurantListController">
+
+    <children>
+        <MenuBar VBox.vgrow="NEVER">
+            <menus>
+                <Menu text="Menu">
+                    <items>
+                        <MenuItem text="About TascaEats"/>
+                        <MenuItem text="Logout" onAction="#handleLogout"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox alignment="CENTER" spacing="15.0" prefWidth="750.0">
+
+                    <VBox spacing="10.0" maxWidth="350">
+                        <padding>
+                            <Insets top="20" bottom="20"/>
+                        </padding>
+
+                        <HBox spacing="4">
+                            <Hyperlink text="Home" textFill="#a1a1a1" onAction="#handleGoHome">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1"/>
+                            <Label text="Restaurants"/>
+                        </HBox>
+
+                        <Label text="Restaurant List">
+                            <font><Font name="AppleGothic Regular" size="22.0"/></font>
+                        </Label>
+
+                        <Label text="Search Filters"/>
+
+                        <FlowPane hgap="10" vgap="8">
+                            <CheckBox fx:id="nameCheckBox" text="Name" selected="true" disable="true"/>
+                            <CheckBox fx:id="cityCheckBox" text="City"/>
+                            <CheckBox fx:id="streetCheckBox" text="Street"/>
+                            <CheckBox fx:id="postalCodeCheckBox" text="Postal Code"/>
+                            <CheckBox fx:id="cuisineCheckBox" text="Cuisine"/>
+                            <CheckBox fx:id="minOrdersCheckBox" text="Min Orders"/>
+                            <CheckBox fx:id="minReviewsCheckBox" text="Min Reviews"/>
+                            <CheckBox fx:id="activeAtCheckBox" text="Active At"/>
+                            <CheckBox fx:id="maxAvgPriceCheckBox" text="Max. Avg Price"/>
+                        </FlowPane>
+
+                        <Label fx:id="nameLabel" text="Name"/>
+                        <TextField fx:id="nameField" promptText="Name"/>
+
+                        <Label fx:id="cityLabel" text="City" visible="false" managed="false"/>
+                        <TextField fx:id="cityField" promptText="City" visible="false" managed="false"/>
+
+                        <Label fx:id="streetLabel" text="Street" visible="false" managed="false"/>
+                        <TextField fx:id="streetField" promptText="Street" visible="false" managed="false"/>
+
+                        <Label fx:id="postalCodeLabel" text="Postal Code" visible="false" managed="false"/>
+                        <TextField fx:id="postalCodeField" promptText="Postal Code" visible="false" managed="false"/>
+
+                        <Label fx:id="cuisineLabel" text="Cuisine" visible="false" managed="false"/>
+                        <TextField fx:id="cuisineField" promptText="Cuisine" visible="false" managed="false"/>
+
+                        <Label fx:id="minOrdersLabel" text="Min Orders" visible="false" managed="false"/>
+                        <TextField fx:id="minOrdersField" promptText="Min Orders" visible="false" managed="false"/>
+
+                        <Label fx:id="minReviewsLabel" text="Min Reviews" visible="false" managed="false"/>
+                        <TextField fx:id="minReviewsField" promptText="Min Reviews" visible="false" managed="false"/>
+
+                        <Label fx:id="activeAtLabel" text="Active At" visible="false" managed="false"/>
+                        <TextField fx:id="activeAtField" promptText="HH:mm" visible="false" managed="false"/>
+
+                        <Label fx:id="maxAvgPriceLabel" text="Max Avg Price" visible="false" managed="false"/>
+                        <TextField fx:id="maxAvgPriceField" promptText="Max Avg Price" visible="false" managed="false"/>
+
+                        <Button fx:id="searchButton" text="Search" maxWidth="Infinity" onAction="#handleSearch">
+                            <font><Font name="AppleGothic Regular" size="13.0"/></font>
+                        </Button>
+
+                        <ListView fx:id="restaurantListView" prefHeight="180.0"/>
+
+                        <Label fx:id="errorLabel" text="No restaurant selected to edit"
+                               textFill="red" visible="false" managed="false"/>
+
+                        <HBox spacing="10">
+                            <Button fx:id="editButton" text="Edit" maxWidth="Infinity"
+                                    HBox.hgrow="ALWAYS" onAction="#handleEdit"/>
+                            <Button fx:id="createNewButton" text="Create New" maxWidth="Infinity"
+                                    HBox.hgrow="ALWAYS" onAction="#handleCreateNew"/>
+                        </HBox>
+
+                    </VBox>
+
+                </VBox>
+            </content>
+        </ScrollPane>
+
+        <ToolBar prefHeight="40.0"/>
+    </children>
+</VBox>

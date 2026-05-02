@@ -15,9 +15,35 @@ service TascaEatsService {
   rpc UpdateAdmin (UserRequest) returns (UserResponse);
   rpc UpdateClient (UserRequest) returns (UserResponse);
   rpc UpdateDeliveryPerson (DeliveryPersonUpdateRequest) returns (DeliveryPersonResponse);
+  rpc SearchAdminRestaurants (AdminRestaurantsRequest) returns (AdminRestaurantsResponse);
+  rpc GetAllMenus (Empty) returns (MenusResponse);
+  rpc AssignMenu (AssignMenuRequest) returns (Empty);
+  rpc ChangeRestaurantStatus (ChangeStatusRequest) returns (Empty);
 }
 
 message Empty {}
+
+message MenuItemMessage {
+  int64 id = 1;
+  string name = 2;
+  string cuisine = 3;
+  string description = 4;
+  repeated int64 productIds = 5;
+}
+
+message MenusResponse {
+  repeated MenuItemMessage menus = 1;
+}
+
+message AssignMenuRequest {
+  int64 restaurantId = 1;
+  int64 menuId = 2;
+}
+
+message ChangeStatusRequest {
+  int64 restaurantId = 1;
+  string status = 2;
+}
 
 message LoginRequest {
     string username = 1;
@@ -64,4 +90,33 @@ message DeliveryPersonResponse {
 
 message DeleteAccountRequest {
   int64 id = 1;
+}
+
+message AdminRestaurantsRequest {
+  int64 adminId = 1;
+  string name = 2;
+  string city = 3;
+  string street = 4;
+  string postalCode = 5;
+  string cuisine = 6;
+  string minOrders = 7;
+  string minReviews = 8;
+  string activeAt = 9;
+  string maxAvgPrice = 10;
+}
+
+message RestaurantItem {
+  int64 id = 1;
+  string designation = 2;
+  string status = 3;
+  string nif = 4;
+  string street = 5;
+  string city = 6;
+  string postalCode = 7;
+  string openHours = 8;
+  string closeHours = 9;
+}
+
+message AdminRestaurantsResponse {
+  repeated RestaurantItem restaurants = 1;
 }
