@@ -136,7 +136,7 @@ PUT /api/users/client/1
   "postalCode": "2352-123"
 }
 ```
-> Esperado: 200 OK — morada atualizada de "Ilha do Sol" para "Ilha do Lua" e street de "avenida de mal penteada" para "avenida bem penteada" 
+> Esperado: 200 OK — morada atualizada de "Ilha do Sol" para "Ilha do Lua" e street de "avenida de mal penteada" para "avenida bem penteada"
 
 **✅ Atualizar admin** (id 4 — diabinho_joelho):
 ```
@@ -279,7 +279,7 @@ DELETE /api/restaurants/1/products/{id do sumo de laranja}
 
 **❌ Negativo — soft-delete** — remover produto com pedidos associados (id 1 — arroz doce):
 
-> Primeiro criar e pagar um pedido com produto 1 (fazer Casos H e I antes), depois voltar aqui. 
+> Primeiro criar e pagar um pedido com produto 1 (fazer Casos H e I antes), depois voltar aqui.
 
 ```
 DELETE /api/restaurants/1/products/1
@@ -504,4 +504,3 @@ PATCH /api/orders/1/status
 - [ ] Caso J demonstrado (positivo + saltar estado)
 - [ ] Caso K demonstrado (positivo + entregador BUSY + pedido não READY)
 - [ ] Caso L demonstrado (positivo + cancelar em PREPARING)
-

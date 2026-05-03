@@ -35,6 +35,9 @@ Core features include:
 
 > **Note:** The video does not cover every implemented feature exhaustively, but walks through the main user flows across the three interfaces.
 
+## Domain Model
+![Domain Model](DiagramaCSS-2a-fase.jpeg)
+
 ## Phase 2 — Changes and Extensions
 
 ### Backend / Core
