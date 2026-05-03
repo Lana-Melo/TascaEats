@@ -1,490 +1,353 @@
 package pt.ul.fc.css.tascaeats.services;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
+import pt.ul.fc.css.tascaeats.dto.order.OrderResponseDto;
+import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
+import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.Menu;
+import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.Product;
+import pt.ul.fc.css.tascaeats.entities.ProductItem;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
+import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
+import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
+import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
+import pt.ul.fc.css.tascaeats.exceptions.IncompleteInputException;
+import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
-import pt.ul.fc.css.tascaeats.repository.ProductRepository;
+import pt.ul.fc.css.tascaeats.repository.ProductItemRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
-
+ 
   @Mock private OrderRepository orderRepository;
   @Mock private UserRepository userRepository;
   @Mock private RestaurantRepository restaurantRepository;
-  @Mock private ProductRepository productRepository;
-
+  @Mock private ProductItemRepository productItemRepository;
+ 
   @InjectMocks private OrderService orderService;
-
-  // helpers
-  private Address address() {
-    return new Address("Rua A", "Lisboa", "1000-001");
-  }
-
-  private Admin admin() {
-    return new Admin("admin", "pass", "Admin", "912345678", "987654321");
-  }
-
+ 
+  private Address address() { return new Address("Rua A", "Lisboa", "1000-001"); }
+  private Admin admin() { return new Admin("admin", "pass", "Admin", "912345678", "987654321"); }
   private Restaurant restaurant() {
-    return new Restaurant(
-        "123456789", "Cantina", address(), admin(), LocalTime.of(11, 0), LocalTime.of(22, 0));
+    return new Restaurant("123456789", "Cantina", address(), admin(), LocalTime.of(11, 0), LocalTime.of(22, 0));
   }
-
   private Client client() {
     return new Client("client", "pass", "Client", "912345678", "123456789", List.of(address()));
   }
-
-  private Menu menu() {
-    return new Menu("menu", "italian", "italian");
+  private ProductItem productItem(Restaurant r) {
+    Menu m = new Menu("menu", "italian", "desc");
+    Product p = new Product(9.99, "Mussarela", "Pizza", m);
+    return new ProductItem(p, r);
   }
-
-  private Product product(Menu m) {
-    return new Product(9.99, "Mussarela", "Pizza", m);
-  }
-
-  // --- CREATE ORDER ---
-
-  /*@Test
-  void createOrder_shouldReturnNull_whenClientNotFound() {
-    OrderRequestDto request = new OrderRequestDto();
-    request.setClientId(1L);
-    request.setProductIds(List.of(1L));
-
+  private Order buildOrder(Client c, ProductItem pi) { return new Order(c, List.of(pi), address()); }
+ 
+  // ─── createOrder ────────────────────────────────────────────────────────────
+ 
+  @Test
+  void createOrder_shouldThrow_whenClientNotFound() {
+    OrderRequestDto req = new OrderRequestDto();
+    req.setClientId(1L); req.setProductIds(List.of(1L));
+    req.setCity("Lisboa"); req.setStreet("Rua A"); req.setPostalCode("1000-001");
     when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
-    assertNull(orderService.createOrder(request));
+    assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(req));
   }
-
+ 
   @Test
-  void createOrder_shouldReturnNull_whenUserIsNotClient() {
-    OrderRequestDto request = new OrderRequestDto();
-    request.setClientId(1L);
-    request.setProductIds(List.of(1L));
-
+  void createOrder_shouldThrow_whenUserIsNotClient() {
+    OrderRequestDto req = new OrderRequestDto();
+    req.setClientId(1L); req.setProductIds(List.of(1L));
+    req.setCity("Lisboa"); req.setStreet("Rua A"); req.setPostalCode("1000-001");
     when(userRepository.findById(1L)).thenReturn(Optional.of(admin()));
-
-    assertNull(orderService.createOrder(request));
+    assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(req));
   }
-
+ 
   @Test
-  void createOrder_shouldReturnNull_whenProductNotFound() {
-    OrderRequestDto request = new OrderRequestDto();
-    request.setClientId(1L);
-    request.setProductIds(List.of(1L));
-
+  void createOrder_shouldThrow_whenProductNotFound() {
+    OrderRequestDto req = new OrderRequestDto();
+    req.setClientId(1L); req.setProductIds(List.of(1L));
+    req.setCity("Lisboa"); req.setStreet("Rua A"); req.setPostalCode("1000-001");
     when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
-    when(productRepository.findById(1L)).thenReturn(Optional.empty());
-
-    assertNull(orderService.createOrder(request));
+    when(productItemRepository.findById(1L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(req));
   }
-
+ 
   @Test
-  void createOrder_shouldReturnNull_whenRestaurantClosed() {
-    Restaurant restaurant = restaurant();
-    restaurant.setStatus(RestaurantStatus.CLOSED);
-    Product product = product(restaurant);
-
-    OrderRequestDto request = new OrderRequestDto();
-    request.setClientId(1L);
-    request.setProductIds(List.of(1L));
-
+  void createOrder_shouldThrow_whenRestaurantClosed() {
+    Restaurant r = restaurant();
+    r.setStatus(RestaurantStatus.CLOSED);
+    ProductItem pi = productItem(r);
+    OrderRequestDto req = new OrderRequestDto();
+    req.setClientId(1L); req.setProductIds(List.of(1L));
+    req.setCity("Lisboa"); req.setStreet("Rua A"); req.setPostalCode("1000-001");
     when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
-    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-
-    assertNull(orderService.createOrder(request));
+    when(productItemRepository.findById(1L)).thenReturn(Optional.of(pi));
+    assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(req));
   }
-
+ 
   @Test
-  void createOrder_shouldReturnNull_whenProductSoldOut() {
-    Restaurant restaurant = restaurant();
-    Product product = product(restaurant);
-    product.setStatus(ProductStatus.SOLD_OUT);
-
-    OrderRequestDto request = new OrderRequestDto();
-    request.setClientId(1L);
-    request.setProductIds(List.of(1L));
-
+  void createOrder_shouldThrow_whenAddressMissing() {
+    Restaurant r = restaurant();
+    ProductItem pi = productItem(r);
+    OrderRequestDto req = new OrderRequestDto();
+    req.setClientId(1L); req.setProductIds(List.of(1L));
     when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
-    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-
-    assertNull(orderService.createOrder(request));
+    when(productItemRepository.findById(1L)).thenReturn(Optional.of(pi));
+    assertThrows(IncompleteInputException.class, () -> orderService.createOrder(req));
   }
-
+ 
   @Test
-  void createOrder_shouldReturnOrderResponse_whenSuccessful() {
-    Restaurant restaurant = restaurant();
-    Product product = product(restaurant);
-
-    OrderRequestDto request = new OrderRequestDto();
-    request.setClientId(1L);
-    request.setProductIds(List.of(1L));
-
-    when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
-    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-    when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
-
-    assertNotNull(orderService.createOrder(request));
+  void createOrder_shouldReturnOrder_whenValid() {
+    Restaurant r = restaurant();
+    ProductItem pi = productItem(r);
+    Client c = client();
+    Order order = buildOrder(c, pi);
+    OrderRequestDto req = new OrderRequestDto();
+    req.setClientId(1L); req.setProductIds(List.of(1L));
+    req.setCity("Lisboa"); req.setStreet("Rua A"); req.setPostalCode("1000-001");
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(productItemRepository.findById(1L)).thenReturn(Optional.of(pi));
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+    when(restaurantRepository.findById(any())).thenReturn(Optional.of(r));
+    when(userRepository.save(any())).thenReturn(c);
+    OrderResponseDto result = orderService.createOrder(req);
+    assertNotNull(result);
   }
-
-  // --- PROCESS PAYMENT ---
-
+ 
+  // ─── processPayment ─────────────────────────────────────────────────────────
+ 
   @Test
-  void processPayment_shouldReturnNull_whenOrderMissing() {
-    PaymentRequestDto request = new PaymentRequestDto();
-    request.setOrderId(1L);
-    request.setPaymentMethod("CASH");
-    request.setAmount(9.99);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.empty());
-
-    assertNull(orderService.processPayment(request));
+  void processPayment_shouldThrow_whenOrderNotFound() {
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(99L); req.setPaymentMethod("Cash"); req.setAmount(10.0);
+    when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class, () -> orderService.processPayment(req));
   }
-
+ 
   @Test
-  void processPayment_shouldReturnNull_whenAmountMismatch() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-
-    PaymentRequestDto request = new PaymentRequestDto();
-    request.setOrderId(1L);
-    request.setPaymentMethod("CASH");
-    request.setAmount(8.99);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
-    assertNull(orderService.processPayment(request));
-  }
-
-  @Test
-  void processPayment_shouldReturnNull_whenOrderNotInCreatedStatus() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
+  void processPayment_shouldThrow_whenOrderAlreadyPaid() {
+    Restaurant r = restaurant();
+    Order order = buildOrder(client(), productItem(r));
     order.setOrderStatus(OrderStatus.PAID);
-
-    PaymentRequestDto request = new PaymentRequestDto();
-    request.setOrderId(1L);
-    request.setPaymentMethod("CASH");
-    request.setAmount(9.99);
-
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(1L); req.setPaymentMethod("Cash"); req.setAmount(10.0);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
-    assertNull(orderService.processPayment(request));
+    assertThrows(RequirementsNotMetException.class, () -> orderService.processPayment(req));
   }
-
+ 
   @Test
-  void processPayment_shouldReturnOrderResponse_whenSuccessful() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-
-    PaymentRequestDto request = new PaymentRequestDto();
-    request.setOrderId(1L);
-    request.setPaymentMethod("CASH");
-    request.setAmount(9.99);
-
+  void processPayment_shouldThrow_whenCashAmountInsufficient() {
+    Restaurant r = restaurant();
+    Order order = buildOrder(client(), productItem(r)); // totalValue = 9.99
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(1L); req.setPaymentMethod("Cash"); req.setAmount(5.0);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
-
-    assertEquals(OrderStatus.PAID, orderService.processPayment(request).status());
+    assertThrows(RequirementsNotMetException.class, () -> orderService.processPayment(req));
   }
-
-  // --- UPDATE ORDER STATUS ---
-
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenOrderNotFound() {
-    when(orderRepository.findById(1L)).thenReturn(Optional.empty());
-    assertNull(orderService.updateOrderStatus(1L, "PAID"));
-  }
-
-  // CREATED → transições inválidas
-  @Test
-  void updateOrderStatus_shouldReturnNull_whenCreatedToPreparing() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    // CREATED → PREPARING é inválido
-
+  void processPayment_shouldReturnPaidOrder_withCash() {
+    Restaurant r = restaurant();
+    Order order = buildOrder(client(), productItem(r)); // totalValue = 9.99
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(1L); req.setPaymentMethod("Cash"); req.setAmount(10.0); req.setPaymentInfo(null);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "PREPARING"));
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+    assertNotNull(orderService.processPayment(req));
   }
-
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenCreatedToDelivered() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-
+  void processPayment_shouldThrow_whenMBWayAmountMismatch() {
+    Restaurant r = restaurant();
+    Order order = buildOrder(client(), productItem(r)); // totalValue = 9.99
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(1L); req.setPaymentMethod("MBWay"); req.setAmount(5.0); req.setPaymentInfo("912345678");
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "DELIVERED"));
+    assertThrows(RequirementsNotMetException.class, () -> orderService.processPayment(req));
   }
-
-  // PAID → transições inválidas
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenPaidToReady() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.PAID);
-
+  void processPayment_shouldReturnPaidOrder_withCard() {
+    Restaurant r = restaurant();
+    Order order = buildOrder(client(), productItem(r)); // totalValue = 9.99
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(1L); req.setPaymentMethod("Card"); req.setAmount(9.99); req.setPaymentInfo("4111111111111111");
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "READY"));
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+    assertNotNull(orderService.processPayment(req));
   }
-
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenPaidToDelivered() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.PAID);
-
+  void processPayment_shouldThrow_whenInvalidMethod() {
+    Restaurant r = restaurant();
+    Order order = buildOrder(client(), productItem(r));
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(1L); req.setPaymentMethod("Crypto"); req.setAmount(9.99);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "DELIVERED"));
+    assertThrows(IllegalArgumentException.class, () -> orderService.processPayment(req));
   }
-
-  // PREPARING → transições inválidas
+ 
+  // ─── updateOrderStatus ──────────────────────────────────────────────────────
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenPreparingToPaid() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.PREPARING);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "PAID"));
+  void updateOrderStatus_shouldThrow_whenOrderNotFound() {
+    when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class, () -> orderService.updateOrderStatus(99L, "PAID"));
   }
-
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenPreparingToDelivered() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.PREPARING);
-
+  void updateOrderStatus_shouldThrow_whenCreatedToInvalidStatus() {
+    Order order = buildOrder(client(), productItem(restaurant())); // CREATED
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "DELIVERED"));
+    assertThrows(RequirementsNotMetException.class, () -> orderService.updateOrderStatus(1L, "DELIVERED"));
   }
-
-  // READY → transições inválidas
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenReadyToPaid() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.READY);
-
+  void updateOrderStatus_shouldSucceed_fromCreatedToPaid() {
+    Order order = buildOrder(client(), productItem(restaurant()));
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "PAID"));
-  }
-
-  @Test
-  void updateOrderStatus_shouldReturnNull_whenReadyToPreparing() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.READY);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "PREPARING"));
-  }
-
-  @Test
-  void updateOrderStatus_shouldReturnNull_whenAlreadyDelivered() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.DELIVERED);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "READY"));
-  }
-
-  @Test
-  void updateOrderStatus_shouldReturnOrderResponse_whenValidTransition() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    // CREATED → PAID is valid
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
-
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
     assertNotNull(orderService.updateOrderStatus(1L, "PAID"));
   }
-
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenDeliveredButNoDeliveryAssigned() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
+  void updateOrderStatus_shouldSucceed_fromCreatedToCancelled() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+    assertNotNull(orderService.updateOrderStatus(1L, "CANCELLED"));
+  }
+ 
+  @Test
+  void updateOrderStatus_shouldThrow_whenReadyToInvalidStatus() {
+    Order order = buildOrder(client(), productItem(restaurant()));
     order.setOrderStatus(OrderStatus.READY);
-
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
-    assertNull(orderService.updateOrderStatus(1L, "DELIVERED"));
+    assertThrows(RequirementsNotMetException.class, () -> orderService.updateOrderStatus(1L, "CANCELLED"));
   }
-
-  // Status terminal → qualquer transição é inválida
+ 
+  // ─── assignDeliveryPerson ───────────────────────────────────────────────────
+ 
   @Test
-  void updateOrderStatus_shouldReturnNull_whenAlreadyCancelled() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.CANCELLED);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    assertNull(orderService.updateOrderStatus(1L, "CREATED"));
+  void assignDeliveryPerson_shouldThrow_whenOrderNotFound() {
+    when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class, () -> orderService.assignDeliveryPerson(99L, 1L));
   }
-
-  // Prepared -> Delivered
+ 
   @Test
-  void updateOrderStatus_shouldReturnOrderResponse_whenReadyToDeliveredWithDelivery() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
+  void assignDeliveryPerson_shouldThrow_whenUserNotDeliveryPerson() {
+    Order order = buildOrder(client(), productItem(restaurant()));
     order.setOrderStatus(OrderStatus.READY);
-
-    DeliveryPerson delivery =
-        new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
-    delivery.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
-    order.setDeliveryPerson(delivery);
-    order.setDelivery(new Delivery(LocalDateTime.now()));
-
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
-
-    assertNotNull(orderService.updateOrderStatus(1L, "DELIVERED"));
-    assertEquals(DeliveryPersonStatus.AVAILABLE, delivery.getDeliveryPersonStatus());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
+    assertThrows(ResourceNotFoundException.class, () -> orderService.assignDeliveryPerson(1L, 1L));
   }
-
-  // --- ASSIGN DELIVERY PERSON ---
-
+ 
   @Test
-  void assignDeliveryPerson_shouldReturnNull_whenOrderNotFound() {
-    when(orderRepository.findById(1L)).thenReturn(Optional.empty());
-    assertNull(orderService.assignDeliveryPerson(1L, 2L));
-  }
-
-  @Test
-  void assignDeliveryPerson_shouldReturnNull_whenDeliveryPersonNotFound() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
+  void assignDeliveryPerson_shouldThrow_whenDeliveryPersonBusy() {
+    Order order = buildOrder(client(), productItem(restaurant()));
     order.setOrderStatus(OrderStatus.READY);
-
+    DeliveryPerson dp = new DeliveryPerson("dp", "pass", "DP", "912000000", "111111111");
+    dp.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(userRepository.findById(2L)).thenReturn(Optional.empty());
-
-    assertNull(orderService.assignDeliveryPerson(1L, 2L));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+    assertThrows(RequirementsNotMetException.class, () -> orderService.assignDeliveryPerson(1L, 1L));
   }
-
+ 
   @Test
-  void assignDeliveryPerson_shouldReturnNull_whenDeliveryPersonBusy() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
+  void assignDeliveryPerson_shouldThrow_whenOrderNotReady() {
+    Order order = buildOrder(client(), productItem(restaurant())); // CREATED
+    DeliveryPerson dp = new DeliveryPerson("dp", "pass", "DP", "912000000", "111111111");
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+    assertThrows(RequirementsNotMetException.class, () -> orderService.assignDeliveryPerson(1L, 1L));
+  }
+ 
+  @Test
+  void assignDeliveryPerson_shouldSucceed_whenValid() {
+    Order order = buildOrder(client(), productItem(restaurant()));
     order.setOrderStatus(OrderStatus.READY);
-
-    DeliveryPerson delivery =
-        new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
-    delivery.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
-
+    DeliveryPerson dp = new DeliveryPerson("dp", "pass", "DP", "912000000", "111111111");
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(userRepository.findById(2L)).thenReturn(Optional.of(delivery));
-
-    assertNull(orderService.assignDeliveryPerson(1L, 2L));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+    when(userRepository.save(any())).thenReturn(dp);
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+    assertNotNull(orderService.assignDeliveryPerson(1L, 1L));
   }
-
+ 
+  // ─── cancelOrder ────────────────────────────────────────────────────────────
+ 
   @Test
-  void assignDeliveryPerson_shouldReturnNull_whenOrderNotReady() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    // status is CREATED, not READY
-
-    DeliveryPerson delivery =
-        new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
-    delivery.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(userRepository.findById(2L)).thenReturn(Optional.of(delivery));
-
-    assertNull(orderService.assignDeliveryPerson(1L, 2L));
+  void cancelOrder_shouldReturnFalse_whenNotFound() {
+    when(orderRepository.existsById(99L)).thenReturn(false);
+    assertFalse(orderService.cancelOrder(99L));
   }
-
-  @Test
-  void assignDeliveryPerson_shouldReturnOrderResponse_whenSuccessful() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    order.setOrderStatus(OrderStatus.READY);
-
-    DeliveryPerson delivery =
-        new DeliveryPerson("delivery", "pass", "Delivery", "931234567", "111222333");
-    delivery.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(userRepository.findById(2L)).thenReturn(Optional.of(delivery));
-    when(orderRepository.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
-
-    assertNotNull(orderService.assignDeliveryPerson(1L, 2L));
-  }
-
-  // --- CANCEL ORDER ---
-
-  @Test
-  void cancelOrder_shouldReturnTrue_whenOrderDoesNotExist() {
-    when(orderRepository.existsById(1L)).thenReturn(false);
-    assertTrue(orderService.cancelOrder(1L));
-  }
-
+ 
   @Test
   void cancelOrder_shouldReturnFalse_whenOrderNotCancellable() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
+    Order order = buildOrder(client(), productItem(restaurant()));
     order.setOrderStatus(OrderStatus.PREPARING);
-
     when(orderRepository.existsById(1L)).thenReturn(true);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
     assertFalse(orderService.cancelOrder(1L));
   }
-
+ 
   @Test
-  void cancelOrder_shouldReturnTrue_whenOrderInCreatedStatus() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
-    // status is CREATED by default
-
+  void cancelOrder_shouldReturnTrue_whenOrderCreated() {
+    Order order = buildOrder(client(), productItem(restaurant()));
     when(orderRepository.existsById(1L)).thenReturn(true);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
     assertTrue(orderService.cancelOrder(1L));
+    verify(orderRepository).deleteById(1L);
   }
-
+ 
   @Test
-  void cancelOrder_shouldReturnTrue_whenOrderInPaidStatus() {
-    Restaurant restaurant = restaurant();
-    Address address = address();
-    Order order = new Order(client(), List.of(product(restaurant)), address);
+  void cancelOrder_shouldReturnTrue_whenOrderPaid() {
+    Order order = buildOrder(client(), productItem(restaurant()));
     order.setOrderStatus(OrderStatus.PAID);
-
     when(orderRepository.existsById(1L)).thenReturn(true);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
     assertTrue(orderService.cancelOrder(1L));
-  }*/
+    verify(orderRepository).deleteById(1L);
+  }
+ 
+  // ─── getAllOrders ────────────────────────────────────────────────────────────
+ 
+  @Test
+  void getAllOrders_shouldReturnList() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    when(orderRepository.findAll()).thenReturn(List.of(order));
+    assertEquals(1, orderService.getAllOrders().size());
+  }
+ 
+  @Test
+  void getAllOrders_shouldReturnEmptyList_whenNoOrders() {
+    when(orderRepository.findAll()).thenReturn(List.of());
+    assertTrue(orderService.getAllOrders().isEmpty());
+  }
 }

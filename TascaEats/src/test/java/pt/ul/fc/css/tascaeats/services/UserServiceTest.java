@@ -3,10 +3,11 @@ package pt.ul.fc.css.tascaeats.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -16,7 +17,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
+import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponseDto;
@@ -26,6 +29,7 @@ import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
@@ -34,396 +38,292 @@ import pt.ul.fc.css.tascaeats.repository.UserRepository;
 class UserServiceTest {
 
   @Mock private UserRepository userRepository;
+  @Mock private OrderRepository orderRepository;
+  @Mock private RestaurantRepository restaurantRepository;
 
   @InjectMocks private UserService userService;
 
-  @Mock private OrderRepository orderRepository;
+  private Address address() { return new Address("Rua A", "Lisboa", "1000-001"); }
+  private Admin admin() { return new Admin("admin", "pass", "Admin", "912345678", "987654321"); }
+  private Client client() {
+    return new Client("client", "pass", "Client Name", "912345678", "123456789", List.of(address()));
+  }
+  private DeliveryPerson deliveryPerson() {
+    return new DeliveryPerson("dp", "pass", "DP Name", "912000001", "111111111");
+  }
 
-  @Mock private RestaurantRepository restaurantRepository;
+  // ─── login ──────────────────────────────────────────────────────────────────
 
-  /*@Test
-  void login_shouldReturnUserResponse_whenUserExists() {
-    Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-    when(userRepository.findByUsername("admin")).thenReturn(Optional.of(admin));
-
-    UserResponseDto response = userService.login("admin", "anything");
-
-    assertEquals("admin", response.username());
-    assertEquals("Admin", response.name());
+  @Test
+  void login_shouldReturnUser_whenFound() {
+    Admin a = admin();
+    when(userRepository.findByUsername("admin")).thenReturn(Optional.of(a));
+    UserResponseDto result = userService.login("admin", "pass");
+    assertNotNull(result);
+    assertEquals("admin", result.username());
   }
 
   @Test
-  void login_shouldReturnNull_whenUserDoesNotExist() {
+  void login_shouldThrow_whenNotFound() {
     when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
-
-    assertNull(userService.login("ghost", "pass"));
+    assertThrows(ResourceNotFoundException.class, () -> userService.login("ghost", "pass"));
   }
 
-  @Test
-  void registerNewClient_shouldReturnNull_whenUsernameAlreadyExists() {
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("jane");
-    when(userRepository.findByUsername("jane"))
-        .thenReturn(Optional.of(new Admin("jane", "pass", "Jane", "912345678", "123456789")));
-
-    assertNull(userService.registerNewClient(request));
-  }
+  // ─── registerNewClient ──────────────────────────────────────────────────────
 
   @Test
-  void registerNewClient_shouldReturnClientResponse_whenSuccessful() {
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("jane");
-    request.setPassword("pass");
-    request.setName("Jane Doe");
-    request.setPhoneNumber("912345678");
-    request.setNif("123456789");
-    request.setAddresses(List.of(List.of("Lisboa", "Rua A", "1000-001")));
+  void registerNewClient_shouldReturnClient_whenUsernameAvailable() {
+    ClientRequestDto req = new ClientRequestDto();
+    req.setUsername("jane"); req.setPassword("pass"); req.setName("Jane");
+    req.setPhoneNumber("912000000"); req.setNif("111222333");
+    req.setCity("Porto"); req.setStreet("Rua B"); req.setPostalCode("4000-001");
 
     when(userRepository.findByUsername("jane")).thenReturn(Optional.empty());
-    when(userRepository.save(any(Client.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(userRepository.save(any(Client.class))).thenAnswer(inv -> inv.getArgument(0));
 
-    ClientResponseDto response = userService.registerNewClient(request);
-
-    assertEquals("jane", response.username());
-    assertEquals(List.of(List.of("Lisboa", "Rua A", "1000-001")), response.addresses());
+    ClientResponseDto result = userService.registerNewClient(req);
+    assertNotNull(result);
+    assertEquals("jane", result.username());
   }
 
   @Test
-  void updateClient_shouldReturnNull_whenUserNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+  void registerNewClient_shouldThrow_whenUsernameExists() {
+    ClientRequestDto req = new ClientRequestDto();
+    req.setUsername("jane");
+    when(userRepository.findByUsername("jane")).thenReturn(Optional.of(client()));
+    assertThrows(IllegalArgumentException.class, () -> userService.registerNewClient(req));
+  }
 
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("client");
+  // ─── registerNewAdmin ───────────────────────────────────────────────────────
 
-    assertNull(userService.updateClient(1L, request));
+  @Test
+  void registerNewAdmin_shouldReturnAdmin_whenUsernameAvailable() {
+    UserRequestDto req = new UserRequestDto();
+    req.setUsername("newadmin"); req.setPassword("pass"); req.setName("New Admin");
+    req.setPhoneNumber("912000000"); req.setNif("999888777");
+
+    when(userRepository.findByUsername("newadmin")).thenReturn(Optional.empty());
+    when(userRepository.save(any(Admin.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    UserResponseDto result = userService.registerNewAdmin(req);
+    assertNotNull(result);
+    assertEquals("newadmin", result.username());
+    assertEquals("ADMIN", result.role());
   }
 
   @Test
-  void updateClient_shouldReturnNull_whenUserIsNotClient() {
-    Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-    when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+  void registerNewAdmin_shouldThrow_whenUsernameExists() {
+    UserRequestDto req = new UserRequestDto();
+    req.setUsername("admin");
+    when(userRepository.findByUsername("admin")).thenReturn(Optional.of(admin()));
+    assertThrows(IllegalArgumentException.class, () -> userService.registerNewAdmin(req));
+  }
 
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("client");
+  // ─── registerNewDeliveryPerson ──────────────────────────────────────────────
 
-    assertNull(userService.updateClient(1L, request));
+  @Test
+  void registerNewDeliveryPerson_shouldReturnDelivery_whenUsernameAvailable() {
+    DeliveryPersonRequestDto req = new DeliveryPersonRequestDto();
+    req.setUsername("dperson"); req.setPassword("pass"); req.setName("DP");
+    req.setPhoneNumber("912000000"); req.setNif("777666555");
+
+    when(userRepository.findByUsername("dperson")).thenReturn(Optional.empty());
+    when(userRepository.save(any(DeliveryPerson.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    DeliveryPersonResponseDto result = userService.registerNewDeliveryPerson(req);
+    assertNotNull(result);
+    assertEquals("dperson", result.username());
   }
 
   @Test
-  void updateClient_shouldReturnClientResponse_whenSuccessful() {
-    Client client =
-        new Client(
-            "client",
-            "pass",
-            "Client",
-            "912345678",
-            "123456789",
-            List.of(new Address("Rua A", "Lisboa", "1000-001")));
-    when(userRepository.findById(1L)).thenReturn(Optional.of(client));
-    when(userRepository.save(any(Client.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+  void registerNewDeliveryPerson_shouldThrow_whenUsernameExists() {
+    DeliveryPersonRequestDto req = new DeliveryPersonRequestDto();
+    req.setUsername("dp");
+    when(userRepository.findByUsername("dp")).thenReturn(Optional.of(deliveryPerson()));
+    assertThrows(IllegalArgumentException.class, () -> userService.registerNewDeliveryPerson(req));
+  }
 
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("client_updated");
-    request.setPassword("pass");
-    request.setName("Client Updated");
-    request.setPhoneNumber("912345678");
-    request.setNif("123456789");
-    request.setAddresses(List.of(List.of("Porto", "Rua B", "4000-001")));
+  // ─── getUserById ────────────────────────────────────────────────────────────
 
-    ClientResponseDto response = userService.updateClient(1L, request);
-
-    assertEquals("client_updated", response.username());
-    assertEquals(List.of(List.of("Porto", "Rua B", "4000-001")), response.addresses());
+  @Test
+  void getUserById_shouldReturnUser_whenFound() {
+    Admin a = admin();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(a));
+    UserResponseDto result = userService.getUserById(1L);
+    assertNotNull(result);
+    assertEquals("ADMIN", result.role());
   }
 
   @Test
-  void registerNewAdmin_shouldReturnNull_whenUsernameAlreadyExists() {
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin");
-    when(userRepository.findByUsername("admin"))
-        .thenReturn(Optional.of(new Admin("admin", "pass", "Admin", "912345678", "987654321")));
+  void getUserById_shouldThrow_whenNotFound() {
+    when(userRepository.findById(99L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class, () -> userService.getUserById(99L));
+  }
 
-    assertNull(userService.registerNewAdmin(request));
+  // ─── updateAdmin ────────────────────────────────────────────────────────────
+
+  @Test
+  void updateAdmin_shouldReturnUpdated_whenFound() {
+    Admin a = admin();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(a));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    UserRequestDto req = new UserRequestDto();
+    req.setName("Updated"); req.setUsername("admin2"); req.setPhoneNumber("900000000");
+    req.setNif("000000001"); req.setPassword("newpass");
+
+    UserResponseDto result = userService.updateAdmin(1L, req);
+    assertNotNull(result);
+    assertEquals("admin2", result.username());
   }
 
   @Test
-  void registerNewAdmin_shouldReturnUserResponse_whenSuccessful() {
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin");
-    request.setPassword("pass");
-    request.setName("Admin User");
-    request.setPhoneNumber("912345678");
-    request.setNif("987654321");
-
-    when(userRepository.findByUsername("admin")).thenReturn(Optional.empty());
-    when(userRepository.save(any(Admin.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-    UserResponseDto response = userService.registerNewAdmin(request);
-
-    assertEquals("admin", response.username());
-    assertEquals("Admin User", response.name());
+  void updateAdmin_shouldThrow_whenNotFound() {
+    when(userRepository.findById(99L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class,
+        () -> userService.updateAdmin(99L, new UserRequestDto()));
   }
 
   @Test
-  void registerNewDeliveryPerson_shouldReturnNull_whenUsernameAlreadyExists() {
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery");
-    when(userRepository.findByUsername("delivery"))
-        .thenReturn(
-            Optional.of(new Admin("delivery", "pass", "Delivery", "912345678", "987654321")));
+  void updateAdmin_shouldThrow_whenUserIsNotAdmin() {
+    when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
+    assertThrows(ResourceNotFoundException.class,
+        () -> userService.updateAdmin(1L, new UserRequestDto()));
+  }
 
-    assertNull(userService.registerNewDeliveryPerson(request));
+  // ─── updateClient ───────────────────────────────────────────────────────────
+
+  @Test
+  void updateClient_shouldReturnUpdated_whenFound() {
+    Client c = client();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    ClientUpdateRequestDto req = new ClientUpdateRequestDto();
+    req.setName("New Name"); req.setUsername("newclient"); req.setPhoneNumber("900000001");
+    req.setNif("000000002"); req.setPassword("newpass");
+
+    ClientResponseDto result = userService.updateClient(1L, req);
+    assertNotNull(result);
+    assertEquals("newclient", result.username());
   }
 
   @Test
-  void registerNewDeliveryPerson_shouldReturnDeliveryPersonResponse_whenSuccessful() {
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery");
-    request.setPassword("pass");
-    request.setName("Delivery User");
-    request.setPhoneNumber("912345678");
-    request.setNif("987654321");
-
-    when(userRepository.findByUsername("delivery")).thenReturn(Optional.empty());
-    when(userRepository.save(any(DeliveryPerson.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
-
-    DeliveryPersonResponseDto response = userService.registerNewDeliveryPerson(request);
-
-    assertEquals("delivery", response.username());
-    assertEquals("Delivery User", response.name());
+  void updateClient_shouldThrow_whenNotFound() {
+    when(userRepository.findById(99L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class,
+        () -> userService.updateClient(99L, new ClientUpdateRequestDto()));
   }
 
   @Test
-  void getUserById_shouldReturnNull_whenUserDoesNotExist() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
+  void updateClient_shouldThrow_whenUserIsNotClient() {
+    when(userRepository.findById(1L)).thenReturn(Optional.of(admin()));
+    assertThrows(ResourceNotFoundException.class,
+        () -> userService.updateClient(1L, new ClientUpdateRequestDto()));
+  }
 
-    assertNull(userService.getUserById(1L));
+  // ─── updateDeliveryPerson ───────────────────────────────────────────────────
+
+  @Test
+  void updateDeliveryPerson_shouldReturnUpdated_whenFound() {
+    DeliveryPerson dp = deliveryPerson();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    DeliveryPersonRequestDto req = new DeliveryPersonRequestDto();
+    req.setName("New DP"); req.setUsername("dp2"); req.setPhoneNumber("900000002");
+    req.setNif("000000003"); req.setPassword("newpass");
+
+    DeliveryPersonResponseDto result = userService.updateDeliveryPerson(1L, req);
+    assertNotNull(result);
+    assertEquals("dp2", result.username());
   }
 
   @Test
-  void getUserById_shouldReturnUserResponse_whenUserExists() {
-    Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-    when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-
-    UserResponseDto response = userService.getUserById(1L);
-
-    assertEquals("admin", response.username());
-    assertEquals("Admin", response.name());
+  void updateDeliveryPerson_shouldThrow_whenNotFound() {
+    when(userRepository.findById(99L)).thenReturn(Optional.empty());
+    assertThrows(ResourceNotFoundException.class,
+        () -> userService.updateDeliveryPerson(99L, new DeliveryPersonRequestDto()));
   }
 
-  @Test
-  void updateAdmin_shouldReturnNull_whenUserNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin_updated");
-
-    assertNull(userService.updateAdmin(1L, request));
-  }
+  // ─── deleteUser ─────────────────────────────────────────────────────────────
 
   @Test
-  void updateAdmin_shouldReturnNull_whenUserIsNotAdmin() {
-    Client client =
-        new Client(
-            "client",
-            "pass",
-            "Client",
-            "912345678",
-            "123456789",
-            List.of(new Address("Rua A", "Lisboa", "1000-001")));
-    when(userRepository.findById(1L)).thenReturn(Optional.of(client));
-
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin_updated");
-
-    assertNull(userService.updateAdmin(1L, request));
-  }
-
-  @Test
-  void updateAdmin_shouldReturnUserResponse_whenSuccessful() {
-    Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-    when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-    when(userRepository.save(any(Admin.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin_updated");
-    request.setPassword("newpass");
-    request.setName("Admin Updated");
-    request.setPhoneNumber("912345679");
-    request.setNif("111222333");
-
-    UserResponseDto response = userService.updateAdmin(1L, request);
-
-    assertEquals("admin_updated", response.username());
-    assertEquals("Admin Updated", response.name());
-  }
-
-  @Test
-  void updateDeliveryPerson_shouldReturnNull_whenUserNotFound() {
-    when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery_updated");
-
-    assertNull(userService.updateDeliveryPerson(1L, request));
-  }
-
-  @Test
-  void updateDeliveryPerson_shouldReturnNull_whenUserIsNotDeliveryPerson() {
-    Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
-    when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery_updated");
-
-    assertNull(userService.updateDeliveryPerson(1L, request));
-  }
-
-  @Test
-  void updateDeliveryPerson_shouldReturnDeliveryPersonResponse_whenSuccessful() {
-    DeliveryPerson deliveryPerson =
-        new DeliveryPerson("delivery", "pass", "Delivery", "912345678", "987654321");
-    when(userRepository.findById(1L)).thenReturn(Optional.of(deliveryPerson));
-    when(userRepository.save(any(DeliveryPerson.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
-
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery_updated");
-    request.setPassword("newpass");
-    request.setName("Delivery Updated");
-    request.setPhoneNumber("912345679");
-    request.setNif("111222333");
-
-    DeliveryPersonResponseDto response = userService.updateDeliveryPerson(1L, request);
-
-    assertEquals("delivery_updated", response.username());
-    assertEquals("Delivery Updated", response.name());
-  }
-
-  @Test
-  void deleteUser_shouldReturnFalse_whenUserDoesNotExist() {
+  void deleteUser_shouldReturnFalse_whenNotFound() {
     when(userRepository.existsById(99L)).thenReturn(false);
     assertFalse(userService.deleteUser(99L));
   }
 
   @Test
-  void deleteAdmin_shouldHardDelete_whenNoRestaurantsAssociated() {
-    Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
+  void deleteUser_shouldDeleteAdmin_whenNoRestaurants() {
+    Admin a = admin();
     when(userRepository.existsById(1L)).thenReturn(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-    when(restaurantRepository.existsByAdminId(admin.getId())).thenReturn(false);
-
+    when(userRepository.findById(1L)).thenReturn(Optional.of(a));
+    when(restaurantRepository.existsByAdminId(any())).thenReturn(false);
     assertTrue(userService.deleteUser(1L));
+    verify(userRepository).deleteById(any());
   }
 
   @Test
-  void deleteAdmin_shouldReturnFalse_whenRestaurantsAssociated() {
-    Admin admin = new Admin("admin", "pass", "Admin", "912345678", "987654321");
+  void deleteUser_shouldReturnFalse_whenAdminHasRestaurants() {
+    Admin a = admin();
     when(userRepository.existsById(1L)).thenReturn(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
-    when(restaurantRepository.existsByAdminId(admin.getId())).thenReturn(true);
-
+    when(userRepository.findById(1L)).thenReturn(Optional.of(a));
+    when(restaurantRepository.existsByAdminId(any())).thenReturn(true);
     assertFalse(userService.deleteUser(1L));
+    verify(userRepository, never()).deleteById(any());
   }
 
-  // --- DELETE CLIENT ---
-
   @Test
-  void deleteClient_shouldHardDelete_whenNoOrdersAssociated() {
-    Client client =
-        new Client(
-            "client",
-            "pass",
-            "Client",
-            "912345678",
-            "123456789",
-            List.of(new Address("Rua A", "Lisboa", "1000-001")));
+  void deleteUser_shouldDeleteClientPermanently_whenNoOrders() {
+    Client c = client();
     when(userRepository.existsById(1L)).thenReturn(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(client));
-    when(orderRepository.existsByClientId(client.getId())).thenReturn(false);
-
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(orderRepository.existsByClientId(any())).thenReturn(false);
     assertTrue(userService.deleteUser(1L));
+    verify(userRepository).deleteById(any());
   }
 
   @Test
-  void deleteClient_shouldReturnFalse_whenOrdersInProgress() {
-    Client client =
-        new Client(
-            "client",
-            "pass",
-            "Client",
-            "912345678",
-            "123456789",
-            List.of(new Address("Rua A", "Lisboa", "1000-001")));
+  void deleteUser_shouldSoftDeleteClient_whenHasCompletedOrders() {
+    Client c = client();
     when(userRepository.existsById(1L)).thenReturn(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(client));
-    when(orderRepository.existsByClientId(client.getId())).thenReturn(true);
-    when(orderRepository.existsByClientIdAndStatusNotIn(eq(client.getId()), any()))
-        .thenReturn(true);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(orderRepository.existsByClientId(any())).thenReturn(true);
+    when(orderRepository.existsByClientIdAndStatusNotIn(any(), any())).thenReturn(false);
+    when(userRepository.save(any())).thenReturn(c);
+    assertTrue(userService.deleteUser(1L));
+    verify(userRepository, never()).deleteById(any());
+  }
 
+  @Test
+  void deleteUser_shouldReturnFalse_whenClientHasActiveOrders() {
+    Client c = client();
+    when(userRepository.existsById(1L)).thenReturn(true);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(orderRepository.existsByClientId(any())).thenReturn(true);
+    when(orderRepository.existsByClientIdAndStatusNotIn(any(), any())).thenReturn(true);
     assertFalse(userService.deleteUser(1L));
+    verify(userRepository, never()).deleteById(any());
   }
 
   @Test
-  void deleteClient_shouldSoftDelete_whenAllOrdersFinished() {
-    Client client =
-        new Client(
-            "client",
-            "pass",
-            "Client",
-            "912345678",
-            "123456789",
-            List.of(new Address("Rua A", "Lisboa", "1000-001")));
-    when(userRepository.existsById(1L)).thenReturn(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(client));
-    when(orderRepository.existsByClientId(client.getId())).thenReturn(true);
-    when(orderRepository.existsByClientIdAndStatusNotIn(eq(client.getId()), any()))
-        .thenReturn(false);
-
-    assertTrue(userService.deleteUser(1L));
-    assertNotNull(client.getDeletedAt()); // confirma soft delete
-  }
-
-  // --- DELETE DELIVERY PERSON ---
-
-  @Test
-  void deleteDeliveryPerson_shouldHardDelete_whenNoOrdersAssociated() {
-    DeliveryPerson dp =
-        new DeliveryPerson("delivery", "pass", "Delivery", "912345678", "987654321");
+  void deleteUser_shouldDeleteDeliveryPersonPermanently_whenNoOrders() {
+    DeliveryPerson dp = deliveryPerson();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
-    when(orderRepository.existsByDeliveryPersonId(dp.getId())).thenReturn(false);
-
+    when(orderRepository.existsByDeliveryPersonId(any())).thenReturn(false);
     assertTrue(userService.deleteUser(1L));
+    verify(userRepository).deleteById(any());
   }
 
   @Test
-  void deleteDeliveryPerson_shouldReturnFalse_whenOrdersInProgress() {
-    DeliveryPerson dp =
-        new DeliveryPerson("delivery", "pass", "Delivery", "912345678", "987654321");
+  void deleteUser_shouldReturnFalse_whenDeliveryPersonHasActiveOrders() {
+    DeliveryPerson dp = deliveryPerson();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
-    when(orderRepository.existsByDeliveryPersonId(dp.getId())).thenReturn(true);
-    when(orderRepository.existsByDeliveryPersonIdAndStatusNotIn(eq(dp.getId()), any()))
-        .thenReturn(true);
-
+    when(orderRepository.existsByDeliveryPersonId(any())).thenReturn(true);
+    when(orderRepository.existsByDeliveryPersonIdAndStatusNotIn(any(), any())).thenReturn(true);
     assertFalse(userService.deleteUser(1L));
   }
-
-  @Test
-  void deleteDeliveryPerson_shouldSoftDelete_whenAllOrdersFinished() {
-    DeliveryPerson dp =
-        new DeliveryPerson("delivery", "pass", "Delivery", "912345678", "987654321");
-    when(userRepository.existsById(1L)).thenReturn(true);
-    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
-    when(orderRepository.existsByDeliveryPersonId(dp.getId())).thenReturn(true);
-    when(orderRepository.existsByDeliveryPersonIdAndStatusNotIn(eq(dp.getId()), any()))
-        .thenReturn(false);
-
-    assertTrue(userService.deleteUser(1L));
-    assertNotNull(dp.getDeletedAt()); // confirma soft delete
-  }*/
 }

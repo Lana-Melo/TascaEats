@@ -4,10 +4,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -17,353 +19,255 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
-import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
-import pt.ul.fc.css.tascaeats.dto.users.request.LoginRequestDto;
-import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
-import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponseDto;
-import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
-import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
-import pt.ul.fc.css.tascaeats.services.UserService;
+import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
+import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
+import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
+import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequestDto;
+import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewResponseDto;
+import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
+import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
+import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.services.RestaurantService;
 
-@WebMvcTest(UserController.class)
-class UserControllerTest {
+@WebMvcTest(RestaurantController.class)
+class RestaurantControllerTest {
 
   @Autowired private MockMvc mockMvc;
-
-  @MockBean private UserService userService;
-
+  @MockBean private RestaurantService restaurantService;
   @Autowired private ObjectMapper objectMapper;
 
-  // --- LOGIN ---
-  /*@Test
-  void login_shouldReturn200_whenUserExists() throws Exception {
-    LoginRequestDto request = new LoginRequestDto();
-    request.setUsername("john");
-    request.setPassword("pass");
-    UserResponseDto response =
-        new UserResponseDto(1L, "john", "john", "123 456 678", "111 222 333");
+  private RestaurantResponseDto restaurantResponse() {
+    return new RestaurantResponseDto(1L, "Cantina", "OPEN", "123456789",
+        "Admin", "Rua A", "Lisboa", "1000-001", "11:00", "22:00", null, 0.0, 0);
+  }
+  private RestaurantRequestDto restaurantRequest() {
+    RestaurantRequestDto r = new RestaurantRequestDto();
+    r.setDesignation("Cantina"); r.setNif("123456789");
+    r.setCity("Lisboa"); r.setStreet("Rua A"); r.setPostalCode("1000-001");
+    r.setAdminId(1L); r.setOpenHours("11:00"); r.setCloseHours("22:00");
+    return r;
+  }
+  private ProductItemResponseDto productItemResponse() {
+    return new ProductItemResponseDto(1L, 1L, 1L, "Pizza", "Mussarela", "AVAILABLE", 9.99);
+  }
+  private ReviewResponseDto reviewResponse() {
+    return new ReviewResponseDto(1L, 4, "Great!", 1L, 1L);
+  }
 
-    when(userService.login("john", "pass")).thenReturn(response);
+  // ─── GET /api/restaurants/search ─────────────────────────────────────────────
 
-    mockMvc
-        .perform(
-            post("/api/users/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+  @Test
+  void searchRestaurant_shouldReturn200_withResults() throws Exception {
+    when(restaurantService.searchBy(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        .thenReturn(List.of(restaurantResponse()));
+
+    mockMvc.perform(get("/api/restaurants/search").param("designation", "Cantina"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("john"));
+        .andExpect(jsonPath("$[0].designation").value("Cantina"));
   }
 
   @Test
-  void login_shouldReturn404_whenUserNotFound() throws Exception {
-    LoginRequestDto request = new LoginRequestDto();
-    request.setUsername("john");
-    request.setPassword("123456");
+  void searchRestaurant_shouldReturn200_withEmptyList() throws Exception {
+    when(restaurantService.searchBy(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        .thenReturn(List.of());
 
-    when(userService.login("ghost", "pass")).thenReturn(null);
-
-    mockMvc
-        .perform(
-            post("/api/users/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isNotFound());
-  }
-
-  // --- REGISTER CLIENT ---
-  @Test
-  void registerClient_shouldReturn200_whenSuccessful() throws Exception {
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("jane");
-    request.setPassword("pass");
-    request.setName("Jane Doe");
-    request.setPhoneNumber("912345678");
-    request.setNif("123456789");
-    request.setAddresses(List.of(List.of("Lisboa", "Rua A", "1000-001")));
-
-    ClientResponseDto response =
-        new ClientResponseDto(
-            1L,
-            "jane",
-            "Jane Doe",
-            "912345678",
-            "123456789",
-            List.of(List.of("Lisboa", "Rua A", "1000-001")));
-
-    when(userService.registerNewClient(any())).thenReturn(response);
-
-    mockMvc
-        .perform(
-            post("/api/users/register/client")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+    mockMvc.perform(get("/api/restaurants/search"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("jane"))
-        .andExpect(jsonPath("$.city").value("Lisboa"));
+        .andExpect(jsonPath("$").isEmpty());
+  }
+
+  // ─── GET /api/restaurants/{id}/products/search ───────────────────────────────
+
+  @Test
+  void searchProduct_shouldReturn200_withResults() throws Exception {
+    when(restaurantService.searchProductBy(any(), any(), any(), any(), any(), any()))
+        .thenReturn(List.of(productItemResponse()));
+
+    mockMvc.perform(get("/api/restaurants/1/products/search").param("designation", "Pizza"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].designation").value("Pizza"));
   }
 
   @Test
-  void registerClient_shouldReturn400_whenServiceFails() throws Exception {
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("jane");
-    request.setPassword("pass");
-    request.setName("Jane Doe");
-    request.setPhoneNumber("912345678");
-    request.setNif("123456789");
-    request.setAddresses(List.of(List.of("Lisboa", "Rua A", "1000-001")));
+  void searchProduct_shouldReturn200_withEmptyList() throws Exception {
+    when(restaurantService.searchProductBy(any(), any(), any(), any(), any(), any()))
+        .thenReturn(List.of());
 
-    when(userService.registerNewClient(any())).thenReturn(null);
+    mockMvc.perform(get("/api/restaurants/1/products/search"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isEmpty());
+  }
 
-    mockMvc
-        .perform(
-            post("/api/users/register/client")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+  // ─── POST /api/restaurants ───────────────────────────────────────────────────
+
+  @Test
+  void createRestaurant_shouldReturn200_whenSuccessful() throws Exception {
+    when(restaurantService.createRestaurant(any())).thenReturn(restaurantResponse());
+
+    mockMvc.perform(post("/api/restaurants")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(restaurantRequest())))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.designation").value("Cantina"))
+        .andExpect(jsonPath("$.status").value("OPEN"));
+  }
+
+  @Test
+  void createRestaurant_shouldReturn400_whenBodyInvalid() throws Exception {
+    mockMvc.perform(post("/api/restaurants")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{}"))
         .andExpect(status().isBadRequest());
   }
 
-  // --- REGISTER ADMIN ---
   @Test
-  void registerAdmin_shouldReturn200_whenSuccessful() throws Exception {
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin");
-    request.setPassword("pass");
-    request.setName("Admin User");
-    request.setPhoneNumber("912345678");
-    request.setNif("987654321");
+  void createRestaurant_shouldReturn404_whenAdminNotFound() throws Exception {
+    when(restaurantService.createRestaurant(any()))
+        .thenThrow(new ResourceNotFoundException("User not found"));
 
-    UserResponseDto response =
-        new UserResponseDto(2L, "admin", "Admin User", "912345678", "987654321");
+    mockMvc.perform(post("/api/restaurants")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(restaurantRequest())))
+        .andExpect(status().isNotFound());
+  }
 
-    when(userService.registerNewAdmin(any())).thenReturn(response);
+  // ─── PATCH /api/restaurants/{id}/status ──────────────────────────────────────
 
-    mockMvc
-        .perform(
-            post("/api/users/register/admin")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+  @Test
+  void updateStatus_shouldReturn200_whenSuccessful() throws Exception {
+    RestaurantResponseDto closed = new RestaurantResponseDto(1L, "Cantina", "CLOSED", "123456789",
+        "Admin", "Rua A", "Lisboa", "1000-001", "11:00", "22:00", null, 0.0, 0);
+    when(restaurantService.changeStatus(eq(1L), any())).thenReturn(closed);
+
+    mockMvc.perform(patch("/api/restaurants/1/status").param("status", "CLOSED"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("admin"));
+        .andExpect(jsonPath("$.status").value("CLOSED"));
   }
 
   @Test
-  void registerAdmin_shouldReturn400_whenServiceFails() throws Exception {
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin");
-    request.setPassword("pass");
-    request.setName("Admin User");
-    request.setPhoneNumber("912345678");
-    request.setNif("987654321");
+  void updateStatus_shouldReturn404_whenRestaurantNotFound() throws Exception {
+    when(restaurantService.changeStatus(eq(99L), any()))
+        .thenThrow(new ResourceNotFoundException("Restaurant not found"));
 
-    when(userService.registerNewAdmin(any())).thenReturn(null);
+    mockMvc.perform(patch("/api/restaurants/99/status").param("status", "CLOSED"))
+        .andExpect(status().isNotFound());
+  }
 
-    mockMvc
-        .perform(
-            post("/api/users/register/admin")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+  // ─── PUT /api/restaurants/{id}/products/{productId} ──────────────────────────
+
+  @Test
+  void updateProductStatus_shouldReturn200_whenSuccessful() throws Exception {
+    ProductItemResponseDto soldOut = new ProductItemResponseDto(1L, 1L, 1L, "Pizza", "Mussarela", "SOLD_OUT", 9.99);
+    when(restaurantService.updateProductStatus(eq(1L), eq(1L), eq(ProductStatus.SOLD_OUT)))
+        .thenReturn(soldOut);
+
+    mockMvc.perform(put("/api/restaurants/1/products/1").param("status", "SOLD_OUT"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.availability").value("SOLD_OUT"));
+  }
+
+  @Test
+  void updateProductStatus_shouldReturn404_whenProductNotFound() throws Exception {
+    when(restaurantService.updateProductStatus(eq(1L), eq(99L), any()))
+        .thenThrow(new ResourceNotFoundException("Product not found"));
+
+    mockMvc.perform(put("/api/restaurants/1/products/99").param("status", "SOLD_OUT"))
+        .andExpect(status().isNotFound());
+  }
+
+  // ─── DELETE /api/restaurants/{id}/products/{productId} ───────────────────────
+
+  @Test
+  void deleteProductItem_shouldReturn204_whenDeleted() throws Exception {
+    when(restaurantService.deleteProductItem(1L, 1L)).thenReturn(true);
+    mockMvc.perform(delete("/api/restaurants/1/products/1")).andExpect(status().isNoContent());
+  }
+
+  @Test
+  void deleteProductItem_shouldReturn404_whenNotFound() throws Exception {
+    when(restaurantService.deleteProductItem(1L, 99L)).thenReturn(false);
+    mockMvc.perform(delete("/api/restaurants/1/products/99")).andExpect(status().isNotFound());
+  }
+
+  // ─── POST /api/restaurants/{id}/reviews ──────────────────────────────────────
+
+  @Test
+  void addReview_shouldReturn200_whenSuccessful() throws Exception {
+    ReviewRequestDto req = new ReviewRequestDto();
+    req.setRating(4); req.setComment("Great!"); req.setClientId(1L);
+    when(restaurantService.addReview(eq(1L), any())).thenReturn(reviewResponse());
+
+    mockMvc.perform(post("/api/restaurants/1/reviews")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(req)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.rating").value(4))
+        .andExpect(jsonPath("$.comment").value("Great!"));
+  }
+
+  @Test
+  void addReview_shouldReturn404_whenRestaurantNotFound() throws Exception {
+    ReviewRequestDto req = new ReviewRequestDto();
+    req.setRating(4); req.setComment("Good"); req.setClientId(1L);
+    when(restaurantService.addReview(eq(99L), any()))
+        .thenThrow(new ResourceNotFoundException("Restaurant not found"));
+
+    mockMvc.perform(post("/api/restaurants/99/reviews")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(req)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void addReview_shouldReturn400_whenClientNeverOrdered() throws Exception {
+    ReviewRequestDto req = new ReviewRequestDto();
+    req.setRating(4); req.setComment("Good"); req.setClientId(1L);
+    when(restaurantService.addReview(eq(1L), any()))
+        .thenThrow(new RequirementsNotMetException("Cannot review"));
+
+    mockMvc.perform(post("/api/restaurants/1/reviews")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(req)))
         .andExpect(status().isBadRequest());
   }
 
-  // --- REGISTER DELIVERY ---
+  // ─── GET /api/restaurants/{id}/reviews ───────────────────────────────────────
+
   @Test
-  void registerDelivery_shouldReturn200_whenSuccessful() throws Exception {
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery1");
-    request.setPassword("pass");
-    request.setName("João Entregador");
-    request.setPhoneNumber("931234567");
-    request.setNif("111222333");
+  void getReviews_shouldReturn200_withResults() throws Exception {
+    when(restaurantService.getReviews(1L)).thenReturn(List.of(reviewResponse()));
 
-    DeliveryPersonResponseDto response =
-        new DeliveryPersonResponseDto(
-            3L, "delivery1", "João Entregador", "931234567", "111222333", "AVAILABLE");
-
-    when(userService.registerNewDeliveryPerson(any())).thenReturn(response);
-
-    mockMvc
-        .perform(
-            post("/api/users/register/delivery")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+    mockMvc.perform(get("/api/restaurants/1/reviews"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("delivery1"))
-        .andExpect(jsonPath("$.status").value("AVAILABLE"));
+        .andExpect(jsonPath("$[0].rating").value(4));
   }
 
   @Test
-  void registerDelivery_shouldReturn400_whenServiceFails() throws Exception {
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery1");
-    request.setPassword("pass");
-    request.setName("João Entregador");
-    request.setPhoneNumber("931234567");
-    request.setNif("111222333");
+  void getReviews_shouldReturn404_whenRestaurantNotFound() throws Exception {
+    when(restaurantService.getReviews(99L)).thenThrow(new ResourceNotFoundException("Not found"));
 
-    when(userService.registerNewDeliveryPerson(any())).thenReturn(null);
-
-    mockMvc
-        .perform(
-            post("/api/users/register/delivery")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+    mockMvc.perform(get("/api/restaurants/99/reviews")).andExpect(status().isNotFound());
   }
 
-  // --- UPDATE CLIENT ---
+  // ─── PATCH /api/restaurants/{id}/menu/{menuId} ───────────────────────────────
+
   @Test
-  void updateClient_shouldReturn200_whenClientExists() throws Exception {
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("jane_updated");
-    request.setPassword("pass");
-    request.setName("Jane Updated");
-    request.setPhoneNumber("912345678");
-    request.setNif("123456789");
-    request.setAddresses(List.of(List.of("Porto", "Rua B", "4000-001")));
+  void assignMenu_shouldReturn200_whenSuccessful() throws Exception {
+    RestaurantResponseDto withMenu = new RestaurantResponseDto(1L, "Cantina", "OPEN", "123456789",
+        "Admin", "Rua A", "Lisboa", "1000-001", "11:00", "22:00", 1L, 0.0, 0);
+    when(restaurantService.assignMenu(1L, 1L)).thenReturn(withMenu);
 
-    ClientResponseDto response =
-        new ClientResponseDto(
-            1L,
-            "jane_updated",
-            "Jane Updated",
-            "912345678",
-            "123456789",
-            List.of(List.of("Porto", "Rua B", "4000-001")));
-
-    when(userService.updateClient(eq(1L), any())).thenReturn(response);
-
-    mockMvc
-        .perform(
-            put("/api/users/client/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+    mockMvc.perform(patch("/api/restaurants/1/menu/1"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("jane_updated"))
-        .andExpect(jsonPath("$.city").value("Porto"));
+        .andExpect(jsonPath("$.menuId").value(1));
   }
 
   @Test
-  void updateClient_shouldReturn404_whenClientNotFound() throws Exception {
-    ClientRequestDto request = new ClientRequestDto();
-    request.setUsername("jane_updated");
-    request.setPassword("pass");
-    request.setName("Jane Updated");
-    request.setPhoneNumber("912345678");
-    request.setNif("123456789");
-    request.setAddresses(List.of(List.of("Porto", "Rua B", "4000-001")));
+  void assignMenu_shouldReturn404_whenRestaurantOrMenuNotFound() throws Exception {
+    when(restaurantService.assignMenu(1L, 99L))
+        .thenThrow(new ResourceNotFoundException("Menu not found"));
 
-    when(userService.updateClient(eq(99L), any())).thenReturn(null);
-
-    mockMvc
-        .perform(
-            put("/api/users/client/99")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+    mockMvc.perform(patch("/api/restaurants/1/menu/99"))
         .andExpect(status().isNotFound());
   }
-
-  // --- UPDATE ADMIN ---
-  @Test
-  void updateAdmin_shouldReturn200_whenAdminExists() throws Exception {
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin_updated");
-    request.setPassword("pass");
-    request.setName("Admin Updated");
-    request.setPhoneNumber("912345678");
-    request.setNif("987654321");
-
-    UserResponseDto response =
-        new UserResponseDto(1L, "admin_updated", "Admin Updated", "912345678", "987654321");
-
-    when(userService.updateAdmin(eq(1L), any())).thenReturn(response);
-
-    mockMvc
-        .perform(
-            put("/api/users/admin/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("admin_updated"));
-  }
-
-  @Test
-  void updateAdmin_shouldReturn404_whenAdminNotFound() throws Exception {
-    UserRequestDto request = new UserRequestDto();
-    request.setUsername("admin_updated");
-    request.setPassword("pass");
-    request.setName("Admin Updated");
-    request.setPhoneNumber("912345678");
-    request.setNif("987654321");
-
-    when(userService.updateAdmin(eq(99L), any())).thenReturn(null);
-
-    mockMvc
-        .perform(
-            put("/api/users/admin/99")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isNotFound());
-  }
-
-  // --- UPDATE DELIVERY PERSON ---
-
-  @Test
-  void updateDeliveryPerson_shouldReturn200_whenDeliveryPersonExists() throws Exception {
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery_updated");
-    request.setPassword("pass");
-    request.setName("Delivery Updated");
-    request.setPhoneNumber("931234567");
-    request.setNif("111222333");
-
-    DeliveryPersonResponseDto response =
-        new DeliveryPersonResponseDto(
-            1L, "delivery_updated", "Delivery Updated", "931234567", "111222333", "BUSY");
-
-    when(userService.updateDeliveryPerson(eq(1L), any())).thenReturn(response);
-
-    mockMvc
-        .perform(
-            put("/api/users/delivery/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.username").value("delivery_updated"))
-        .andExpect(jsonPath("$.status").value("BUSY"));
-  }
-
-  @Test
-  void updateDeliveryPerson_shouldReturn404_whenDeliveryPersonNotFound() throws Exception {
-    DeliveryPersonRequestDto request = new DeliveryPersonRequestDto();
-    request.setUsername("delivery_updated");
-    request.setPassword("pass");
-    request.setName("Delivery Updated");
-    request.setPhoneNumber("931234567");
-    request.setNif("111222333");
-
-    when(userService.updateDeliveryPerson(eq(99L), any())).thenReturn(null);
-
-    mockMvc
-        .perform(
-            put("/api/users/delivery/99")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isNotFound());
-  }
-
-  // --- DELETE
-  @Test
-  void deleteUser_shouldReturn204_whenDeleted() throws Exception {
-    when(userService.deleteUser(1L)).thenReturn(true);
-
-    mockMvc.perform(delete("/api/users/1")).andExpect(status().isNoContent());
-  }
-
-  @Test
-  void deleteUser_shouldReturn404_whenNotFound() throws Exception {
-    when(userService.deleteUser(99L)).thenReturn(false);
-
-    mockMvc.perform(delete("/api/users/99")).andExpect(status().isNotFound());
-  }*/
 }
