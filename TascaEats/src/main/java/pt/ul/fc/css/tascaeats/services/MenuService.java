@@ -139,6 +139,9 @@ public class MenuService {
 
     Product saved = productRepository.save(product);
 
+    menu.addProduct(saved);
+    menuRepository.save(menu);
+
     return mapProductToProductResponse(saved);
   }
 
