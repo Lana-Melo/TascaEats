@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="600.0" prefWidth="800.0"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.BackOfficeOrdersController">
+
+    <children>
+        <MenuBar VBox.vgrow="NEVER">
+            <menus>
+                <Menu text="Menu">
+                    <items>
+                        <MenuItem text="About TascaEats"/>
+                        <MenuItem text="Logout" onAction="#handleLogout"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox alignment="CENTER" spacing="15.0" prefWidth="800.0">
+                    <VBox spacing="10.0" maxWidth="600">
+                        <padding>
+                            <Insets top="20" bottom="20"/>
+                        </padding>
+
+                        <HBox spacing="4" alignment="CENTER_LEFT">
+                            <Hyperlink text="Login" textFill="#a1a1a1" onAction="#handleGoLogin">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Label>
+                            <Hyperlink text="Back Office" textFill="#a1a1a1" onAction="#handleGoBackOffice">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Label>
+                            <Label text="Orders">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Label>
+                        </HBox>
+
+                        <Label text="Orders">
+                            <font><Font name="AppleGothic Regular" size="22.0"/></font>
+                        </Label>
+
+                        <Label text="Filter by Status"/>
+                        <ComboBox fx:id="statusFilterComboBox" maxWidth="Infinity" promptText="All Statuses"/>
+
+                        <Button text="Search" maxWidth="Infinity" onAction="#handleSearch">
+                            <font><Font name="AppleGothic Regular" size="13.0"/></font>
+                        </Button>
+
+                        <Label fx:id="errorLabel" text="" textFill="red" visible="false" managed="false"/>
+
+                        <TableView fx:id="ordersTable" prefHeight="300.0" maxWidth="Infinity">
+                            <columns>
+                                <TableColumn fx:id="clientNameCol" text="Client Name" prefWidth="200"/>
+                                <TableColumn fx:id="createdAtCol" text="Created At" prefWidth="170"/>
+                                <TableColumn fx:id="statusCol" text="Status" prefWidth="110"/>
+                                <TableColumn fx:id="editCol" text="" prefWidth="80"/>
+                            </columns>
+                        </TableView>
+
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+
+        <ToolBar prefHeight="40.0"/>
+    </children>
+</VBox>

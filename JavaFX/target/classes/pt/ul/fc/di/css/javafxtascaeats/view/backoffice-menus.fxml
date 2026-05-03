@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="600.0" prefWidth="640.0"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.BackOfficeMenusController">
+
+  <children>
+
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu text="Help">
+          <items>
+            <MenuItem text="About TascaEats"/>
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+      <content>
+
+        <VBox alignment="CENTER" spacing="15.0" prefWidth="640.0">
+
+          <VBox spacing="10.0" maxWidth="500">
+            <padding><Insets top="20" bottom="20"/></padding>
+
+            <HBox spacing="4" alignment="CENTER_LEFT">
+              <Hyperlink text="Login" textFill="#a1a1a1" onAction="#handleGoLogin"/>
+              <Label text="/"/>
+              <Hyperlink text="Back Office" textFill="#a1a1a1" onAction="#handleGoBackOffice"/>
+              <Label text="/"/>
+              <Label text="Menus"/>
+            </HBox>
+
+            <Label text="Menus">
+              <font><Font name="AppleGothic Regular" size="22.0"/></font>
+            </Label>
+
+
+            <CheckBox fx:id="cbName" text="Name"/>
+            <TextField fx:id="nameField" visible="false" managed="false"/>
+
+            <CheckBox fx:id="cbProductNumber" text="Min Number of Products"/>
+            <TextField fx:id="productNumberField" visible="false" managed="false"/>
+
+            <CheckBox fx:id="cbAverage" text="Max Avg Price"/>
+            <TextField fx:id="averageField" visible="false" managed="false"/>
+
+            <Button text="Search" maxWidth="Infinity" onAction="#handleSearch"/>
+
+            <Label fx:id="errorLabel" textFill="red" visible="false" managed="false"/>
+
+            <TableView fx:id="menusTable"
+                       prefHeight="300.0"
+                       maxWidth="Infinity"
+                       visible="false"
+                       managed="false">
+
+              <columns>
+                <TableColumn fx:id="colName" text="Name"/>
+                <TableColumn fx:id="colCuisine" text="Cuisine"/>
+                <TableColumn fx:id="colEdit" text="" prefWidth="60"/>
+              </columns>
+
+              <columnResizePolicy>
+                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+              </columnResizePolicy>
+
+            </TableView>
+
+          </VBox>
+
+        </VBox>
+
+      </content>
+    </ScrollPane>
+
+    <ToolBar prefHeight="40.0"/>
+
+  </children>
+</VBox>

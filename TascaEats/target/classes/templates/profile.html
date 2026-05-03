@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile — TascaEats</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary mb-4">
+<div class="container">
+    <a class="navbar-brand" href="/restaurant">🍽️ TascaEats</a>
+    <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto gap-3">
+            <li class="nav-item"><a class="nav-link active" href="/profile">Update Profile</a></li>
+            <li class="nav-item"><a class="nav-link" href="/restaurant">Restaurants</a></li>
+            <li class="nav-item"><a class="nav-link" href="/order">My Orders</a></li>
+            <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+        </ul>
+    </div>
+</div>
+</nav>
+
+<div class="container d-flex justify-content-center mt-4">
+    <div class="card shadow-lg p-4" style="width: 500px; border-radius: 15px;">
+
+        <h4 class="text-center mb-3">Edit Profile</h4>
+
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+
+        <!-- Form dados pessoais — SOZINHO, sem nada dentro -->
+        <form method="post" th:action="@{/profile}">
+            <input type="text" name="name" class="form-control mb-2" placeholder="Full name" th:value="${client.name()}" required />
+            <input type="text" name="username" class="form-control mb-2" placeholder="Username" th:value="${client.username()}" required />
+            <input type="text" name="phoneNumber" class="form-control mb-2" placeholder="Phone number" th:value="${client.phoneNumber()}" required />
+            <input type="text" name="nif" class="form-control mb-2" placeholder="NIF" th:value="${client.nif()}" required />
+            <input type="password" name="password" class="form-control mb-3" placeholder="New password (leave blank to keep)" />
+            <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+        </form>
+
+        <!-- Moradas — FORA do form principal -->
+        <hr class="mt-4">
+        <h6 class="mb-2">My Addresses</h6>
+
+        <div th:if="${client.addresses().isEmpty()}" class="text-muted small">
+            No addresses registered.
+        </div>
+
+        <div th:each="a, iter : ${client.addresses()}" class="d-flex justify-content-between align-items-center mb-2">
+            <span class="small">
+                📍 <span th:text="${a.street() + ', ' + a.city() + ' ' + a.postalCode()}"></span>
+            </span>
+            <form th:action="@{/profile/address/{index}/delete(index=${iter.index})}" method="post"
+                th:if="${client.addresses().size() > 1}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+            </form>
+        </div>
+
+        <button type="button" class="btn btn-outline-primary w-100 mt-2"
+                data-bs-toggle="modal" data-bs-target="#addressModal">
+            + Add Address
+        </button>
+
+    </div>
+</div>
+
+<!-- Modal add address -->
+<div class="modal fade" id="addressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" th:action="@{/profile/address}">
+                <div class="modal-body">
+                    <input type="text" name="street" class="form-control mb-2" placeholder="Street" required />
+                    <input type="text" name="city" class="form-control mb-2" placeholder="City" required />
+                    <input type="text" name="postalCode" class="form-control mb-2" placeholder="Postal Code" required />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

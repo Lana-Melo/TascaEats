@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="700.0" prefWidth="700.0"
+      xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.BackOfficeOrdersController">
+
+    <children>
+        <MenuBar VBox.vgrow="NEVER">
+            <menus>
+                <Menu text="Menu">
+                    <items>
+                        <MenuItem text="About TascaEats"/>
+                        <MenuItem text="Logout" onAction="#handleLogout"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox alignment="CENTER" spacing="15.0" prefWidth="700.0">
+                    <VBox spacing="10.0" maxWidth="500">
+                        <padding>
+                            <Insets top="20" bottom="20"/>
+                        </padding>
+
+                        <!-- Breadcrumb -->
+                        <HBox spacing="4" alignment="CENTER_LEFT">
+                            <Hyperlink text="Login" textFill="#a1a1a1" onAction="#handleGoLogin">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Label>
+                            <Hyperlink text="Back Office" textFill="#a1a1a1" onAction="#handleGoBackOffice">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Label>
+                            <Hyperlink text="Orders" textFill="#a1a1a1" onAction="#handleGoOrders">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Hyperlink>
+                            <Label text="/" textFill="#a1a1a1">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Label>
+                            <Label text="Order Details">
+                                <font><Font name="AppleGothic Regular" size="11.0"/></font>
+                            </Label>
+                        </HBox>
+
+                        <Label text="Order Details">
+                            <font><Font name="AppleGothic Regular" size="22.0"/></font>
+                        </Label>
+
+                        <!-- Order Info -->
+                        <HBox spacing="8">
+                            <Label text="Created At:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="createdAtLabel"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Status:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="currentStatusLabel"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Total:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="totalValueLabel"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Delivery Address:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="addressLabel"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Client Name:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="clientNameLabel"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Client NIF:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="clientNifLabel"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Delivery Person:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="deliveryPersonNameLabel"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Delivery Person NIF:" style="-fx-font-weight: bold;"/>
+                            <Label fx:id="deliveryPersonNifLabel"/>
+                        </HBox>
+
+                        <!-- Products -->
+                        <Label text="Products" style="-fx-font-weight: bold;"/>
+                        <TableView fx:id="productsTable" prefHeight="150.0" maxWidth="Infinity">
+                            <columns>
+                                <TableColumn fx:id="productDesignationCol" text="Product" prefWidth="320"/>
+                                <TableColumn fx:id="productPriceCol" text="Price (€)" prefWidth="100"/>
+                            </columns>
+                        </TableView>
+
+                        <!-- Update Status -->
+                        <Separator/>
+                        <Label text="Update Status" style="-fx-font-weight: bold;"/>
+                        <ComboBox fx:id="newStatusComboBox" maxWidth="Infinity" promptText="Select new status"/>
+                        <Label fx:id="statusErrorLabel" text="" textFill="red" visible="false" managed="false"/>
+                        <Button text="Update Status" maxWidth="Infinity" onAction="#handleUpdateStatus">
+                            <font><Font name="AppleGothic Regular" size="13.0"/></font>
+                        </Button>
+
+                        <!-- Payment -->
+                        <Separator/>
+                        <Label text="Payment Info" style="-fx-font-weight: bold;"/>
+
+                        <!-- Shown when payment already registered -->
+                        <VBox fx:id="paymentInfoBox" spacing="6" visible="false" managed="false">
+                            <HBox spacing="8">
+                                <Label text="Amount:" style="-fx-font-weight: bold;"/>
+                                <Label fx:id="paymentAmountLabel"/>
+                            </HBox>
+                            <HBox spacing="8">
+                                <Label text="Paid At:" style="-fx-font-weight: bold;"/>
+                                <Label fx:id="paymentAtLabel"/>
+                            </HBox>
+                            <HBox fx:id="paymentChangeBox" spacing="8" visible="false" managed="false">
+                                <Label text="Change:" style="-fx-font-weight: bold;"/>
+                                <Label fx:id="paymentChangeLabel"/>
+                            </HBox>
+                        </VBox>
+
+                        <!-- Shown when payment not yet registered -->
+                        <VBox fx:id="paymentFormBox" spacing="6">
+                            <Label text="Payment Method"/>
+                            <ComboBox fx:id="paymentMethodComboBox" maxWidth="Infinity" promptText="Select method"/>
+                            <Label text="Amount"/>
+                            <TextField fx:id="paymentAmountField" promptText="0.00"/>
+                            <Label fx:id="paymentInfoLabel" text="Payment Info (phone / card number)"
+                                   visible="false" managed="false"/>
+                            <TextField fx:id="paymentInfoField" promptText="Phone number / Card number"
+                                      visible="false" managed="false"/>
+                            <Label fx:id="paymentErrorLabel" text="" textFill="red"
+                                   visible="false" managed="false"/>
+                            <Button text="Register Payment" maxWidth="Infinity" onAction="#handleRegisterPayment">
+                                <font><Font name="AppleGothic Regular" size="13.0"/></font>
+                            </Button>
+                        </VBox>
+
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
+
+        <ToolBar prefHeight="40.0"/>
+    </children>
+</VBox>
