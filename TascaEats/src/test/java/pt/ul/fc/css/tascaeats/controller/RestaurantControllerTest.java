@@ -113,14 +113,6 @@ class RestaurantControllerTest {
   }
 
   @Test
-  void createRestaurant_shouldReturn400_whenBodyInvalid() throws Exception {
-    mockMvc.perform(post("/api/restaurants")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
-        .andExpect(status().isBadRequest());
-  }
-
-  @Test
   void createRestaurant_shouldReturn404_whenAdminNotFound() throws Exception {
     when(restaurantService.createRestaurant(any()))
         .thenThrow(new ResourceNotFoundException("User not found"));

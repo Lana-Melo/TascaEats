@@ -1,11 +1,12 @@
 package pt.ul.fc.css.tascaeats.dto.restaurant;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class ReviewRequestDto {
-  @NotBlank private int rating;
+  @NotNull private int rating;
   @NotBlank private String comment;
-  @NotBlank private Long clientId;
+  @NotNull private Long clientId;
 
   public ReviewRequestDto() {}
 

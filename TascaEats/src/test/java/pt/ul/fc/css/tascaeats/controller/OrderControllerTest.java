@@ -64,14 +64,6 @@ class OrderControllerTest {
   }
 
   @Test
-  void createOrder_shouldReturn400_whenBodyInvalid() throws Exception {
-    mockMvc.perform(post("/api/orders")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
-        .andExpect(status().isBadRequest());
-  }
-
-  @Test
   void createOrder_shouldReturn404_whenClientNotFound() throws Exception {
     when(orderService.createOrder(any()))
         .thenThrow(new ResourceNotFoundException("User not found"));

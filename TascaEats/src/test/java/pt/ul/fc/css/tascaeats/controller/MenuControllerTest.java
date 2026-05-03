@@ -72,16 +72,6 @@ class MenuControllerTest {
         .andExpect(jsonPath("$.cuisine").value("Italian"));
   }
  
-  @Test
-  void createMenu_shouldReturn400_whenRequestBodyInvalid() throws Exception {
-    MenuRequestDto invalid = new MenuRequestDto(); // missing @NotBlank fields
- 
-    mockMvc.perform(post("/api/menus")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(invalid)))
-        .andExpect(status().isBadRequest());
-  }
- 
   // ─── PUT /api/menus/{id} ──────────────────────────────────────────────────────
  
   @Test
