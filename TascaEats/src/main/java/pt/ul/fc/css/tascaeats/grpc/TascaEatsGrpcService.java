@@ -6,6 +6,7 @@ import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
+import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
 import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
@@ -436,14 +437,33 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
     }
   }
 
-  // ─── Get All Orders ───────────────────────────────────────────────
+  // ─── Get All Orders (delegates to searchByStatus) ────────────────
   @Override
   public void getAllOrders(Empty request, StreamObserver<OrdersResponse> responseObserver) {
     try {
-      List<OrderResponseDto> orders = orderService.getAllOrders();
+      List<OrderResponseDto> orders = orderService.searchByStatus(null);
       OrdersResponse.Builder builder = OrdersResponse.newBuilder();
       for (OrderResponseDto dto : orders) {
-        builder.addOrders(grpcMapper.mapOrderResponseDtoToResponse(dto));
+        builder.addOrders(buildOrderResponse(dto));
+      }
+      responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Search Orders ────────────────────────────────────────────────
+  @Override
+  public void searchOrders(
+      SearchOrdersRequest request, StreamObserver<OrdersResponse> responseObserver) {
+    try {
+      String status = request.getStatus().isEmpty() ? null : request.getStatus();
+      List<OrderResponseDto> orders = orderService.searchByStatus(status);
+      OrdersResponse.Builder builder = OrdersResponse.newBuilder();
+      for (OrderResponseDto dto : orders) {
+        builder.addOrders(buildOrderResponse(dto));
       }
       responseObserver.onNext(builder.build());
       responseObserver.onCompleted();
@@ -464,7 +484,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       dto.setAmount(request.getAmount());
       dto.setPaymentInfo(request.getPaymentInfo().isEmpty() ? null : request.getPaymentInfo());
       OrderResponseDto order = orderService.processPayment(dto);
-      responseObserver.onNext(grpcMapper.mapOrderResponseDtoToResponse(order));
+      responseObserver.onNext(buildOrderResponse(order));
       responseObserver.onCompleted();
     } catch (ResourceNotFoundException e) {
       responseObserver.onError(
@@ -482,7 +502,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
     try {
       OrderResponseDto order =
           orderService.updateOrderStatus(request.getOrderId(), request.getStatus());
-      responseObserver.onNext(grpcMapper.mapOrderResponseDtoToResponse(order));
+      responseObserver.onNext(buildOrderResponse(order));
       responseObserver.onCompleted();
     } catch (ResourceNotFoundException e) {
       responseObserver.onError(
@@ -491,6 +511,38 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
     }
+  }
+
+  // ─── Helper: build OrderResponse proto from DTO ───────────────────
+  private OrderResponse buildOrderResponse(OrderResponseDto dto) {
+    OrderResponse.Builder builder =
+        OrderResponse.newBuilder()
+            .setId(dto.id())
+            .setStatus(dto.status().name())
+            .setTotalValue(dto.totalValue())
+            .setClientId(dto.clientId())
+            .setClientName(dto.clientName())
+            .setClientNif(dto.clientNif() != null ? dto.clientNif() : "")
+            .setCity(dto.city())
+            .setStreet(dto.street())
+            .setPostalCode(dto.postalCode())
+            .setCreatedAt(dto.timestamp() != null ? dto.timestamp().toString() : "")
+            .setDeliveryPersonName(dto.deliveryPersonName() != null ? dto.deliveryPersonName() : "")
+            .setDeliveryPersonNif(dto.deliveryPersonNif() != null ? dto.deliveryPersonNif() : "")
+            .setPaymentAmount(dto.paymentAmount() != null ? dto.paymentAmount() : 0.0)
+            .setPaymentAt(dto.paymentTimestamp() != null ? dto.paymentTimestamp().toString() : "")
+            .setPaymentChange(dto.paymentChange() != null ? dto.paymentChange() : 0.0);
+    if (dto.products() != null) {
+      for (OrderProductItemDto p : dto.products()) {
+        builder.addProducts(
+            OrderProductItem.newBuilder()
+                .setId(p.id())
+                .setDesignation(p.designation())
+                .setPrice(p.price())
+                .build());
+      }
+    }
+    return builder.build();
   }
 
   // ─── Cancel Order ─────────────────────────────────────────────

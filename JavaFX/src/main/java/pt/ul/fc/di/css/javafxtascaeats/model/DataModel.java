@@ -50,4 +50,14 @@ public class DataModel {
   public void setCurrentProduct(ProductModel product) {
     this.currentProduct = product;
   }
+
+  private OrderModel currentOrder;
+
+  public OrderModel getCurrentOrder() {
+    return currentOrder;
+  }
+
+  public void setCurrentOrder(OrderModel order) {
+    this.currentOrder = order;
+  }
 }

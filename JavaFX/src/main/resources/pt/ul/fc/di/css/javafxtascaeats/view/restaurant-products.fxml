@@ -71,7 +71,7 @@
                         <TextField fx:id="descriptionField" promptText="Description" visible="false" managed="false"/>
 
                         <Label fx:id="availabilityLabel" text="Availability" visible="false" managed="false"/>
-                        <TextField fx:id="availabilityField" promptText="AVAILABLE or SOLD_OUT" visible="false" managed="false"/>
+                        <ComboBox fx:id="availabilityField" promptText="Select availability" maxWidth="Infinity" visible="false" managed="false"/>
 
                         <Label fx:id="timesOrderedLabel" text="Min Times Ordered" visible="false" managed="false"/>
                         <TextField fx:id="timesOrderedField" promptText="Min Times Ordered" visible="false" managed="false"/>
