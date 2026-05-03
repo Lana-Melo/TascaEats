@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
@@ -158,12 +159,14 @@ public class OrderService {
   /////////////////////////////////////////////////////////////
   ///  GET ORDER METHODS
   /////////////////////////////////////////////////////////////
+  @Transactional
   public List<OrderResponseDto> getOrdersByClient(Long clientId) {
     return orderRepository.findByClientId(clientId).stream()
         .map(this::mapOrderToOrderResponse)
         .toList();
   }
 
+  @Transactional
   public List<OrderResponseDto> getAllOrders() {
     return orderRepository.findAll().stream().map(this::mapOrderToOrderResponse).toList();
   }
@@ -287,14 +290,23 @@ public class OrderService {
   private OrderResponseDto mapOrderToOrderResponse(Order order) {
     ArrayList<Long> productIds = new ArrayList<Long>();
     ArrayList<Long> restaurantIds = new ArrayList<Long>();
+    ArrayList<OrderProductItemDto> products = new ArrayList<>();
     for (ProductItem p : order.getProductItems()) {
       productIds.add(p.getId());
       if (!restaurantIds.contains(p.getRestaurant().getId())) {
         restaurantIds.add(p.getRestaurant().getId());
       }
+      products.add(
+          new OrderProductItemDto(
+              p.getId(), p.getProduct().getDesignation(), p.getProduct().getPrice()));
     }
     Long delId = order.getDeliveryPerson() == null ? null : order.getDeliveryPerson().getId();
     String delName = order.getDeliveryPerson() == null ? null : order.getDeliveryPerson().getName();
+    String delNif = order.getDeliveryPerson() == null ? null : order.getDeliveryPerson().getNif();
+    Double paymentAmount = order.getPayment() == null ? null : order.getPayment().getAmount();
+    java.time.LocalDateTime paymentTimestamp =
+        order.getPayment() == null ? null : order.getPayment().getTimestamp();
+    Double paymentChange = order.getPayment() instanceof Cash cash ? cash.getPhoneNumber() : null;
 
     return new OrderResponseDto(
         order.getId(),
@@ -303,12 +315,30 @@ public class OrderService {
         order.getTotalValue(),
         order.getClient().getId(),
         order.getClient().getName(),
+        order.getClient().getNif(),
         restaurantIds,
         productIds,
+        products,
         delId,
         delName,
+        delNif,
         order.getAddress().getCity(),
         order.getAddress().getStreet(),
-        order.getAddress().getPostalCode());
+        order.getAddress().getPostalCode(),
+        paymentAmount,
+        paymentTimestamp,
+        paymentChange);
+  }
+
+  @Transactional
+  public List<OrderResponseDto> searchByStatus(String status) {
+    return orderRepository.findAll().stream()
+        .filter(
+            o ->
+                status == null
+                    || status.isBlank()
+                    || o.getOrderStatus().name().equalsIgnoreCase(status))
+        .map(this::mapOrderToOrderResponse)
+        .toList();
   }
 }

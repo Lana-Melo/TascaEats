@@ -19,10 +19,15 @@ service TascaEatsService {
   rpc SearchRestaurants (SearchRestaurantsRequest) returns (RestaurantsResponse);
   rpc SearchAdminRestaurants (AdminRestaurantsRequest) returns (AdminRestaurantsResponse);
   rpc SearchMenus (SearchMenusRequest) returns (MenusSearchResponse);
+  rpc SearchProducts (SearchProductsRequest) returns (ProductsSearchResponse);
   rpc GetAllMenus (Empty) returns (MenusResponse);
   rpc AssignMenu (AssignMenuRequest) returns (Empty);
   rpc ChangeRestaurantStatus (ChangeStatusRequest) returns (Empty);
+  rpc CreateRestaurant (CreateRestaurantRequest) returns (RestaurantItem);
+  rpc GetRestaurantProducts (GetRestaurantProductsRequest) returns (ProductsResponse);
+  rpc UpdateProductStatus (UpdateProductStatusRequest) returns (Empty);
   rpc GetAllOrders (Empty) returns (OrdersResponse);
+  rpc SearchOrders (SearchOrdersRequest) returns (OrdersResponse);
   rpc ProcessPayment (PaymentRequest) returns (OrderResponse);
   rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
   rpc CancelOrder (OrderIdRequest) returns (Empty);
@@ -80,6 +85,44 @@ message AssignMenuRequest {
 message ChangeStatusRequest {
   int64 restaurantId = 1;
   string status = 2;
+}
+
+message CreateRestaurantRequest {
+  int64 adminId = 1;
+  string designation = 2;
+  string nif = 3;
+  string city = 4;
+  string postalCode = 5;
+  string street = 6;
+  string openHours = 7;
+  string closeHours = 8;
+}
+
+message GetRestaurantProductsRequest {
+  int64 restaurantId = 1;
+  string price = 2;
+  string designation = 3;
+  string description = 4;
+  string availability = 5;
+  string timesOrdered = 6;
+}
+
+message ProductItemMessage {
+  int64 id = 1;
+  string designation = 2;
+  string description = 3;
+  string status = 4;
+  double price = 5;
+}
+
+message ProductsResponse {
+  repeated ProductItemMessage products = 1;
+}
+
+message UpdateProductStatusRequest {
+  int64 restaurantId = 1;
+  int64 productId = 2;
+  string status = 3;
 }
 
 message LoginRequest {
@@ -140,6 +183,12 @@ message SearchUsersResponse {
   repeated UserResponse users = 1;
 }
 
+message OrderProductItem {
+  int64 id = 1;
+  string designation = 2;
+  double price = 3;
+}
+
 message OrderResponse {
   int64 id = 1;
   string status = 2;
@@ -149,6 +198,18 @@ message OrderResponse {
   string city = 6;
   string street = 7;
   string postalCode = 8;
+  string clientNif = 9;
+  string createdAt = 10;
+  string deliveryPersonName = 11;
+  string deliveryPersonNif = 12;
+  repeated OrderProductItem products = 13;
+  double paymentAmount = 14;
+  string paymentAt = 15;
+  double paymentChange = 16;
+}
+
+message SearchOrdersRequest {
+  string status = 1;
 }
 
 message OrdersResponse {
@@ -203,4 +264,25 @@ message MenuSearchItem {
 
 message MenusSearchResponse {
   repeated MenuSearchItem menus = 1;
+}
+
+message SearchProductsRequest {
+  string designation = 1;
+  string price = 2;
+  string description = 3;
+  string availability = 4;
+  string timesOrdered = 5;
+}
+
+message ProductSearchItem {
+  int64 id = 1;
+  string designation = 2;
+  double price = 3;
+  string description = 4;
+  string availability = 5;
+  int32 timesOrdered = 6;
+}
+
+message ProductsSearchResponse {
+  repeated ProductSearchItem products = 1;
 }

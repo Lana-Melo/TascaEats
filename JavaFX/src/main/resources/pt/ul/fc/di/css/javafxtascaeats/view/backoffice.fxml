@@ -70,6 +70,10 @@
               <font><Font name="AppleGothic Regular" size="13.0"/></font>
             </Button>
 
+            <Button text="Orders" maxWidth="Infinity" onAction="#handleOrders">
+              <font><Font name="AppleGothic Regular" size="13.0"/></font>
+            </Button>
+
           </VBox>
         </VBox>
       </children>

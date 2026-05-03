@@ -1,12 +1,11 @@
 package pt.ul.fc.css.tascaeats.entities;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 
 @Entity
 public class Card extends APayment {
 
-  @Column(nullable = false)
+  // @Column(nullable = false)
   private String cardFlag;
 
   protected Card() {}

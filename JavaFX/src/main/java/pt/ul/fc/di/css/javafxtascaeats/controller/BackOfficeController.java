@@ -48,6 +48,15 @@ public class BackOfficeController implements ControllerWithModel {
   }
 
   @FXML
+  void handleOrders(ActionEvent event) {
+    UtilController.switchScene(
+        stage,
+        "/pt/ul/fc/di/css/javafxtascaeats/view/back-office-orders.fxml",
+        "Back Office - Orders",
+        model);
+  }
+
+  @FXML
   void handleGoLogin(ActionEvent event) {
     UtilController.switchScene(
         stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);

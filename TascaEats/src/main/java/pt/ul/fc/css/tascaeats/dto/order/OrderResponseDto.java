@@ -11,10 +11,16 @@ public record OrderResponseDto(
     double totalValue,
     Long clientId,
     String clientName,
+    String clientNif,
     List<Long> restaurantIds,
     List<Long> productIds,
+    List<OrderProductItemDto> products,
     Long deliveryPersonId,
     String deliveryPersonName,
+    String deliveryPersonNif,
     String city,
     String street,
-    String postalCode) {}
+    String postalCode,
+    Double paymentAmount,
+    LocalDateTime paymentTimestamp,
+    Double paymentChange) {}

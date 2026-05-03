@@ -3,6 +3,8 @@ package pt.ul.fc.css.tascaeats.services;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -86,44 +88,6 @@ public class RestaurantService {
             average);
     List<Restaurant> restaurants = restaurantRepository.findAll(spec);
     return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();
-    /*
-    DEPRECATED
-    List<Restaurant> restaurants =
-        (designation == null || designation.isEmpty())
-            ? restaurantRepository.findAll()
-            : restaurantRepository.findByDesignationContainingIgnoreCase(designation);
-
-    if (city != null && !city.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByAddressCityContainingIgnoreCase(city));
-    }
-    if (street != null && !street.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByAddressStreetContainingIgnoreCase(street));
-    }
-    if (postalCode != null && !postalCode.isEmpty()) {
-      restaurants.retainAll(
-          restaurantRepository.findByAddressPostalCodeContainingIgnoreCase(postalCode));
-    }
-    if (cuisine != null && !cuisine.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByMenuCuisineContainingIgnoreCase(cuisine));
-    }
-    if (orderNumber != null && !orderNumber.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByOrderNumber(Integer.parseInt(orderNumber)));
-    }
-    if (reviewNumber != null && !reviewNumber.isEmpty()) {
-      restaurants.retainAll(
-          restaurantRepository.findByReviewNumber(Integer.parseInt(reviewNumber)));
-    }
-    if (activeHour != null && !activeHour.isEmpty()) {
-      String[] hour = activeHour.split(":");
-      restaurants.retainAll(
-          restaurantRepository.findByActiveHours(
-              LocalTime.of(Integer.parseInt(hour[0]), Integer.parseInt(hour[1]))));
-    }
-    if (average != null && !average.isEmpty()) {
-      restaurants.retainAll(restaurantRepository.findByAveragePrice(Double.parseDouble(average)));
-    }
-
-    return restaurants.stream().map(this::mapRestaurantToRestaurantResponse).toList();*/
   }
 
   @Transactional
@@ -308,14 +272,6 @@ public class RestaurantService {
     for (Product product : menu.getProducts()) {
       restaurant.addProductItem(new ProductItem(product, restaurant));
     }
-    /* DEPRECATED porque tava a dar excecao do reassingment a uma nova lista de productItems
-    for (ProductItem productItem : restaurant.getProductItems()) {
-      deleteProductItem(restaurant.getId(), productItem.getId());
-    }
-    restaurant.setProductItems(new ArrayList<>());
-    for (Product product : menu.getProducts()) {
-      restaurant.addProductItem(new ProductItem(product, restaurant));
-    }*/
 
     Restaurant saved = restaurantRepository.save(restaurant);
     return mapRestaurantToRestaurantResponse(saved);
@@ -362,6 +318,7 @@ public class RestaurantService {
     return false;
   }
 
+  @Transactional
   public List<ProductItemResponseDto> searchProductBy(
       Long restaurantId,
       String price,
@@ -369,31 +326,57 @@ public class RestaurantService {
       String description,
       String availability,
       String timesOrdered) {
-    List<ProductItem> productItems =
-        (designation == null || designation.isEmpty())
-            ? productItemRepository.findAll()
-            : productItemRepository.findByProductDesignationContainingIgnoreCase(designation);
-
-    if (description != null && !description.isEmpty()) {
-      productItems.retainAll(
-          productItemRepository.findByProductDescriptionContainingIgnoreCase(description));
-    }
-    if (price != null && !price.isEmpty()) {
-      productItems.retainAll(
-          productItemRepository.findByProductPriceLessThanEqual(Double.parseDouble(price)));
-    }
-    if (availability != null && !availability.isEmpty()) {
-      productItems.retainAll(
-          productItemRepository.findByAvailability(ProductStatus.valueOf(availability)));
-    }
-    if (timesOrdered != null && !timesOrdered.isEmpty()) {
-      productItems.retainAll(
-          productItemRepository.findByTimesOrdered(Integer.parseInt(timesOrdered)));
-    }
-    if (restaurantId != null) {
-      productItems.retainAll(productItemRepository.findAllByRestaurantId(restaurantId));
-    }
+    Specification<ProductItem> spec =
+        getProductSearchSpec(
+            restaurantId, price, designation, description, availability, timesOrdered);
+    List<ProductItem> productItems = productItemRepository.findAll(spec);
     return productItems.stream().map(this::mapProductItemToProductItemResponse).toList();
+  }
+
+  private Specification<ProductItem> getProductSearchSpec(
+      Long restaurantId,
+      String price,
+      String designation,
+      String description,
+      String availability,
+      String timesOrdered) {
+    return (root, query, cb) -> {
+      List<Predicate> predicates = new ArrayList<>();
+
+      if (designation != null && !designation.isEmpty()) {
+        predicates.add(
+            cb.like(
+                cb.upper(root.get("product").get("designation")),
+                "%" + designation.toUpperCase() + "%"));
+      }
+      if (description != null && !description.isEmpty()) {
+        predicates.add(
+            cb.like(
+                cb.upper(root.get("product").get("description")),
+                "%" + description.toUpperCase() + "%"));
+      }
+      if (price != null && !price.isEmpty()) {
+        predicates.add(
+            cb.lessThanOrEqualTo(root.get("product").get("price"), Double.parseDouble(price)));
+      }
+      if (availability != null && !availability.isEmpty()) {
+        predicates.add(cb.equal(root.get("availability"), ProductStatus.valueOf(availability)));
+      }
+      if (timesOrdered != null && !timesOrdered.isEmpty()) {
+        int minTimes = Integer.parseInt(timesOrdered);
+        Subquery<Long> subquery = query.subquery(Long.class);
+        Root<Order> orderRoot = subquery.from(Order.class);
+        Join<Order, ProductItem> orderItems = orderRoot.join("productItems");
+        subquery.select(cb.count(orderRoot));
+        subquery.where(cb.equal(orderItems, root));
+        predicates.add(cb.greaterThanOrEqualTo(subquery, (long) minTimes));
+      }
+      if (restaurantId != null) {
+        predicates.add(cb.equal(root.get("restaurant").get("id"), restaurantId));
+      }
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    };
   }
 
   /////////////////////////////////////////////////////////////

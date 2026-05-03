@@ -98,13 +98,24 @@ The controller currently returns `404` both when a user is not found and when de
 
 ---
 
-### **Contrato gRPC (`tascaeats.proto`):**
+### **gRPC Protocol (`tascaeats.proto`):**
 
 | RPC | Request | Response | Description |
 |---|---|---|---|
-| `Login` | `LoginRequest` | `UserResponse` | Execute an user login |
-| `RegisterAdmin` | `UserRequest` | `UserResponse` | Register a new admin |
-| `RegisterDeliveryPerson` | `UserRequest` | `DeliveryPersonResponse` | Register a new delivery person |
+| `Login` | `LoginRequest` | `UserResponse` | Authenticate a user and return their profile |
+| `RegisterAdmin` | `UserRequest` | `UserResponse` | Register a new admin account |
+| `RegisterDeliveryPerson` | `UserRequest` | `DeliveryPersonResponse` | Register a new delivery person account |
+| `DeleteAccount` | `DeleteAccountRequest` | `Empty` | Delete a user account by ID |
+| `UpdateAdmin` | `UserRequest` | `UserResponse` | Update an admin's profile data |
+| `UpdateClient` | `UserRequest` | `UserResponse` | Update a client's profile data |
+| `UpdateDeliveryPerson` | `DeliveryPersonUpdateRequest` | `DeliveryPersonResponse` | Update a delivery person's profile and status |
+| `SearchAdminRestaurants` | `AdminRestaurantsRequest` | `AdminRestaurantsResponse` | Search restaurants owned by a given admin with optional filters |
+| `GetAllMenus` | `Empty` | `MenusResponse` | Retrieve all available menus |
+| `AssignMenu` | `AssignMenuRequest` | `Empty` | Assign a menu to a restaurant |
+| `ChangeRestaurantStatus` | `ChangeStatusRequest` | `Empty` | Change the status of a restaurant (OPEN / CLOSED) |
+| `CreateRestaurant` | `CreateRestaurantRequest` | `RestaurantItem` | Create a new restaurant for a given admin |
+| `GetRestaurantProducts` | `GetRestaurantProductsRequest` | `ProductsResponse` | Search products of a restaurant with optional filters |
+| `UpdateProductStatus` | `UpdateProductStatusRequest` | `Empty` | Update the availability status of a product item |
 
 ---
 
