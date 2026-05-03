@@ -4,8 +4,11 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -32,6 +35,7 @@ public class BackOfficeMenusController implements ControllerWithModel {
   @FXML private TableView<MenuModel> menusTable;
   @FXML private TableColumn<MenuModel, String> colName;
   @FXML private TableColumn<MenuModel, String> colCuisine;
+  @FXML private TableColumn<MenuModel, Void> colEdit;
 
   @Override
   public void initModel(Stage stage, DataModel model) {
@@ -47,6 +51,32 @@ public class BackOfficeMenusController implements ControllerWithModel {
 
     colName.setCellValueFactory(new PropertyValueFactory<>("name"));
     colCuisine.setCellValueFactory(new PropertyValueFactory<>("cuisine"));
+    colEdit.setCellFactory(
+        col ->
+            new TableCell<>() {
+              private final Button btn = new Button("✏");
+
+              {
+                btn.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+                btn.setOnAction(
+                    e -> {
+                      MenuModel menu = getTableView().getItems().get(getIndex());
+                      model.setCurrentMenu(menu);
+                      UtilController.switchScene(
+                          stage,
+                          "/pt/ul/fc/di/css/javafxtascaeats/view/backoffice-menu-edit.fxml",
+                          "Edit Menu",
+                          model);
+                    });
+              }
+
+              @Override
+              protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : btn);
+                setAlignment(Pos.CENTER);
+              }
+            });
   }
 
   private void bindFilter(CheckBox cb, TextField field) {

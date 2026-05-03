@@ -10,6 +10,7 @@ public class DataModel {
   private RestaurantModel currentRestaurant;
   private List<MenuModel> menus = new ArrayList<>();
   private ProductModel currentProduct;
+  private MenuModel currentMenu;
 
   public CurrentUser getCurrentUser() {
     return currentUser;
@@ -49,5 +50,13 @@ public class DataModel {
 
   public void setCurrentProduct(ProductModel product) {
     this.currentProduct = product;
+  }
+
+  public MenuModel getCurrentMenu() {
+    return currentMenu;
+  }
+
+  public void setCurrentMenu(MenuModel menu) {
+    this.currentMenu = menu;
   }
 }

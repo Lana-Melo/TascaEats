@@ -5,23 +5,31 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import java.util.List;
+import pt.ul.fc.css.tascaeats.grpc.AddProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsRequest;
 import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsResponse;
 import pt.ul.fc.css.tascaeats.grpc.AssignMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.ChangeStatusRequest;
+import pt.ul.fc.css.tascaeats.grpc.CreateMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.CreateRestaurantRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeleteMenuRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeleteProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
 import pt.ul.fc.css.tascaeats.grpc.Empty;
 import pt.ul.fc.css.tascaeats.grpc.GetRestaurantProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
+import pt.ul.fc.css.tascaeats.grpc.MenuIdRequest;
+import pt.ul.fc.css.tascaeats.grpc.MenuItemMessage;
+import pt.ul.fc.css.tascaeats.grpc.MenuProductsResponse;
 import pt.ul.fc.css.tascaeats.grpc.MenusResponse;
 import pt.ul.fc.css.tascaeats.grpc.MenusSearchResponse;
 import pt.ul.fc.css.tascaeats.grpc.OrderIdRequest;
 import pt.ul.fc.css.tascaeats.grpc.OrderResponse;
 import pt.ul.fc.css.tascaeats.grpc.OrdersResponse;
 import pt.ul.fc.css.tascaeats.grpc.PaymentRequest;
+import pt.ul.fc.css.tascaeats.grpc.ProductResponse;
 import pt.ul.fc.css.tascaeats.grpc.ProductsResponse;
 import pt.ul.fc.css.tascaeats.grpc.ProductsSearchResponse;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantItem;
@@ -31,7 +39,9 @@ import pt.ul.fc.css.tascaeats.grpc.SearchProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchRestaurantsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
+import pt.ul.fc.css.tascaeats.grpc.UpdateMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.UpdateOrderStatusRequest;
+import pt.ul.fc.css.tascaeats.grpc.UpdateProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.UpdateProductStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
@@ -484,5 +494,89 @@ public class ApiClient {
                     "", // menu
                     item.getAvailability()))
         .toList();
+  }
+
+  public static List<ProductModel> getMenuProducts(long menuId) {
+    MenuIdRequest request = MenuIdRequest.newBuilder().setMenuId(menuId).build();
+    MenuProductsResponse response = stub.getMenuProducts(request);
+    return response.getProductsList().stream()
+        .map(
+            p ->
+                new ProductModel(
+                    p.getId(), p.getPrice(), p.getDescription(), p.getDesignation(), null, null))
+        .toList();
+  }
+
+  public static ProductModel addProduct(
+      long menuId, String designation, String description, double price) {
+    AddProductRequest request =
+        AddProductRequest.newBuilder()
+            .setMenuId(menuId)
+            .setDesignation(designation)
+            .setDescription(description)
+            .setPrice(price)
+            .build();
+    ProductResponse response = stub.addProduct(request);
+    return new ProductModel(
+        response.getId(),
+        response.getPrice(),
+        response.getDescription(),
+        response.getDesignation(),
+        null,
+        null);
+  }
+
+  public static ProductModel updateProduct(
+      long menuId, long productId, String designation, String description, double price) {
+    UpdateProductRequest request =
+        UpdateProductRequest.newBuilder()
+            .setMenuId(menuId)
+            .setProductId(productId)
+            .setDesignation(designation)
+            .setDescription(description)
+            .setPrice(price)
+            .build();
+    ProductResponse response = stub.updateProduct(request);
+    return new ProductModel(
+        response.getId(),
+        response.getPrice(),
+        response.getDescription(),
+        response.getDesignation(),
+        null,
+        null);
+  }
+
+  public static void deleteProduct(long menuId, long productId) {
+    DeleteProductRequest request =
+        DeleteProductRequest.newBuilder().setMenuId(menuId).setProductId(productId).build();
+    stub.deleteProduct(request);
+  }
+
+  public static MenuModel createMenu(String name, String cuisine, String description) {
+    CreateMenuRequest request =
+        CreateMenuRequest.newBuilder()
+            .setName(name)
+            .setCuisine(cuisine)
+            .setDescription(description)
+            .build();
+    MenuItemMessage response = stub.createMenu(request);
+    return new MenuModel(response.getId(), response.getName(), response.getCuisine(), List.of());
+  }
+
+  public static MenuModel updateMenu(long menuId, String name, String cuisine, String description) {
+    UpdateMenuRequest request =
+        UpdateMenuRequest.newBuilder()
+            .setMenuId(menuId)
+            .setName(name)
+            .setCuisine(cuisine)
+            .setDescription(description)
+            .build();
+    MenuItemMessage response = stub.updateMenu(request);
+    return new MenuModel(response.getId(), response.getName(), response.getCuisine(), List.of());
+  }
+
+  public static void deleteMenu(long menuId) {
+    DeleteMenuRequest request = DeleteMenuRequest.newBuilder().setMenuId(menuId).build();
+    stub.deleteMenu(request);
   }
 }
