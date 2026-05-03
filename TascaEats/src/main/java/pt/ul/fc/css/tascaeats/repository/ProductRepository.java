@@ -2,11 +2,13 @@ package pt.ul.fc.css.tascaeats.repository;
 
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import pt.ul.fc.css.tascaeats.entities.Product;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository
+    extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
   boolean existsByIdAndMenuId(Long productId, Long menuId);
 
   List<Product> findAllByMenuId(Long menuId);

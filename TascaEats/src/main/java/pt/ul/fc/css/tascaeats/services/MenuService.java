@@ -177,18 +177,27 @@ public class MenuService {
 
   public List<ProductResponseDto> searchProductBy(
       Long menuId, String designation, String description) {
-    List<Product> products =
-        (designation == null || designation.isEmpty())
-            ? productRepository.findAll()
-            : productRepository.findByDesignationContainingIgnoreCase(designation);
 
-    if (description != null && !description.isEmpty()) {
-      products.retainAll(productRepository.findByDescriptionContainingIgnoreCase(description));
-    }
-    if (menuId != null) {
-      products.retainAll(productRepository.findAllByMenuId(menuId));
-    }
-    return products.stream().map(this::mapProductToProductResponse).toList();
+    Specification<Product> spec =
+        (root, query, cb) -> {
+          List<Predicate> predicates = new ArrayList<>();
+
+          if (menuId != null) {
+            predicates.add(cb.equal(root.get("menu").get("id"), menuId));
+          }
+          if (designation != null && !designation.isEmpty()) {
+            predicates.add(
+                cb.like(cb.upper(root.get("designation")), "%" + designation.toUpperCase() + "%"));
+          }
+          if (description != null && !description.isEmpty()) {
+            predicates.add(
+                cb.like(cb.upper(root.get("description")), "%" + description.toUpperCase() + "%"));
+          }
+
+          return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+    return productRepository.findAll(spec).stream().map(this::mapProductToProductResponse).toList();
   }
 
   /////////////////////////////////////////////////////////////
