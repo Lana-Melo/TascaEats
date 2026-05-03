@@ -207,6 +207,7 @@ public class ApiClient {
   }
 
   public static void assignMenu(long restaurantId, long menuId) {
+    System.out.println("Assigning menu " + menuId + " to restaurant " + restaurantId);
     AssignMenuRequest request =
         AssignMenuRequest.newBuilder().setRestaurantId(restaurantId).setMenuId(menuId).build();
     stub.assignMenu(request);
