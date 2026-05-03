@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
+import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Order;
@@ -33,6 +35,7 @@ import pt.ul.fc.css.tascaeats.entities.ProductItem;
 import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
+import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.exceptions.IncompleteInputException;
 import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
@@ -96,7 +99,20 @@ class OrderServiceTest {
     when(productItemRepository.findById(1L)).thenReturn(Optional.empty());
     assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(req));
   }
- 
+
+  @Test
+  void createOrder_shouldThrow_whenProductSoldOut() {
+    Restaurant r = restaurant();
+    ProductItem pi = productItem(r);
+    pi.setStatus(ProductStatus.SOLD_OUT);
+    OrderRequestDto req = new OrderRequestDto();
+    req.setClientId(1L); req.setProductIds(List.of(1L));
+    req.setCity("Lisboa"); req.setStreet("Rua A"); req.setPostalCode("1000-001");
+    when(userRepository.findById(1L)).thenReturn(Optional.of(client()));
+    when(productItemRepository.findById(1L)).thenReturn(Optional.of(pi));
+    assertThrows(ResourceNotFoundException.class, () -> orderService.createOrder(req));
+  }
+
   @Test
   void createOrder_shouldThrow_whenRestaurantClosed() {
     Restaurant r = restaurant();
@@ -134,7 +150,7 @@ class OrderServiceTest {
     when(productItemRepository.findById(1L)).thenReturn(Optional.of(pi));
     when(orderRepository.save(any(Order.class))).thenReturn(order);
     when(restaurantRepository.findById(any())).thenReturn(Optional.of(r));
-    when(userRepository.save(any())).thenReturn(c);
+    when(restaurantRepository.save(any())).thenReturn(r);
     OrderResponseDto result = orderService.createOrder(req);
     assertNotNull(result);
   }
@@ -201,7 +217,18 @@ class OrderServiceTest {
     when(orderRepository.save(any(Order.class))).thenReturn(order);
     assertNotNull(orderService.processPayment(req));
   }
- 
+
+  @Test
+  void processPayment_shouldReturnPaidOrder_withMBWay() {
+    Restaurant r = restaurant();
+    Order order = buildOrder(client(), productItem(r)); // totalValue = 9.99
+    PaymentRequestDto req = new PaymentRequestDto();
+    req.setOrderId(1L); req.setPaymentMethod("MBWay"); req.setAmount(9.99); req.setPaymentInfo("912345678");
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+    assertNotNull(orderService.processPayment(req));
+  }
+
   @Test
   void processPayment_shouldThrow_whenInvalidMethod() {
     Restaurant r = restaurant();
@@ -249,6 +276,95 @@ class OrderServiceTest {
     order.setOrderStatus(OrderStatus.READY);
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
     assertThrows(RequirementsNotMetException.class, () -> orderService.updateOrderStatus(1L, "CANCELLED"));
+  }
+
+  @Test
+  void updateOrderStatus_shouldAssignDelivery_whenPreparingAndDeliveryAvailable() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    order.setOrderStatus(OrderStatus.PREPARING);
+    DeliveryPerson del = new DeliveryPerson("dp", "pass", "DP", "912000000", "111111111");
+    del.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(userRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE)).thenReturn(Optional.of(del));
+    when(userRepository.save(any())).thenReturn(del);
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+    OrderResponseDto result = orderService.updateOrderStatus(1L, "READY");
+
+    assertNotNull(result);
+    assertEquals(OrderStatus.READY, result.status());
+  }
+
+  @Test
+  void updateOrderStatus_shouldReturnDelivered_whenReadyAndDeliveryExists() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    order.setOrderStatus(OrderStatus.READY);
+    DeliveryPerson del = new DeliveryPerson("dp", "pass", "DP", "912000000", "111111111");
+    del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
+    order.setDeliveryPerson(del);
+    order.setDelivery(new Delivery(LocalDateTime.now()));
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+    OrderResponseDto result = orderService.updateOrderStatus(1L, "DELIVERED");
+
+    assertNotNull(result);
+    assertEquals(OrderStatus.DELIVERED, result.status());
+  }
+
+  @Test
+  void updateOrderStatus_shouldReturnReady_whenPreparingAndNoDeliveryAvailable() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    order.setOrderStatus(OrderStatus.PREPARING);
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(userRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE)).thenReturn(Optional.empty());
+    when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+    OrderResponseDto result = orderService.updateOrderStatus(1L, "READY");
+
+    assertNotNull(result);
+    assertEquals(OrderStatus.READY, result.status());
+  }
+
+  @Test
+  void updateOrderStatus_shouldThrow_whenDeliveredWithoutDelivery() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    order.setOrderStatus(OrderStatus.READY);
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+    assertThrows(RequirementsNotMetException.class,
+        () -> orderService.updateOrderStatus(1L, "DELIVERED"));
+  }
+
+  @Test
+  void getOrdersByClient_shouldReturnList() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    when(orderRepository.findByClientId(1L)).thenReturn(List.of(order));
+
+    var result = orderService.getOrdersByClient(1L);
+
+    assertEquals(1, result.size());
+  }
+
+  @Test
+  void searchByStatus_shouldReturnList_whenStatusMatches() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    order.setOrderStatus(OrderStatus.PAID);
+    when(orderRepository.findAll()).thenReturn(List.of(order));
+
+    var result = orderService.searchByStatus("paid");
+
+    assertEquals(1, result.size());
+  }
+
+  @Test
+  void searchByStatus_shouldReturnAll_whenStatusNull() {
+    Order order = buildOrder(client(), productItem(restaurant()));
+    when(orderRepository.findAll()).thenReturn(List.of(order));
+
+    var result = orderService.searchByStatus(null);
+
+    assertEquals(1, result.size());
   }
  
   // ─── assignDeliveryPerson ───────────────────────────────────────────────────

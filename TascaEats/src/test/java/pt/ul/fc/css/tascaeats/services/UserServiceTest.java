@@ -10,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
@@ -46,7 +48,13 @@ class UserServiceTest {
   private Address address() { return new Address("Rua A", "Lisboa", "1000-001"); }
   private Admin admin() { return new Admin("admin", "pass", "Admin", "912345678", "987654321"); }
   private Client client() {
-    return new Client("client", "pass", "Client Name", "912345678", "123456789", List.of(address()));
+    return new Client(
+        "client",
+        "pass",
+        "Client Name",
+        "912345678",
+        "123456789",
+        new ArrayList<>(List.of(address())));
   }
   private DeliveryPerson deliveryPerson() {
     return new DeliveryPerson("dp", "pass", "DP Name", "912000001", "111111111");
@@ -245,7 +253,135 @@ class UserServiceTest {
     assertThrows(ResourceNotFoundException.class,
         () -> userService.updateDeliveryPerson(99L, new DeliveryPersonRequestDto()));
   }
+  @Test
+  void getClientById_shouldReturnClient_whenFound() {
+    Client c = client();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
 
+    ClientResponseDto result = userService.getClientById(1L);
+
+    assertNotNull(result);
+    assertEquals("client", result.username());
+  }
+
+  @Test
+  void addAddress_shouldAddNewAddress_whenNotDuplicate() {
+    Client c = client();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    ClientResponseDto result = userService.addAddress(1L, "Rua B", "Porto", "4000-001");
+
+    assertNotNull(result);
+    assertEquals(2, result.addresses().size());
+  }
+
+  @Test
+  void addAddress_shouldNotAddDuplicateAddress_whenAlreadyPresent() {
+    Client c = client();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    ClientResponseDto result = userService.addAddress(1L, "Rua A", "Lisboa", "1000-001");
+
+    assertNotNull(result);
+    assertEquals(1, result.addresses().size());
+  }
+
+  @Test
+  void removeAddress_shouldThrow_whenOnlyOneAddress() {
+    Client c = client();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+
+    assertThrows(IllegalArgumentException.class, () -> userService.removeAddress(1L, 0));
+  }
+
+  @Test
+  void removeAddress_shouldRemoveAddress_whenMoreThanOne() {
+    Client c = new Client(
+        "client",
+        "pass",
+        "Client Name",
+        "912345678",
+        "123456789",
+        new ArrayList<>(
+            List.of(
+                new Address("Rua A", "Lisboa", "1000-001"),
+                new Address("Rua B", "Porto", "4000-001"))));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(c));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    ClientResponseDto result = userService.removeAddress(1L, 0);
+
+    assertNotNull(result);
+    assertEquals(1, result.addresses().size());
+  }
+
+  @Test
+  void updateDeliveryPerson_shouldReturnUpdatedWithStatus_whenStatusProvided() {
+    DeliveryPerson dp = deliveryPerson();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    DeliveryPersonRequestDto req = new DeliveryPersonRequestDto();
+    req.setName("New DP");
+    req.setUsername("dp2");
+    req.setPhoneNumber("900000002");
+    req.setNif("000000003");
+    req.setPassword("newpass");
+    req.setStatus("BUSY");
+
+    DeliveryPersonResponseDto result = userService.updateDeliveryPerson(1L, req);
+
+    assertNotNull(result);
+    assertEquals("dp2", result.username());
+    assertEquals("BUSY", result.status());
+  }
+
+  @Test
+  void updateDeliveryPerson_shouldReturnUpdated_whenStatusNotProvided() {
+    DeliveryPerson dp = deliveryPerson();
+    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+    when(userRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    DeliveryPersonRequestDto req = new DeliveryPersonRequestDto();
+    req.setName("New DP");
+    req.setUsername("dp2");
+    req.setPhoneNumber("900000002");
+    req.setNif("000000003");
+    req.setPassword("newpass");
+
+    DeliveryPersonResponseDto result = userService.updateDeliveryPerson(1L, req);
+
+    assertNotNull(result);
+    assertEquals("dp2", result.username());
+    assertEquals("AVAILABLE", result.status());
+  }
+
+  @Test
+  void deleteDeliveryPerson_shouldSoftDelete_whenHasCompletedOrders() {
+    DeliveryPerson dp = deliveryPerson();
+    when(userRepository.existsById(1L)).thenReturn(true);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
+    when(orderRepository.existsByDeliveryPersonId(any())).thenReturn(true);
+    when(orderRepository.existsByDeliveryPersonIdAndStatusNotIn(any(), any())).thenReturn(false);
+    when(userRepository.save(any())).thenReturn(dp);
+
+    boolean result = userService.deleteUser(1L);
+
+    assertTrue(result);
+    verify(userRepository, never()).deleteById(any());
+    assertNotNull(dp.getDeletedAt());
+  }
+
+  @Test
+  void searchBy_shouldReturnFilteredUsersByType() {
+    when(userRepository.findAll(any(Specification.class))).thenReturn(List.of(client()));
+
+    var result = userService.searchBy(null, "Client", null, null);
+
+    assertEquals(1, result.size());
+  }
   // ─── deleteUser ─────────────────────────────────────────────────────────────
 
   @Test

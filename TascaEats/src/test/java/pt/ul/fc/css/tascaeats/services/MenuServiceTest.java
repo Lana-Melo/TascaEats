@@ -17,14 +17,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.dto.product.ProductRequestDto;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponseDto;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Product;
+import pt.ul.fc.css.tascaeats.entities.ProductItem;
+import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.MenuRepository;
+import pt.ul.fc.css.tascaeats.repository.OrderRepository;
+import pt.ul.fc.css.tascaeats.repository.ProductItemRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 
@@ -34,6 +39,8 @@ class MenuServiceTest {
   @Mock private MenuRepository menuRepository;
   @Mock private RestaurantRepository restaurantRepository;
   @Mock private ProductRepository productRepository;
+  @Mock private ProductItemRepository productItemRepository;
+  @Mock private OrderRepository orderRepository;
  
   @InjectMocks private MenuService menuService;
  
@@ -226,7 +233,7 @@ class MenuServiceTest {
   @Test
   void deleteProduct_shouldDeletePermanently_whenMenuNotLinkedToRestaurant() {
     when(productRepository.existsByIdAndMenuId(1L, 1L)).thenReturn(true);
-    when(restaurantRepository.existsByMenuId(1L)).thenReturn(false);
+    when(productItemRepository.findAllByProductId(1L)).thenReturn(List.of());
  
     boolean result = menuService.deleteProduct(1L, 1L);
  
@@ -235,23 +242,84 @@ class MenuServiceTest {
   }
  
   @Test
-  void deleteProduct_shouldReturnFalse_whenMenuLinkedToRestaurant() {
+  void deleteProduct_shouldReturnFalse_whenHasActiveOrders() throws Exception {
+    // Create a product item with an active order
+    ProductItem pi = new ProductItem(new Product(9.99, "desc", "Pizza", menu()), null);
+    // Set ID using reflection since this is a test
+    java.lang.reflect.Field idField = pi.getClass().getDeclaredField("id");
+    idField.setAccessible(true);
+    idField.set(pi, 1L);
     when(productRepository.existsByIdAndMenuId(1L, 1L)).thenReturn(true);
-    when(restaurantRepository.existsByMenuId(1L)).thenReturn(true);
- 
+    when(productItemRepository.findAllByProductId(1L)).thenReturn(List.of(pi));
+    when(orderRepository.existsByProductItemsIdAndStatusNotIn(pi.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))).thenReturn(true);
+
     boolean result = menuService.deleteProduct(1L, 1L);
- 
+
     assertFalse(result);
     verify(productRepository, never()).deleteById(any());
   }
- 
+
+  @Test
+  void deleteProduct_shouldSoftDelete_whenHasOrderHistory() {
+    Menu m = menu();
+    Product p = new Product(9.99, "desc", "Pizza", m);
+    ProductItem pi = new ProductItem(p, null);
+    when(productRepository.existsByIdAndMenuId(1L, 1L)).thenReturn(true);
+    when(productItemRepository.findAllByProductId(1L)).thenReturn(List.of(pi));
+    when(orderRepository.existsByProductItemsIdAndStatusNotIn(any(), any())).thenReturn(false);
+    when(orderRepository.existsByProductItemsId(any())).thenReturn(true);
+    when(productRepository.findById(1L)).thenReturn(Optional.of(p));
+    when(productRepository.save(any(Product.class))).thenReturn(p);
+    when(productItemRepository.save(any(ProductItem.class))).thenReturn(pi);
+
+    boolean result = menuService.deleteProduct(1L, 1L);
+
+    assertTrue(result);
+    verify(productRepository, never()).deleteById(any());
+    assertNotNull(pi.getDeletedAt());
+  }
+
+  @Test
+  void searchBy_shouldReturnMenus_withFilters() {
+    Menu m = menu();
+    when(menuRepository.findAll(any(Specification.class))).thenReturn(List.of(m));
+
+    var result = menuService.searchBy("italiano", "0", "20.0");
+
+    assertEquals(1, result.size());
+    assertEquals("Menu Italiano", result.get(0).name());
+  }
+
+  @Test
+  void searchProductBy_shouldFilterByDescription() {
+    Menu m = menu();
+    Product p = new Product(5.0, "Chocolate", "Cake", m);
+    when(productRepository.findAll(any(Specification.class))).thenReturn(List.of(p));
+
+    var result = menuService.searchProductBy(null, null, "chocolate");
+
+    assertEquals(1, result.size());
+    assertEquals("Cake", result.get(0).designation());
+  }
+
+  @Test
+  void searchBy_shouldReturnMenus_whenNameMatches() {
+    Menu m = menu();
+    when(menuRepository.findAll(any(Specification.class))).thenReturn(List.of(m));
+
+    var result = menuService.searchBy("menu", "0", "20.0");
+
+    assertEquals(1, result.size());
+    assertEquals("Menu Italiano", result.get(0).name());
+  }
+
   // ─── searchProductBy ─────────────────────────────────────────────────────────
  
   @Test
   void searchProductBy_shouldReturnAll_whenNoFilters() {
     Menu m = menu();
     List<Product> products = List.of(new Product(5.0, "desc", "item", m));
-    when(productRepository.findAll()).thenReturn(products);
+    when(productRepository.findAll(any(Specification.class))).thenReturn(products);
  
     List<ProductResponseDto> result = menuService.searchProductBy(null, null, null);
  
@@ -262,7 +330,7 @@ class MenuServiceTest {
   void searchProductBy_shouldFilterByDesignation() {
     Menu m = menu();
     Product p = new Product(5.0, "desc", "Pizza", m);
-    when(productRepository.findByDesignationContainingIgnoreCase("pizza")).thenReturn(List.of(p));
+    when(productRepository.findAll(any(Specification.class))).thenReturn(List.of(p));
  
     List<ProductResponseDto> result = menuService.searchProductBy(null, "pizza", null);
  
@@ -272,7 +340,7 @@ class MenuServiceTest {
  
   @Test
   void searchProductBy_shouldReturnEmpty_whenNoMatch() {
-    when(productRepository.findByDesignationContainingIgnoreCase("xyz")).thenReturn(List.of());
+    when(productRepository.findAll(any(Specification.class))).thenReturn(List.of());
  
     List<ProductResponseDto> result = menuService.searchProductBy(null, "xyz", null);
  

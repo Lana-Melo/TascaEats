@@ -19,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
+import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.ReviewRequestDto;
@@ -240,8 +242,12 @@ class RestaurantServiceTest {
   }
 
   @Test
-  void addReview_shouldThrow_whenRatingOutOfRange() {
+  void addReview_shouldThrow_whenRatingOutOfRange() throws Exception {
     Client c = client();
+    // Set ID using reflection since this is a test
+    java.lang.reflect.Field idField = c.getClass().getSuperclass().getDeclaredField("id");
+    idField.setAccessible(true);
+    idField.set(c, 1L);
     // Build restaurant with an order from this client
     Restaurant r = restaurant();
     Order order = new Order(c, new ArrayList<>(), address());
@@ -256,8 +262,12 @@ class RestaurantServiceTest {
   }
 
   @Test
-  void addReview_shouldReturnReview_whenValid() {
+  void addReview_shouldReturnReview_whenValid() throws Exception {
     Client c = client();
+    // Set ID using reflection since this is a test
+    java.lang.reflect.Field idField = c.getClass().getSuperclass().getDeclaredField("id");
+    idField.setAccessible(true);
+    idField.set(c, 1L);
     Restaurant r = restaurant();
     Order order = new Order(c, new ArrayList<>(), address());
     r.addOrder(order);
@@ -301,5 +311,73 @@ class RestaurantServiceTest {
     when(restaurantRepository.findById(1L)).thenReturn(Optional.of(r));
     List<ReviewResponseDto> result = restaurantService.getReviews(1L);
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getAllRestaurants_shouldReturnList() {
+    Restaurant r = restaurant();
+    when(restaurantRepository.findAll()).thenReturn(List.of(r));
+
+    List<RestaurantResponseDto> result = restaurantService.getAllRestaurants();
+
+    assertEquals(1, result.size());
+  }
+
+  @Test
+  void getAllRestaurants_shouldReturnAverageAndReviewCount() {
+    Restaurant r = restaurant();
+    Client c = client();
+    r.addReview(new Review(4, "Good", c, r));
+    r.addReview(new Review(5, "Great", c, r));
+    when(restaurantRepository.findAll()).thenReturn(List.of(r));
+
+    List<RestaurantResponseDto> result = restaurantService.getAllRestaurants();
+
+    assertEquals(1, result.size());
+    assertEquals(4.5, result.get(0).averageRating());
+    assertEquals(2, result.get(0).reviewCount());
+  }
+
+  @Test
+  void searchProductBy_shouldReturnFiltered_whenDescriptionMatches() {
+    Restaurant r = restaurant();
+    ProductItem pi = new ProductItem(new Product(12.5, "Tasty", "Burger", new Menu("M", "c", "d")), r);
+    when(productItemRepository.findAll(any(Specification.class))).thenReturn(List.of(pi));
+
+    List<ProductItemResponseDto> result = restaurantService.searchProductBy(1L, null, null, "tasty", null, null);
+
+    assertEquals(1, result.size());
+    assertEquals("Burger", result.get(0).designation());
+  }
+
+  @Test
+  void searchProductBy_shouldReturnEmpty_whenNoMatch() {
+    when(productItemRepository.findAll(any(Specification.class))).thenReturn(List.of());
+
+    List<ProductItemResponseDto> result = restaurantService.searchProductBy(1L, null, null, "xe", null, null);
+
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void searchBy_shouldReturnList_whenFiltersApply() {
+    Restaurant r = restaurant();
+    when(restaurantRepository.findAll(any(Specification.class))).thenReturn(List.of(r));
+
+    List<RestaurantResponseDto> result = restaurantService.searchBy(
+        "Cantina", "Lisboa", "Rua A", "1000-001", "Italian", "1", "1", "12:00", "20.0");
+
+    assertEquals(1, result.size());
+  }
+
+  @Test
+  void searchByWithAdminId_shouldReturnList_whenAdminIdMatches() {
+    Restaurant r = restaurant();
+    when(restaurantRepository.findAll(any(Specification.class))).thenReturn(List.of(r));
+
+    List<RestaurantResponseDto> result = restaurantService.searchByWithAdminId(
+        1L, null, null, null, null, null, null, null, null, null);
+
+    assertEquals(1, result.size());
   }
 }
