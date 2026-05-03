@@ -1,8 +1,13 @@
 package pt.ul.fc.css.tascaeats.services;
 
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
@@ -18,6 +23,7 @@ import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
@@ -122,44 +128,55 @@ public class UserService {
 
   public List<UserResponseDto> searchBy(
       String name, String userType, String orderNumber, String deliveryNumber) {
-    List<AUser> users =
-        name == null || name.isEmpty()
-            ? userRepository.findAll()
-            : userRepository.findAllByNameContainingIgnoreCase(name);
-
-    // se tem orderNumber é pra ver nos clientes
-    if (orderNumber != null && !orderNumber.isEmpty()) {
-      List<Client> clients =
-          userRepository.findClientsWithOrderNumber(Integer.parseInt(orderNumber));
-      users.retainAll(clients);
-      return users.stream().map(this::mapAUserToUserResponse).toList();
-    }
-
-    // se tem deliveryNumber é pra ver delivery persons
-    if (deliveryNumber != null && !deliveryNumber.isEmpty()) {
-      List<DeliveryPerson> delies =
-          userRepository.findDeliveryPersonsWithDeliveryNumber(
-              Integer.parseInt(deliveryNumber), OrderStatus.DELIVERED);
-      users.retainAll(delies);
-      return users.stream().map(this::mapAUserToUserResponse).toList();
-    }
-
-    // se não tem orderNumber nem deliveryNumber userType
-    switch (userType == null ? "" : userType) {
-      case "Client":
-        users.retainAll(userRepository.findAllClients());
-        break;
-      case "Delivery Person":
-        users.retainAll(userRepository.findAllDeliveryPersons());
-        break;
-      case "Admin":
-        users.retainAll(userRepository.findAllAdmins());
-        break;
-      default:
-        break;
-    }
-
+    Specification<AUser> spec = getSearchSpec(name, userType, orderNumber, deliveryNumber);
+    List<AUser> users = userRepository.findAll(spec);
     return users.stream().map(this::mapAUserToUserResponse).toList();
+  }
+
+  private Specification<AUser> getSearchSpec(
+      String name, String userType, String orderNumber, String deliveryNumber) {
+    return (root, query, cb) -> {
+      List<Predicate> predicates = new ArrayList<>();
+
+      if (name != null && !name.isEmpty()) {
+        predicates.add(cb.like(cb.upper(root.get("name")), "%" + name.toUpperCase() + "%"));
+      }
+
+      if (userType != null && !userType.isEmpty()) {
+        switch (userType) {
+          case "Client":
+            predicates.add(cb.equal(root.type(), cb.literal(Client.class)));
+            break;
+          case "Delivery Person":
+            predicates.add(cb.equal(root.type(), cb.literal(DeliveryPerson.class)));
+            break;
+          case "Admin":
+            predicates.add(cb.equal(root.type(), cb.literal(Admin.class)));
+            break;
+        }
+      }
+
+      if (orderNumber != null && !orderNumber.isEmpty()) {
+        Subquery<Long> subquery = query.subquery(Long.class);
+        Root<Order> orderRoot = subquery.from(Order.class);
+        subquery.select(cb.count(orderRoot)).where(cb.equal(orderRoot.get("client"), root));
+        predicates.add(cb.greaterThanOrEqualTo(subquery, Long.parseLong(orderNumber)));
+      }
+
+      if (deliveryNumber != null && !deliveryNumber.isEmpty()) {
+        Subquery<Long> subquery = query.subquery(Long.class);
+        Root<Order> orderRoot = subquery.from(Order.class);
+        subquery
+            .select(cb.count(orderRoot))
+            .where(
+                cb.and(
+                    cb.equal(orderRoot.get("deliveryPerson"), root),
+                    cb.equal(orderRoot.get("status"), OrderStatus.DELIVERED)));
+        predicates.add(cb.greaterThanOrEqualTo(subquery, Long.parseLong(deliveryNumber)));
+      }
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    };
   }
 
   /////////////////////////////////////////////////////////////

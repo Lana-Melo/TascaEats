@@ -16,6 +16,8 @@ public interface ProductItemRepository
 
   List<ProductItem> findAllByRestaurantId(Long restaurantId);
 
+  List<ProductItem> findAllByProductId(Long productId);
+
   List<ProductItem> findByProductDesignationContainingIgnoreCase(String designation);
 
   List<ProductItem> findByProductDescriptionContainingIgnoreCase(String description);

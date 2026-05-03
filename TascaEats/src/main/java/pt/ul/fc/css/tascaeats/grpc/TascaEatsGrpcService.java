@@ -5,11 +5,13 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
 import pt.ul.fc.css.tascaeats.dto.product.ProductItemResponseDto;
+import pt.ul.fc.css.tascaeats.dto.product.ProductRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantRequestDto;
 import pt.ul.fc.css.tascaeats.dto.restaurant.RestaurantResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
@@ -620,6 +622,183 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
         builder.addProducts(item);
       }
       responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Get Menu Products ────────────────────────────────────────────
+  @Override
+  public void getMenuProducts(
+      MenuIdRequest request, StreamObserver<MenuProductsResponse> responseObserver) {
+    try {
+      List<pt.ul.fc.css.tascaeats.dto.product.ProductResponseDto> products =
+          menuService.searchProductBy(request.getMenuId(), null, null);
+
+      MenuProductsResponse.Builder builder = MenuProductsResponse.newBuilder();
+      for (var dto : products) {
+        builder.addProducts(
+            ProductResponse.newBuilder()
+                .setId(dto.id())
+                .setDesignation(dto.designation())
+                .setDescription(dto.description())
+                .setPrice(dto.price())
+                .build());
+      }
+      responseObserver.onNext(builder.build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Add Product ──────────────────────────────────────────────────
+  @Override
+  public void addProduct(
+      AddProductRequest request, StreamObserver<ProductResponse> responseObserver) {
+    try {
+      ProductRequestDto dto = new ProductRequestDto();
+      dto.setDesignation(request.getDesignation());
+      dto.setDescription(request.getDescription());
+      dto.setPrice(request.getPrice());
+
+      var result = menuService.addProduct(request.getMenuId(), dto);
+
+      responseObserver.onNext(
+          ProductResponse.newBuilder()
+              .setId(result.id())
+              .setDesignation(result.designation())
+              .setDescription(result.description())
+              .setPrice(result.price())
+              .build());
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Update Product ───────────────────────────────────────────────
+  @Override
+  public void updateProduct(
+      UpdateProductRequest request, StreamObserver<ProductResponse> responseObserver) {
+    try {
+      ProductRequestDto dto = new ProductRequestDto();
+      dto.setDesignation(request.getDesignation());
+      dto.setDescription(request.getDescription());
+      dto.setPrice(request.getPrice());
+
+      var result = menuService.updateProduct(request.getMenuId(), request.getProductId(), dto);
+
+      responseObserver.onNext(
+          ProductResponse.newBuilder()
+              .setId(result.id())
+              .setDesignation(result.designation())
+              .setDescription(result.description())
+              .setPrice(result.price())
+              .build());
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Delete Product ───────────────────────────────────────────────
+  @Override
+  public void deleteProduct(DeleteProductRequest request, StreamObserver<Empty> responseObserver) {
+    try {
+      boolean deleted = menuService.deleteProduct(request.getMenuId(), request.getProductId());
+      if (!deleted) {
+        responseObserver.onError(
+            Status.FAILED_PRECONDITION
+                .withDescription("Cannot delete product")
+                .asRuntimeException());
+        return;
+      }
+      responseObserver.onNext(Empty.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Create Menu ──────────────────────────────────────────────────
+  @Override
+  public void createMenu(
+      CreateMenuRequest request, StreamObserver<MenuItemMessage> responseObserver) {
+    try {
+      MenuRequestDto dto = new MenuRequestDto();
+      dto.setName(request.getName());
+      dto.setCuisine(request.getCuisine());
+      dto.setDescription(request.getDescription());
+
+      MenuResponseDto result = menuService.createMenu(dto);
+
+      responseObserver.onNext(
+          MenuItemMessage.newBuilder()
+              .setId(result.id())
+              .setName(result.name())
+              .setCuisine(result.cuisine())
+              .setDescription(result.description())
+              .build());
+      responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Update Menu ──────────────────────────────────────────────────
+  @Override
+  public void updateMenu(
+      UpdateMenuRequest request, StreamObserver<MenuItemMessage> responseObserver) {
+    try {
+      MenuRequestDto dto = new MenuRequestDto();
+      dto.setName(request.getName());
+      dto.setCuisine(request.getCuisine());
+      dto.setDescription(request.getDescription());
+
+      MenuResponseDto result = menuService.updateMenu(request.getMenuId(), dto);
+
+      responseObserver.onNext(
+          MenuItemMessage.newBuilder()
+              .setId(result.id())
+              .setName(result.name())
+              .setCuisine(result.cuisine())
+              .setDescription(result.description())
+              .build());
+      responseObserver.onCompleted();
+    } catch (ResourceNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── Delete Menu ──────────────────────────────────────────────────
+  @Override
+  public void deleteMenu(DeleteMenuRequest request, StreamObserver<Empty> responseObserver) {
+    try {
+      boolean deleted = menuService.deleteMenu(request.getMenuId());
+      if (!deleted) {
+        responseObserver.onError(
+            Status.NOT_FOUND.withDescription("Menu not found").asRuntimeException());
+        return;
+      }
+      responseObserver.onNext(Empty.getDefaultInstance());
       responseObserver.onCompleted();
     } catch (Exception e) {
       responseObserver.onError(

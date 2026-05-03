@@ -16,8 +16,12 @@ import pt.ul.fc.css.tascaeats.dto.product.ProductRequestDto;
 import pt.ul.fc.css.tascaeats.dto.product.ProductResponseDto;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Product;
+import pt.ul.fc.css.tascaeats.entities.ProductItem;
+import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.MenuRepository;
+import pt.ul.fc.css.tascaeats.repository.OrderRepository;
+import pt.ul.fc.css.tascaeats.repository.ProductItemRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 
@@ -27,14 +31,20 @@ public class MenuService {
   private final MenuRepository menuRepository;
   private final RestaurantRepository restaurantRepository;
   private final ProductRepository productRepository;
+  private final ProductItemRepository productItemRepository;
+  private final OrderRepository orderRepository;
 
   public MenuService(
       MenuRepository menuRepository,
       RestaurantRepository restaurantRepository,
-      ProductRepository productRepository) {
+      ProductRepository productRepository,
+      ProductItemRepository productItemRepository,
+      OrderRepository orderRepository) {
     this.menuRepository = menuRepository;
     this.restaurantRepository = restaurantRepository;
     this.productRepository = productRepository;
+    this.productItemRepository = productItemRepository;
+    this.orderRepository = orderRepository;
   }
 
   /////////////////////////////////////////////////////////////
@@ -139,6 +149,9 @@ public class MenuService {
 
     Product saved = productRepository.save(product);
 
+    menu.addProduct(saved);
+    menuRepository.save(menu);
+
     return mapProductToProductResponse(saved);
   }
 
@@ -162,33 +175,67 @@ public class MenuService {
 
   @Transactional
   public boolean deleteProduct(Long menuId, Long productId) {
-    boolean isFromMenu = productRepository.existsByIdAndMenuId(productId, menuId);
-
-    if (isFromMenu) {
-      if (!restaurantRepository.existsByMenuId(menuId)) {
-        productRepository.deleteById(productId); // definitively delete
-      } else {
-        return false; // don't delete product associated with orders in progress
-      }
-      return true;
+    if (!productRepository.existsByIdAndMenuId(productId, menuId)) {
+      return false;
     }
-    return false;
+
+    List<OrderStatus> concluded = List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED);
+    List<ProductItem> productItems = productItemRepository.findAllByProductId(productId);
+
+    boolean blocked =
+        productItems.stream()
+            .anyMatch(
+                pi -> orderRepository.existsByProductItemsIdAndStatusNotIn(pi.getId(), concluded));
+    if (blocked) return false;
+
+    boolean hasOrderHistory =
+        productItems.stream().anyMatch(pi -> orderRepository.existsByProductItemsId(pi.getId()));
+
+    if (hasOrderHistory) {
+      Product product = productRepository.findById(productId).orElseThrow();
+      product.setDeletedAt(LocalDateTime.now());
+      productRepository.save(product);
+
+      for (ProductItem pi : productItems) {
+        if (orderRepository.existsByProductItemsId(pi.getId())) {
+          pi.setDeletedAt(LocalDateTime.now());
+          productItemRepository.save(pi);
+        } else {
+          productItemRepository.deleteById(pi.getId());
+        }
+      }
+    } else {
+      menuRepository.deleteMenuProductRelation(menuId, productId);
+      productItemRepository.deleteAll(productItems);
+      productRepository.deleteById(productId);
+    }
+
+    return true;
   }
 
   public List<ProductResponseDto> searchProductBy(
       Long menuId, String designation, String description) {
-    List<Product> products =
-        (designation == null || designation.isEmpty())
-            ? productRepository.findAll()
-            : productRepository.findByDesignationContainingIgnoreCase(designation);
 
-    if (description != null && !description.isEmpty()) {
-      products.retainAll(productRepository.findByDescriptionContainingIgnoreCase(description));
-    }
-    if (menuId != null) {
-      products.retainAll(productRepository.findAllByMenuId(menuId));
-    }
-    return products.stream().map(this::mapProductToProductResponse).toList();
+    Specification<Product> spec =
+        (root, query, cb) -> {
+          List<Predicate> predicates = new ArrayList<>();
+
+          if (menuId != null) {
+            predicates.add(cb.equal(root.get("menu").get("id"), menuId));
+          }
+          if (designation != null && !designation.isEmpty()) {
+            predicates.add(
+                cb.like(cb.upper(root.get("designation")), "%" + designation.toUpperCase() + "%"));
+          }
+          if (description != null && !description.isEmpty()) {
+            predicates.add(
+                cb.like(cb.upper(root.get("description")), "%" + description.toUpperCase() + "%"));
+          }
+
+          return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+    return productRepository.findAll(spec).stream().map(this::mapProductToProductResponse).toList();
   }
 
   /////////////////////////////////////////////////////////////

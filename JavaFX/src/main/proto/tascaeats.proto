@@ -31,6 +31,13 @@ service TascaEatsService {
   rpc ProcessPayment (PaymentRequest) returns (OrderResponse);
   rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
   rpc CancelOrder (OrderIdRequest) returns (Empty);
+  rpc GetMenuProducts (MenuIdRequest) returns (MenuProductsResponse);
+  rpc AddProduct (AddProductRequest) returns (ProductResponse);
+  rpc UpdateProduct (UpdateProductRequest) returns (ProductResponse);
+  rpc DeleteProduct (DeleteProductRequest) returns (Empty);
+  rpc CreateMenu (CreateMenuRequest) returns (MenuItemMessage);
+  rpc UpdateMenu (UpdateMenuRequest) returns (MenuItemMessage);
+  rpc DeleteMenu (DeleteMenuRequest) returns (Empty);
 
 }
 
@@ -285,4 +292,56 @@ message ProductSearchItem {
 
 message ProductsSearchResponse {
   repeated ProductSearchItem products = 1;
+}
+
+message MenuIdRequest {
+  int64 menuId = 1;
+}
+
+message MenuProductsResponse {
+  repeated ProductResponse products = 1;
+}
+
+message ProductResponse {
+  int64 id = 1;
+  string designation = 2;
+  string description = 3;
+  double price = 4;
+}
+
+message AddProductRequest {
+  int64 menuId = 1;
+  string designation = 2;
+  string description = 3;
+  double price = 4;
+}
+
+message UpdateProductRequest {
+  int64 menuId = 1;
+  int64 productId = 2;
+  string designation = 3;
+  string description = 4;
+  double price = 5;
+}
+
+message DeleteProductRequest {
+  int64 menuId = 1;
+  int64 productId = 2;
+}
+
+message CreateMenuRequest {
+  string name = 1;
+  string cuisine = 2;
+  string description = 3;
+}
+
+message UpdateMenuRequest {
+  int64 menuId = 1;
+  string name = 2;
+  string cuisine = 3;
+  string description = 4;
+}
+
+message DeleteMenuRequest {
+  int64 menuId = 1;
 }
