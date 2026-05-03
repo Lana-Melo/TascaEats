@@ -59,4 +59,14 @@ public class DataModel {
   public void setCurrentMenu(MenuModel menu) {
     this.currentMenu = menu;
   }
+
+  private OrderModel currentOrder;
+
+  public OrderModel getCurrentOrder() {
+    return currentOrder;
+  }
+
+  public void setCurrentOrder(OrderModel order) {
+    this.currentOrder = order;
+  }
 }

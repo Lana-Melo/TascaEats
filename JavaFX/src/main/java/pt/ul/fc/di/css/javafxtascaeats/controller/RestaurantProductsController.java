@@ -43,7 +43,7 @@ public class RestaurantProductsController implements ControllerWithModel {
 
   @FXML private CheckBox availabilityCheckBox;
   @FXML private Label availabilityLabel;
-  @FXML private TextField availabilityField;
+  @FXML private ComboBox<String> availabilityField;
 
   @FXML private CheckBox timesOrderedCheckBox;
   @FXML private Label timesOrderedLabel;
@@ -80,6 +80,7 @@ public class RestaurantProductsController implements ControllerWithModel {
 
     bindField(priceCheckBox, priceLabel, priceField);
     bindField(descriptionCheckBox, descriptionLabel, descriptionField);
+    availabilityField.setItems(FXCollections.observableArrayList("AVAILABLE", "SOLD_OUT"));
     bindField(availabilityCheckBox, availabilityLabel, availabilityField);
     bindField(timesOrderedCheckBox, timesOrderedLabel, timesOrderedField);
 
@@ -134,6 +135,17 @@ public class RestaurantProductsController implements ControllerWithModel {
     }
   }
 
+  private void bindField(CheckBox checkBox, Label label, ComboBox<String> field) {
+    if (label != null) {
+      label.visibleProperty().bind(checkBox.selectedProperty());
+      label.managedProperty().bind(checkBox.selectedProperty());
+    }
+    if (field != null) {
+      field.visibleProperty().bind(checkBox.selectedProperty());
+      field.managedProperty().bind(checkBox.selectedProperty());
+    }
+  }
+
   private void loadProducts(
       String designation,
       String price,
@@ -161,8 +173,7 @@ public class RestaurantProductsController implements ControllerWithModel {
     String price = priceCheckBox.isSelected() ? priceField.getText().trim() : null;
     String description =
         descriptionCheckBox.isSelected() ? descriptionField.getText().trim() : null;
-    String availability =
-        availabilityCheckBox.isSelected() ? availabilityField.getText().trim() : null;
+    String availability = availabilityCheckBox.isSelected() ? availabilityField.getValue() : null;
     String timesOrdered =
         timesOrderedCheckBox.isSelected() ? timesOrderedField.getText().trim() : null;
     loadProducts(designation, price, description, availability, timesOrdered);

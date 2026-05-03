@@ -35,6 +35,7 @@ import pt.ul.fc.css.tascaeats.grpc.ProductsSearchResponse;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantItem;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantsResponse;
 import pt.ul.fc.css.tascaeats.grpc.SearchMenusRequest;
+import pt.ul.fc.css.tascaeats.grpc.SearchOrdersRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchRestaurantsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
@@ -47,6 +48,7 @@ import pt.ul.fc.css.tascaeats.grpc.UserRequest;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.model.MenuModel;
 import pt.ul.fc.di.css.javafxtascaeats.model.OrderModel;
+import pt.ul.fc.di.css.javafxtascaeats.model.OrderProductItemModel;
 import pt.ul.fc.di.css.javafxtascaeats.model.ProductModel;
 import pt.ul.fc.di.css.javafxtascaeats.model.RestaurantModel;
 
@@ -398,21 +400,38 @@ public class ApiClient {
         .toList();
   }
 
+  private static OrderModel mapOrderResponse(OrderResponse item) {
+    return new OrderModel(
+        item.getId(),
+        item.getStatus(),
+        item.getTotalValue(),
+        item.getClientId(),
+        item.getClientName(),
+        item.getClientNif(),
+        item.getCity(),
+        item.getStreet(),
+        item.getPostalCode(),
+        item.getCreatedAt(),
+        item.getDeliveryPersonName(),
+        item.getDeliveryPersonNif(),
+        item.getProductsList().stream()
+            .map(p -> new OrderProductItemModel(p.getId(), p.getDesignation(), p.getPrice()))
+            .toList(),
+        item.getPaymentAmount(),
+        item.getPaymentAt(),
+        item.getPaymentChange());
+  }
+
   public static List<OrderModel> getAllOrders() {
     OrdersResponse response = stub.getAllOrders(Empty.getDefaultInstance());
-    return response.getOrdersList().stream()
-        .map(
-            item ->
-                new OrderModel(
-                    item.getId(),
-                    item.getStatus(),
-                    item.getTotalValue(),
-                    item.getClientId(),
-                    item.getClientName(),
-                    item.getCity(),
-                    item.getStreet(),
-                    item.getPostalCode()))
-        .toList();
+    return response.getOrdersList().stream().map(ApiClient::mapOrderResponse).toList();
+  }
+
+  public static List<OrderModel> searchOrders(String status) {
+    SearchOrdersRequest request =
+        SearchOrdersRequest.newBuilder().setStatus(status != null ? status : "").build();
+    OrdersResponse response = stub.searchOrders(request);
+    return response.getOrdersList().stream().map(ApiClient::mapOrderResponse).toList();
   }
 
   public static OrderModel processPayment(
@@ -425,16 +444,7 @@ public class ApiClient {
             .setPaymentInfo(paymentInfo != null ? paymentInfo : "")
             .build();
     try {
-      OrderResponse response = stub.processPayment(request);
-      return new OrderModel(
-          response.getId(),
-          response.getStatus(),
-          response.getTotalValue(),
-          response.getClientId(),
-          response.getClientName(),
-          response.getCity(),
-          response.getStreet(),
-          response.getPostalCode());
+      return mapOrderResponse(stub.processPayment(request));
     } catch (StatusRuntimeException e) {
       throw new IllegalArgumentException(e.getStatus().getDescription());
     }
@@ -444,16 +454,7 @@ public class ApiClient {
     UpdateOrderStatusRequest request =
         UpdateOrderStatusRequest.newBuilder().setOrderId(orderId).setStatus(status).build();
     try {
-      OrderResponse response = stub.updateOrderStatus(request);
-      return new OrderModel(
-          response.getId(),
-          response.getStatus(),
-          response.getTotalValue(),
-          response.getClientId(),
-          response.getClientName(),
-          response.getCity(),
-          response.getStreet(),
-          response.getPostalCode());
+      return mapOrderResponse(stub.updateOrderStatus(request));
     } catch (StatusRuntimeException e) {
       throw new IllegalArgumentException(e.getStatus().getDescription());
     }

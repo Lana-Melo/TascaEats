@@ -27,6 +27,7 @@ service TascaEatsService {
   rpc GetRestaurantProducts (GetRestaurantProductsRequest) returns (ProductsResponse);
   rpc UpdateProductStatus (UpdateProductStatusRequest) returns (Empty);
   rpc GetAllOrders (Empty) returns (OrdersResponse);
+  rpc SearchOrders (SearchOrdersRequest) returns (OrdersResponse);
   rpc ProcessPayment (PaymentRequest) returns (OrderResponse);
   rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
   rpc CancelOrder (OrderIdRequest) returns (Empty);
@@ -189,6 +190,12 @@ message SearchUsersResponse {
   repeated UserResponse users = 1;
 }
 
+message OrderProductItem {
+  int64 id = 1;
+  string designation = 2;
+  double price = 3;
+}
+
 message OrderResponse {
   int64 id = 1;
   string status = 2;
@@ -198,6 +205,18 @@ message OrderResponse {
   string city = 6;
   string street = 7;
   string postalCode = 8;
+  string clientNif = 9;
+  string createdAt = 10;
+  string deliveryPersonName = 11;
+  string deliveryPersonNif = 12;
+  repeated OrderProductItem products = 13;
+  double paymentAmount = 14;
+  string paymentAt = 15;
+  double paymentChange = 16;
+}
+
+message SearchOrdersRequest {
+  string status = 1;
 }
 
 message OrdersResponse {
