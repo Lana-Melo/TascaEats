@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.deliveryservice.model;
+package pt.ul.fc.css.tascaeats.delivery.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

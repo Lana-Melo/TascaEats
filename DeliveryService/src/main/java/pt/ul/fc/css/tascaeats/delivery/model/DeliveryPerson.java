@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.deliveryservice.model;
+package pt.ul.fc.css.tascaeats.delivery.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -6,7 +6,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.Where;
-import pt.ul.fc.css.tascaeats.deliveryservice.model.DeliveryPersonStatus;
+import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
 
 @Entity
 @Where(clause = "deleted_at IS NULL") // For soft deletes
