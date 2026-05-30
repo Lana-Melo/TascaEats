@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -37,6 +36,11 @@ public class Delivery {
   public Delivery(LocalDateTime pickedUpTimeStamp, Long orderId) {
     this.pickedUpTimeStamp = pickedUpTimeStamp;
     this.orderId = orderId;
+  }
+
+  // criando isso para remover erro, dps excluimos
+  public Delivery(LocalDateTime pickedUpTimeStamp) {
+    this.deliveryTimeStamp = pickedUpTimeStamp;
   }
 
   public Long getId() {
