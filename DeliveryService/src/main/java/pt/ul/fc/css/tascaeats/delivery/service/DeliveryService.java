@@ -131,23 +131,43 @@ public class DeliveryService {
     public DeliveryResponseDto assignDeliveryPerson(Long id, Long deliveryPersonId) {
         Optional<Delivery> deliveryOpt = deliveryRepository.findById(id);
         if (deliveryOpt.isEmpty()) {
-        throw new ResourceNotFoundException("Delivery not found");
+            throw new ResourceNotFoundException("Delivery not found");
         }
         Optional<DeliveryPerson> deliveryPersonOpt = deliveryPersonRepository.findById(deliveryPersonId);
-        if (deliveryPersonOpt.isEmpty() || !(deliveryPersonOpt.get() instanceof DeliveryPerson)) {
-        throw new ResourceNotFoundException("Delivery person not found");
+        if (deliveryPersonOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Delivery person not found");
         }
 
         DeliveryPerson del = (DeliveryPerson) deliveryPersonOpt.get();
         Delivery delivery = deliveryOpt.get();
         if (del.getDeliveryPersonStatus() == DeliveryPersonStatus.BUSY) {
-        throw new RequirementsNotMetException(
-            "Delivery person must be available");
+            throw new RequirementsNotMetException("Delivery person must be available");
         }
         delivery.setDeliveryPerson(del);
         del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
 
         deliveryPersonRepository.save(del);
+        Delivery saved = deliveryRepository.save(delivery);
+        return mapDeliveryToDeliveryResponse(saved);
+    }
+
+    @Transactional
+    public DeliveryResponseDto updateDeliveryStatus(Long id) {
+        Optional<Delivery> ordOpt = deliveryRepository.findById(id);
+        if (ordOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Delivery not found");
+        }
+        Delivery delivery = ordOpt.get();
+
+        if (delivery.getStatus() != DeliveryStatus.INCOMING) {
+            throw new RequirementsNotMetException("Delivery has already been delivered");
+        }
+        delivery.setDeliveryTimeStamp();
+        DeliveryPerson del = delivery.getDeliveryPerson();
+        del.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
+        deliveryPersonRepository.save(del);
+
+        delivery.setStatus(DeliveryStatus.DELIVERED);
         Delivery saved = deliveryRepository.save(delivery);
         return mapDeliveryToDeliveryResponse(saved);
     }
