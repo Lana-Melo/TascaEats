@@ -1,11 +1,26 @@
 package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import java.time.LocalDateTime;
 
-@Embeddable
+@Entity
+@Table(name = "deliveries")
 public class Delivery {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @Column(nullable = false)
+  private Long orderId;
 
   @Column(columnDefinition = "TIMESTAMP")
   private LocalDateTime pickedUpTimeStamp;
@@ -13,10 +28,23 @@ public class Delivery {
   @Column(columnDefinition = "TIMESTAMP")
   private LocalDateTime deliveryTimeStamp;
 
+  @ManyToOne
+  @JoinColumn(name = "delivery_person_id")
+  private DeliveryPerson deliveryPerson;
+
   protected Delivery() {}
 
-  public Delivery(LocalDateTime pickedUpTimeStamp) {
+  public Delivery(LocalDateTime pickedUpTimeStamp, Long orderId) {
     this.pickedUpTimeStamp = pickedUpTimeStamp;
+    this.orderId = orderId;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public Long getOrderId() {
+    return orderId;
   }
 
   public LocalDateTime getPickedUpTimeStamp() {
@@ -25,6 +53,14 @@ public class Delivery {
 
   public LocalDateTime getDeliveryTimeStamp() {
     return deliveryTimeStamp;
+  }
+
+  public DeliveryPerson getDeliveryPerson() {
+    return deliveryPerson;
+  }
+
+  public void setDeliveryPerson(DeliveryPerson deliveryPerson) {
+    this.deliveryPerson = deliveryPerson;
   }
 
   public void setDeliveryTimeStamp() {

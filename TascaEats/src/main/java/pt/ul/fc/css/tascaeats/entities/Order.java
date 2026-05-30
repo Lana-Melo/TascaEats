@@ -53,7 +53,7 @@ public class Order {
   @JoinColumn(name = "delivery_person_id")
   private DeliveryPerson deliveryPerson;
 
-  @Embedded private Delivery delivery;
+  private Long deliveryId;
 
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "payment_id")
@@ -114,12 +114,12 @@ public class Order {
     this.productItems.add(productItems);
   }
 
-  public Delivery getDelivery() {
-    return delivery;
+  public Long getDeliveryId() {
+    return deliveryId;
   }
 
-  public void setDelivery(Delivery delivery) {
-    this.delivery = delivery;
+  public void setDeliveryId(Long deliveryId) {
+    this.deliveryId = deliveryId;
   }
 
   public APayment getPayment() {
