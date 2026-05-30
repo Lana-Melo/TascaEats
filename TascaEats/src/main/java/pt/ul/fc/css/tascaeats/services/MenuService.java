@@ -17,6 +17,7 @@ import pt.ul.fc.css.tascaeats.dto.product.ProductResponseDto;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Product;
 import pt.ul.fc.css.tascaeats.entities.ProductItem;
+import pt.ul.fc.css.tascaeats.entities.Restaurant;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.repository.MenuRepository;
@@ -147,10 +148,16 @@ public class MenuService {
             productRequest.getDesignation(),
             menu);
 
-    Product saved = productRepository.save(product);
+    Product saved = productRepository.save(product); 
 
     menu.addProduct(saved);
     menuRepository.save(menu);
+
+    List<Restaurant> restaurants = restaurantRepository.findByMenuId(menuId);
+    for (Restaurant restaurant : restaurants) {
+      restaurant.addProductItem(new ProductItem(saved, restaurant));
+      restaurantRepository.save(restaurant);
+    }
 
     return mapProductToProductResponse(saved);
   }
