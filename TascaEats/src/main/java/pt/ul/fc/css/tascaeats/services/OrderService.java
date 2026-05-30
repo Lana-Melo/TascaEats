@@ -58,6 +58,14 @@ public class OrderService {
   /////////////////////////////////////////////////////////////
   @Transactional
   public OrderResponseDto createOrder(OrderRequestDto request) {
+    if (request.getCity() == null
+        || request.getStreet() == null
+        || request.getPostalCode() == null) {
+      throw new IncompleteInputException("All fields for address need to be filled");
+    }
+
+    Address address = new Address(request.getStreet(), request.getCity(), request.getPostalCode());
+
     Optional<AUser> userOpt = userRepository.findById(request.getClientId());
     if (userOpt.isEmpty() || !(userOpt.get() instanceof Client)) {
       throw new ResourceNotFoundException("User not found");
@@ -80,13 +88,6 @@ public class OrderService {
         restaurants.add(prodOpt.get().getRestaurant());
       }
     }
-
-    if (request.getCity() == null
-        || request.getStreet() == null
-        || request.getPostalCode() == null) {
-      throw new IncompleteInputException("All fields for address need to be filled");
-    }
-    Address address = new Address(request.getStreet(), request.getCity(), request.getPostalCode());
 
     Order order = new Order(client, productItems, address);
 

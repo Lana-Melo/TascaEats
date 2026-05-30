@@ -23,6 +23,8 @@ public interface RestaurantRepository
 
   List<Restaurant> findByAdminId(Long adminId);
 
+  List<Restaurant> findByMenuId(Long menuId);
+
   boolean existsByAdminId(Long id);
 
   boolean existsByMenuId(Long id);
