@@ -27,6 +27,7 @@ import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
 import pt.ul.fc.css.tascaeats.repository.UserRepository;
@@ -37,14 +38,17 @@ public class UserService {
   private final UserRepository userRepository;
   private final OrderRepository orderRepository;
   private final RestaurantRepository restaurantRepository;
+  private final Sender sender;
 
   public UserService(
       UserRepository userRepository,
       OrderRepository orderRepository,
-      RestaurantRepository restaurantRepository) {
+      RestaurantRepository restaurantRepository,
+      Sender sender) {
     this.userRepository = userRepository;
     this.orderRepository = orderRepository;
     this.restaurantRepository = restaurantRepository;
+    this.sender = sender;
   }
 
   /** Mock login, any password is accepted if user is valid. */
@@ -93,6 +97,8 @@ public class UserService {
   }
 
   public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
+    sender.sendAsJson("register-delivery-person", request);
+    /*
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
       throw new IllegalArgumentException("Username already exists.");
     }
@@ -105,6 +111,7 @@ public class UserService {
             request.getNif());
     DeliveryPerson saved = userRepository.save(deliveryPerson);
     return mapDeliveryToDeliveryPersonResponse(saved);
+    */
   }
 
   /////////////////////////////////////////////////////////////
