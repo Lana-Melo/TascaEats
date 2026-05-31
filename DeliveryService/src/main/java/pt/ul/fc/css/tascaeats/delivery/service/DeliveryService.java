@@ -59,6 +59,7 @@ public class DeliveryService {
             throw new RequirementsNotMetException("Delivery person must be available");
         }
         delivery.setDeliveryPerson(del);
+        delivery.setStatus(DeliveryStatus.INCOMING);
         del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
 
         deliveryPersonRepository.save(del);
@@ -75,7 +76,7 @@ public class DeliveryService {
         Delivery delivery = ordOpt.get();
 
         if (delivery.getStatus() != DeliveryStatus.INCOMING) {
-            throw new RequirementsNotMetException("Delivery has already been delivered");
+            throw new RequirementsNotMetException("Delivery cannot change to status 'delivered'");
         }
         delivery.setDeliveryTimeStamp();
         DeliveryPerson del = delivery.getDeliveryPerson();

@@ -43,7 +43,7 @@ public class Delivery {
   public Delivery(LocalDateTime pickedUpTimeStamp, Long orderId) {
     this.pickedUpTimeStamp = pickedUpTimeStamp;
     this.orderId = orderId;
-    this.status = DeliveryStatus.INCOMING;
+    this.status = DeliveryStatus.PENDING;
   }
 
   public Long getId() {
