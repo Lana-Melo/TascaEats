@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -43,7 +42,7 @@ public class Delivery {
   public Delivery(LocalDateTime pickedUpTimeStamp, Long orderId) {
     this.pickedUpTimeStamp = pickedUpTimeStamp;
     this.orderId = orderId;
-    this.status = DeliveryStatus.INCOMING;
+    this.status = DeliveryStatus.PENDING;
   }
 
   public Long getId() {

@@ -5,6 +5,7 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import pt.ul.fc.css.tascaeats.dto.delivery.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
@@ -20,6 +21,8 @@ import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
+import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
 import pt.ul.fc.css.tascaeats.services.OrderService;
 import pt.ul.fc.css.tascaeats.services.RestaurantService;
@@ -38,6 +41,10 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   @Autowired private pt.ul.fc.css.tascaeats.services.MenuService menuService;
 
   @Autowired private GrpcMapper grpcMapper;
+
+  @Autowired private Sender sender;
+
+  @Autowired private KafkaResponseStore kafkaResponseStore;
 
   // ─── Login ───────────────────────────────────────────────────────
   @Override
@@ -800,6 +807,82 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       }
       responseObserver.onNext(Empty.getDefaultInstance());
       responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── GetMyDeliveries ─────────────────────────────────────────────
+  @Override
+  public void getMyDeliveries(
+      DeliveryPersonIdRequest request, StreamObserver<DeliveryItem> responseObserver) {
+    try {
+      sender.sendAsJson("get-my-deliveries", request.getDeliveryPersonId());
+
+      List<DeliveryResponseDto> deliveries = kafkaResponseStore.waitForDeliveries(10000);
+
+      if (deliveries == null) {
+        responseObserver.onError(
+            Status.DEADLINE_EXCEEDED
+                .withDescription("Timeout waiting for deliveries")
+                .asRuntimeException());
+        return;
+      }
+
+      for (DeliveryResponseDto d : deliveries) {
+        responseObserver.onNext(
+            DeliveryItem.newBuilder()
+                .setId(d.id())
+                .setOrderId(d.orderId())
+                .setStatus(d.status())
+                .setPickedUpAt(
+                    d.pickedUpTimeStamp() != null ? d.pickedUpTimeStamp().toString() : "")
+                .setDeliveredAt(
+                    d.deliveryTimeStamp() != null ? d.deliveryTimeStamp().toString() : "")
+                .build());
+      }
+      responseObserver.onCompleted();
+
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  // ─── MarkDeliveryAsDelivered ─────────────────────────────────────
+  @Override
+  public void markDeliveryAsDelivered(
+      DeliveryIdRequest request, StreamObserver<DeliveryResponse> responseObserver) {
+    try {
+      sender.sendAsJson("mark-delivery-delivered", request.getDeliveryId());
+
+      DeliveryResponseDto delivery = kafkaResponseStore.waitForDelivery(10000);
+
+      if (delivery == null) {
+        responseObserver.onError(
+            Status.DEADLINE_EXCEEDED
+                .withDescription("Timeout waiting for delivery update")
+                .asRuntimeException());
+        return;
+      }
+
+      responseObserver.onNext(
+          DeliveryResponse.newBuilder()
+              .setId(delivery.id())
+              .setOrderId(delivery.orderId())
+              .setStatus(delivery.status())
+              .setPickedUpAt(
+                  delivery.pickedUpTimeStamp() != null
+                      ? delivery.pickedUpTimeStamp().toString()
+                      : "")
+              .setDeliveredAt(
+                  delivery.deliveryTimeStamp() != null
+                      ? delivery.deliveryTimeStamp().toString()
+                      : "")
+              .build());
+      responseObserver.onCompleted();
+
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());

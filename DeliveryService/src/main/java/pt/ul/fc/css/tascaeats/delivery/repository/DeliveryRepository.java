@@ -12,4 +12,6 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 
   boolean existsByDeliveryPersonIdAndStatusNotIn(
       Long deliveryPersonId, List<DeliveryStatus> statuses);
+
+  List<Delivery> findByDeliveryPersonId(Long deliveryPersonId);
 }

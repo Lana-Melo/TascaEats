@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.delivery.dto.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
@@ -22,6 +23,7 @@ import pt.ul.fc.css.tascaeats.delivery.model.DeliveryStatus;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryPersonRepository;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryRepository;
 
+@Service
 public class DeliveryService {
 
   @Autowired private DeliveryRepository deliveryRepository;
@@ -43,40 +45,14 @@ public class DeliveryService {
     return mapDeliveryToDeliveryPersonResponse(saved);
   }
 
-  public DeliveryPersonResponseDto getUserById(Long id) {
-    Optional<DeliveryPerson> deliveryPersonOpt = deliveryPersonRepository.findById(id);
-    if (deliveryPersonOpt.isEmpty()) {
-      throw new ResourceNotFoundException("Delivery person not found");
-    }
-    return mapDeliveryToDeliveryPersonResponse(deliveryPersonOpt.get());
+  public DeliveryResponseDto createDelivery(Long orderId) {
+    Delivery delivery = new Delivery(LocalDateTime.now(), orderId);
+    Delivery saved = deliveryRepository.save(delivery);
+    return mapDeliveryToDeliveryResponse(saved);
   }
 
-  @Transactional
-  public DeliveryPersonResponseDto updateDeliveryPerson(Long id, DeliveryPersonRequestDto request) {
-    Optional<DeliveryPerson> userOpt = deliveryPersonRepository.findById(id);
-    if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
-      throw new ResourceNotFoundException("User not found");
-    }
-
-    DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
-    deliveryPerson.setName(request.getName());
-    deliveryPerson.setUsername(request.getUsername());
-    deliveryPerson.setPhoneNumber(request.getPhoneNumber());
-    deliveryPerson.setNif(request.getNif());
-    deliveryPerson.setPassword(request.getPassword());
-    if (request.getStatus() != null && !request.getStatus().isEmpty()) {
-      deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus()));
-    }
-
-    DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
-    return mapDeliveryToDeliveryPersonResponse(saved);
-  }
-
-  public List<DeliveryPersonResponseDto> searchBy(
-      String name, String userType, String delStatus, String deliveryNumber) {
-    Specification<DeliveryPerson> spec = getSearchSpec(name, userType, delStatus, deliveryNumber);
-    List<DeliveryPerson> users = deliveryPersonRepository.findAll(spec);
-    return users.stream().map(this::mapDeliveryToDeliveryPersonResponse).toList();
+  public List<DeliveryResponseDto> getAllDeliveries() {
+    return deliveryRepository.findAll().stream().map(this::mapDeliveryToDeliveryResponse).toList();
   }
 
   private Specification<DeliveryPerson> getSearchSpec(
@@ -109,20 +85,6 @@ public class DeliveryService {
     };
   }
 
-  private boolean deleteDeliveryPerson(DeliveryPerson user) {
-    DeliveryPerson deliveryPerson = user;
-    if (!deliveryRepository.existsByDeliveryPersonId(deliveryPerson.getId())) {
-      deliveryPersonRepository.deleteById(deliveryPerson.getId()); // definitively delete
-    } else if (deliveryRepository.existsByDeliveryPersonIdAndStatusNotIn(
-        deliveryPerson.getId(), List.of(DeliveryStatus.DELIVERED))) {
-      return false;
-    } else {
-      deliveryPerson.setDeletedAt(LocalDateTime.now());
-      deliveryPersonRepository.save(deliveryPerson);
-    }
-    return true;
-  }
-
   @Transactional
   public DeliveryResponseDto assignDeliveryPerson(Long id, Long deliveryPersonId) {
     Optional<Delivery> deliveryOpt = deliveryRepository.findById(id);
@@ -146,6 +108,12 @@ public class DeliveryService {
     deliveryPersonRepository.save(del);
     Delivery saved = deliveryRepository.save(delivery);
     return mapDeliveryToDeliveryResponse(saved);
+  }
+
+  public List<DeliveryResponseDto> getDeliveriesByDeliveryPerson(Long deliveryPersonId) {
+    return deliveryRepository.findByDeliveryPersonId(deliveryPersonId).stream()
+        .map(this::mapDeliveryToDeliveryResponse)
+        .toList();
   }
 
   @Transactional
