@@ -25,7 +25,7 @@ services:
     container_name: monolito
     restart: unless-stopped
     expose:
-      - 8080
+      - 8084
       - 9090
     depends_on:
       - pgserver

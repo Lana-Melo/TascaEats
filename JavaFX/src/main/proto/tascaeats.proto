@@ -38,6 +38,8 @@ service TascaEatsService {
   rpc CreateMenu (CreateMenuRequest) returns (MenuItemMessage);
   rpc UpdateMenu (UpdateMenuRequest) returns (MenuItemMessage);
   rpc DeleteMenu (DeleteMenuRequest) returns (Empty);
+  rpc GetMyDeliveries (DeliveryPersonIdRequest) returns (stream DeliveryItem);
+  rpc MarkDeliveryAsDelivered (DeliveryIdRequest) returns (DeliveryResponse);
 
 }
 
@@ -344,4 +346,32 @@ message UpdateMenuRequest {
 
 message DeleteMenuRequest {
   int64 menuId = 1;
+}
+
+message DeliveryItem {
+  int64 id = 1;
+  int64 orderId = 2;
+  string status = 3;
+  string pickedUpAt = 4;
+  string deliveredAt = 5;
+}
+
+message DeliveriesResponse {
+  repeated DeliveryItem deliveries = 1;
+}
+
+message DeliveryPersonIdRequest {
+  int64 deliveryPersonId = 1;
+}
+
+message DeliveryIdRequest {
+  int64 deliveryId = 1;
+}
+
+message DeliveryResponse {
+  int64 id = 1;
+  int64 orderId = 2;
+  string status = 3;
+  string pickedUpAt = 4;
+  string deliveredAt = 5;
 }

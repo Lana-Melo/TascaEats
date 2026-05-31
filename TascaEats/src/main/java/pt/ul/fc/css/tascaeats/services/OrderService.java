@@ -1,9 +1,9 @@
 package pt.ul.fc.css.tascaeats.services;
 
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
@@ -16,7 +16,6 @@ import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Card;
 import pt.ul.fc.css.tascaeats.entities.Cash;
 import pt.ul.fc.css.tascaeats.entities.Client;
-import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.MBWay;
 import pt.ul.fc.css.tascaeats.entities.Order;
@@ -29,6 +28,7 @@ import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.exceptions.IncompleteInputException;
 import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductItemRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -41,16 +41,19 @@ public class OrderService {
   private final UserRepository userRepository;
   private final RestaurantRepository restaurantRepository;
   private final ProductItemRepository productItemRepository;
+  private final Sender sender;
 
   public OrderService(
       OrderRepository orderRepository,
       UserRepository userRepository,
       RestaurantRepository restaurantRepository,
-      ProductItemRepository productItemRepository) {
+      ProductItemRepository productItemRepository,
+      Sender sender) {
     this.orderRepository = orderRepository;
     this.userRepository = userRepository;
     this.restaurantRepository = restaurantRepository;
     this.productItemRepository = productItemRepository;
+    this.sender = sender;
   }
 
   /////////////////////////////////////////////////////////////
@@ -200,6 +203,7 @@ public class OrderService {
           throw new RequirementsNotMetException(
               "Preparing order cannot update to specified status");
         } else {
+          /*
           Optional<DeliveryPerson> delOpt =
               userRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
           DeliveryPerson del = delOpt.isEmpty() ? null : delOpt.get();
@@ -210,7 +214,14 @@ public class OrderService {
             del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
             order.setDeliveryPerson(del);
             userRepository.save(del);
-          }
+          }*/
+          sender.sendAsJson(
+              "order-ready",
+              Map.of(
+                  "orderId", order.getId(),
+                  "street", order.getAddress().getStreet(),
+                  "city", order.getAddress().getCity(),
+                  "postalCode", order.getAddress().getPostalCode()));
         }
         break;
       case READY:
@@ -222,7 +233,7 @@ public class OrderService {
         throw new IllegalArgumentException("Invalid or unchangeable order status");
     }
 
-    if (ordStat == OrderStatus.DELIVERED && order.getDelivery() == null) {
+    /* if (ordStat == OrderStatus.DELIVERED && order.getDelivery() == null) {
       throw new RequirementsNotMetException(
           "Delivered order must have a delivery associated with it");
     } else if (ordStat == OrderStatus.DELIVERED) {
@@ -230,7 +241,7 @@ public class OrderService {
       DeliveryPerson del = order.getDeliveryPerson();
       del.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
       userRepository.save(del);
-    }
+    }*/
 
     order.setOrderStatus(ordStat);
     Order saved = orderRepository.save(order);
@@ -255,8 +266,8 @@ public class OrderService {
       throw new RequirementsNotMetException(
           "Order must be ready/Delivery person must be available");
     }
-    Delivery delivery = new Delivery(LocalDateTime.now());
-    order.setDelivery(delivery);
+    // Delivery delivery = new Delivery(LocalDateTime.now());
+    // order.setDelivery(delivery);
     del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
     order.setDeliveryPerson(del);
 

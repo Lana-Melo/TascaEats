@@ -56,7 +56,7 @@ public class Order {
   private Long deliveryId;
 
   // colocando aqui para nao quebrar ainda que nao temos a comunicacao com o ms
-  private Delivery delivery;
+  // private Delivery delivery;
 
   @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
   @JoinColumn(name = "payment_id")
@@ -145,11 +145,11 @@ public class Order {
     return address;
   }
 
-  public Delivery getDelivery() {
-    return delivery;
-  }
+  // public Delivery getDelivery() {
+  //   return delivery;
+  // }
 
-  public void setDelivery(Delivery delivery) {
-    this.delivery = delivery;
-  }
+  // public void setDelivery(Delivery delivery) {
+  //   this.delivery = delivery;
+  // }
 }

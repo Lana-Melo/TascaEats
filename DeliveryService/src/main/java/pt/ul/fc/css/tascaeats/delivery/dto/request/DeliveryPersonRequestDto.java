@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.delivery.dto;
+package pt.ul.fc.css.tascaeats.delivery.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

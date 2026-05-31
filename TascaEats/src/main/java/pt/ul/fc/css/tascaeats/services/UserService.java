@@ -101,7 +101,7 @@ public class UserService {
     sender.sendAsJson("register-delivery-person", request);
     como eu posso fazer com que este servico fique a espera do ms?
 
-    */
+
 
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
       throw new IllegalArgumentException("Username already exists.");
@@ -115,6 +115,8 @@ public class UserService {
             request.getNif());
     DeliveryPerson saved = userRepository.save(deliveryPerson);
     return mapDeliveryToDeliveryPersonResponse(saved);
+    */
+    return null;
   }
 
   /////////////////////////////////////////////////////////////

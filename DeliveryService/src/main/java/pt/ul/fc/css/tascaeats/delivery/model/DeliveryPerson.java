@@ -55,20 +55,24 @@ public class DeliveryPerson {
     return id;
   }
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
   public String getUsername() {
     return username;
   }
 
-  public void setName(String name) {
-    this.name = name;
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public String getName() {
     return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getPhoneNumber() {
@@ -85,14 +89,6 @@ public class DeliveryPerson {
 
   public void setNif(String nif) {
     this.nif = nif;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
   }
 
   public DeliveryPersonStatus getDeliveryPersonStatus() {
