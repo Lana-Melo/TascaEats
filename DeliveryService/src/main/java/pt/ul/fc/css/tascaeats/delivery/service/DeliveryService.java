@@ -1,6 +1,7 @@
 package pt.ul.fc.css.tascaeats.delivery.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.kafka.common.errors.ResourceNotFoundException;
@@ -15,6 +16,7 @@ import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryStatus;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryPersonRepository;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryRepository;
+import pt.ul.fc.css.tascaeats.delivery.util.Mapper;
 
 public class DeliveryService {
     
@@ -31,15 +33,13 @@ public class DeliveryService {
     public DeliveryResponseDto createDelivery(Long orderId) {
         Delivery delivery = new Delivery(LocalDateTime.now(), orderId);
         Delivery saved = deliveryRepository.save(delivery);
-        return mapDeliveryToDeliveryResponse(saved);
+        return Mapper.mapDeliveryToDeliveryResponse(saved);
     }
 
-    public DeliveryResponseDto getDeliveryById(Long id) {
-        Optional<Delivery> deliveryOpt = deliveryRepository.findById(id);
-        if (deliveryOpt.isEmpty()) {
-            throw new ResourceNotFoundException("Delivery not found");
-        }
-        return mapDeliveryToDeliveryResponse(deliveryOpt.get());
+    public List<DeliveryResponseDto> getAllDeliveries() {
+        return deliveryRepository.findAll().stream()
+                .map(Mapper::mapDeliveryToDeliveryResponse)
+                .toList();
     }
 
     @Transactional
@@ -63,7 +63,7 @@ public class DeliveryService {
 
         deliveryPersonRepository.save(del);
         Delivery saved = deliveryRepository.save(delivery);
-        return mapDeliveryToDeliveryResponse(saved);
+        return Mapper.mapDeliveryToDeliveryResponse(saved);
     }
 
     @Transactional
@@ -84,23 +84,6 @@ public class DeliveryService {
 
         delivery.setStatus(DeliveryStatus.DELIVERED);
         Delivery saved = deliveryRepository.save(delivery);
-        return mapDeliveryToDeliveryResponse(saved);
-    }
-
-    private DeliveryResponseDto mapDeliveryToDeliveryResponse(Delivery delivery) {
-        Long delId = delivery.getDeliveryPerson() == null ? null : delivery.getDeliveryPerson().getId();
-        String delName = delivery.getDeliveryPerson() == null ? null : delivery.getDeliveryPerson().getName();
-        String delNif = delivery.getDeliveryPerson() == null ? null : delivery.getDeliveryPerson().getNif();
-
-        return new DeliveryResponseDto(
-            delivery.getId(),
-            delivery.getStatus(),
-            delivery.getOrderId(),
-            delivery.getPickedUpTimeStamp(),
-            delivery.getDeliveryTimeStamp(),
-            delId,
-            delName,
-            delNif
-        );
+        return Mapper.mapDeliveryToDeliveryResponse(saved);
     }
 }

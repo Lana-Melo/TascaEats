@@ -9,7 +9,7 @@ import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
 @Component
 public class Mapper {
 
-    public static DeliveryPersonResponseDto mapDeliveryToDeliveryPersonResponse(
+    public static DeliveryPersonResponseDto mapDeliveryPersonToDeliveryPersonResponse(
         DeliveryPerson deliveryPerson) {
         return new DeliveryPersonResponseDto(
             deliveryPerson.getId(),

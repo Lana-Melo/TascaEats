@@ -21,6 +21,7 @@ import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryStatus;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryPersonRepository;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryRepository;
+import pt.ul.fc.css.tascaeats.delivery.util.Mapper;
 
 public class DeliveryPersonService {
     
@@ -46,7 +47,7 @@ public class DeliveryPersonService {
                 request.getPhoneNumber(),
                 request.getNif());
         DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
-        return mapDeliveryToDeliveryPersonResponse(saved);
+        return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
     }
 
     public DeliveryPersonResponseDto getUserById(Long id) {
@@ -54,7 +55,7 @@ public class DeliveryPersonService {
         if (deliveryPersonOpt.isEmpty()) {
         throw new ResourceNotFoundException("Delivery person not found");
         }
-        return mapDeliveryToDeliveryPersonResponse(deliveryPersonOpt.get());
+        return Mapper.mapDeliveryPersonToDeliveryPersonResponse(deliveryPersonOpt.get());
     }
 
     @Transactional
@@ -75,18 +76,18 @@ public class DeliveryPersonService {
         }
 
         DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
-        return mapDeliveryToDeliveryPersonResponse(saved);
+        return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
     }
 
     public List<DeliveryPersonResponseDto> searchBy(
-      String name, String userType, String delStatus, String deliveryNumber) {
-        Specification<DeliveryPerson> spec = getSearchSpec(name, userType, delStatus, deliveryNumber);
+      String name, String delStatus, String deliveryNumber) {
+        Specification<DeliveryPerson> spec = getSearchSpec(name, delStatus, deliveryNumber);
         List<DeliveryPerson> users = deliveryPersonRepository.findAll(spec);
-        return users.stream().map(this::mapDeliveryToDeliveryPersonResponse).toList();
+        return users.stream().map(Mapper::mapDeliveryPersonToDeliveryPersonResponse).toList();
     }
 
     private Specification<DeliveryPerson> getSearchSpec(
-        String name, String userType, String delStatus, String deliveryNumber) {
+        String name, String delStatus, String deliveryNumber) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -115,8 +116,12 @@ public class DeliveryPersonService {
         };
     }
 
-    private boolean deleteDeliveryPerson(DeliveryPerson user) {
-        DeliveryPerson deliveryPerson = user;
+    public boolean deleteDeliveryPerson(Long id) {
+        Optional<DeliveryPerson> userOpt = deliveryPersonRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Delivery person not found");
+        }
+        DeliveryPerson deliveryPerson = userOpt.get();
         if (!deliveryRepository.existsByDeliveryPersonId(deliveryPerson.getId())) {
             deliveryPersonRepository.deleteById(deliveryPerson.getId()); // definitively delete
         } else if (deliveryRepository.existsByDeliveryPersonIdAndStatusNotIn(
@@ -127,16 +132,5 @@ public class DeliveryPersonService {
             deliveryPersonRepository.save(deliveryPerson);
         }
         return true;
-    }
-
-    private DeliveryPersonResponseDto mapDeliveryToDeliveryPersonResponse(
-      DeliveryPerson deliveryPerson) {
-        return new DeliveryPersonResponseDto(
-            deliveryPerson.getId(),
-            deliveryPerson.getUsername(),
-            deliveryPerson.getName(),
-            deliveryPerson.getPhoneNumber(),
-            deliveryPerson.getNif(),
-            deliveryPerson.getDeliveryPersonStatus().toString());
     }
 }
