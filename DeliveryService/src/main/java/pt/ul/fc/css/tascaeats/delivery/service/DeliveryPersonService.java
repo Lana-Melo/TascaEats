@@ -32,7 +32,6 @@ public class DeliveryPersonService {
             request.getNif());
     DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
 
-    // trocar este return para emitir um evento com as infos necessarias para o monolito
     DeliveryPersonResponseDto response = Mapper.mapDeliveryToDeliveryPersonResponse(saved);
     sender.sendAsJson("delivery-person-created", response);
   }
