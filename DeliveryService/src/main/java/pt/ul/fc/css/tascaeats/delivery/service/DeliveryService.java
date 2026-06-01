@@ -115,7 +115,7 @@ public class DeliveryService {
   }
 
   public List<DeliveryResponseDto> getDeliveriesByDeliveryPerson(Long deliveryPersonId) {
-    return deliveryRepository.findByDeliveryPersonId(deliveryPersonId).stream()
+    return deliveryRepository.findByDeliveryPerson_Id(deliveryPersonId).stream()
         .map(this::mapDeliveryToDeliveryResponse)
         .toList();
   }

@@ -12,7 +12,7 @@ public class Sender {
 
   @Autowired private KafkaTemplate<String, String> kafkaTemplate;
 
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
   public void sendAsJson(String topic, Object dto) {
     try {
