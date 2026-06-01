@@ -105,6 +105,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       DeliveryPersonRequestDto requestDto =
           grpcMapper.mapDeliveryPersonRegisterReqToReqDto(request);
 
+      // enviar resposta de reconhecimento imediato para evitar timeout no cliente
       responseObserver.onNext(
           RegisterDeliveryPersonResponse.newBuilder()
               .setAcknowledged(Acknowledged.getDefaultInstance())
@@ -112,6 +113,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
 
       DeliveryPersonResponseDto user = userService.registerNewDeliveryPerson(requestDto);
 
+      // enviar resposta final com os dados do usuário registrado
       responseObserver.onNext(
           RegisterDeliveryPersonResponse.newBuilder()
               .setPerson(grpcMapper.mapDeliveryPersonResponseDtoToResponse(user))

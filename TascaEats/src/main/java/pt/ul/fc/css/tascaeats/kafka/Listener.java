@@ -18,8 +18,8 @@ public class Listener {
   @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
   @KafkaListener(topics = Topics.DELIVERY_PERSON_REGISTER_RESPONSE)
   public void listenDeliveryPersonCreated(String message) throws Exception {
-
     System.out.println("Received delivery person registration response");
+    // desbloqueia o servico que está à espera da resposta do registo de delivery person
     responseStore.putDeliveryPerson(message);
   }
 

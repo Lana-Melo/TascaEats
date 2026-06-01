@@ -33,11 +33,14 @@ public class DeliveryPersonService {
         // devolve null ou um resultado vazio — o listener não envia resposta
         return null;
       }
+      System.out.println("Saving event with correlationId: " + request.getCorrelationId());
       processedEventRepository.save(new ProcessedEvent(request.getCorrelationId()));
     }
+
     if (deliveryPersonRepository.findByUsername(request.getUsername()).isPresent()) {
       throw new UserAlreadyExistsException("Username already exists.");
     }
+
     DeliveryPerson deliveryPerson =
         new DeliveryPerson(
             request.getUsername(),

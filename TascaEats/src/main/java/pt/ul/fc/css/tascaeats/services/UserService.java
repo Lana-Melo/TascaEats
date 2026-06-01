@@ -107,9 +107,11 @@ public class UserService {
 
   public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request)
       throws Exception {
+    // primeiramente, verifico se o username já existe na bd do monolito
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
       throw new UserAlreadyExistsException("Username already exists.");
     }
+
     // traduz o DTO do gRPC para o DTO do Kafka
     DeliveryPersonRegistertDto kafkaDto = new DeliveryPersonRegistertDto();
     kafkaDto.setCorrelationId(UUID.randomUUID().toString()); // para garantir idempotencia
@@ -126,7 +128,7 @@ public class UserService {
     sender.sendAsJson(Topics.DELIVERY_PERSON_REGISTER, kafkaDto);
 
     // aguarda resposta do MS
-    KafkaResponse<DeliveryPersonRegistertDto> response =
+    KafkaResponse<pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto> response =
         kafkaResponseStore.waitForDeliveryPerson(10000);
 
     if (response == null) {
@@ -146,11 +148,11 @@ public class UserService {
     // se chegou aqui, é sucesso, entao guardo tbm na minha bd
     DeliveryPerson deliveryPerson =
         new DeliveryPerson(
-            response.getData().getUsername(),
-            response.getData().getPassword(),
-            response.getData().getName(),
-            response.getData().getPhoneNumber(),
-            response.getData().getNif());
+            response.getData().username(),
+            request.getPassword(),
+            response.getData().name(),
+            response.getData().phoneNumber(),
+            response.getData().nif());
     DeliveryPerson saved = userRepository.save(deliveryPerson);
 
     return mapDeliveryToDeliveryPersonResponse(saved);

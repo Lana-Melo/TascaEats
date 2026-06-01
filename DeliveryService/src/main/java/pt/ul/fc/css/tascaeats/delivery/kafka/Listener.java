@@ -33,6 +33,7 @@ public class Listener {
   public void listenRegisterDeliveryPerson(String message) throws Exception {
 
     DeliveryPersonRegistertDto dto = Sender.fromJson(message, new TypeReference<>() {});
+
     System.out.println(
         "Received delivery person event with correlationId: " + dto.getCorrelationId());
 
