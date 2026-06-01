@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import pt.ul.fc.css.tascaeats.delivery.dto.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.RequirementsNotMetException;
+import pt.ul.fc.css.tascaeats.delivery.kafka.Sender;
 import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
@@ -29,6 +31,8 @@ public class DeliveryService {
   @Autowired private DeliveryRepository deliveryRepository;
 
   @Autowired private DeliveryPersonRepository deliveryPersonRepository;
+
+  @Autowired private Sender sender;
 
   public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
     if (deliveryPersonRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -134,6 +138,8 @@ public class DeliveryService {
 
     delivery.setStatus(DeliveryStatus.DELIVERED);
     Delivery saved = deliveryRepository.save(delivery);
+    sender.sendAsJson(
+        "delivery-delivered", Map.of("orderId", saved.getOrderId())); // vai monolito tua vez
     return mapDeliveryToDeliveryResponse(saved);
   }
 

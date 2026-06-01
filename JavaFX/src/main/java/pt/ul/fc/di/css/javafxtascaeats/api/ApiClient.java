@@ -4,6 +4,8 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import pt.ul.fc.css.tascaeats.grpc.AddProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsRequest;
@@ -15,8 +17,12 @@ import pt.ul.fc.css.tascaeats.grpc.CreateRestaurantRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteProductRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeliveryIdRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeliveryItem;
+import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonIdRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeliveryResponse;
 import pt.ul.fc.css.tascaeats.grpc.Empty;
 import pt.ul.fc.css.tascaeats.grpc.GetRestaurantProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.LoginRequest;
@@ -580,5 +586,19 @@ public class ApiClient {
   public static void deleteMenu(long menuId) {
     DeleteMenuRequest request = DeleteMenuRequest.newBuilder().setMenuId(menuId).build();
     stub.deleteMenu(request);
+  }
+
+  public static List<DeliveryItem> getMyDeliveries(long deliveryPersonId) {
+    DeliveryPersonIdRequest request =
+        DeliveryPersonIdRequest.newBuilder().setDeliveryPersonId(deliveryPersonId).build();
+    Iterator<DeliveryItem> iterator = stub.getMyDeliveries(request);
+    List<DeliveryItem> deliveries = new ArrayList<>();
+    iterator.forEachRemaining(deliveries::add);
+    return deliveries;
+  }
+
+  public static DeliveryResponse markDeliveryAsDelivered(long deliveryId) {
+    DeliveryIdRequest request = DeliveryIdRequest.newBuilder().setDeliveryId(deliveryId).build();
+    return stub.markDeliveryAsDelivered(request);
   }
 }

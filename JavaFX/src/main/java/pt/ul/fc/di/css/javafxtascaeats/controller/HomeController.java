@@ -49,7 +49,8 @@ public class HomeController implements ControllerWithModel {
 
   @FXML
   void handleSeeOrders(ActionEvent event) {
-    System.out.println("See my orders clicado");
+    UtilController.switchScene(
+        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/deliveries.fxml", "Deliveries", model);
   }
 
   @FXML

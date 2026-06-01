@@ -276,6 +276,16 @@ public class OrderService {
     return mapOrderToOrderResponse(saved);
   }
 
+  @Transactional
+  public void markOrderAsDelivered(Long orderId) {
+    Order order =
+        orderRepository
+            .findById(orderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+    order.setOrderStatus(OrderStatus.DELIVERED);
+    orderRepository.save(order);
+  }
+
   /////////////////////////////////////////////////////////////
   ///  DELETE ORDER METHODS
   /////////////////////////////////////////////////////////////

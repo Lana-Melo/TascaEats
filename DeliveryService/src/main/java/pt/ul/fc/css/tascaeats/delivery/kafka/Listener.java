@@ -42,7 +42,7 @@ public class Listener {
   public void listenMarkDelivered(String message) {
     Long deliveryId = Sender.fromJson(message, new TypeReference<Long>() {});
     System.out.println("Received mark-delivery-delivered for deliveryId: " + deliveryId);
-    DeliveryResponseDto response = deliveryService.updateDeliveryStatus(deliveryId);
-    sender.sendAsJson("delivery-marked-delivered", response);
+    deliveryService.updateDeliveryStatus(deliveryId);
+    // o updateDeliveryStatus do servico faz o delivery delivered
   }
 }

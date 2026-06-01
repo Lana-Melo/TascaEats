@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="16" style="-fx-padding: 24;" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="pt.ul.fc.di.css.javafxtascaeats.controller.DeliveriesController">
+
+  <Label text="My Deliveries" style="-fx-font-size: 20; -fx-font-weight: bold;"/>
+
+  <ListView fx:id="deliveriesListView" prefHeight="300"/>
+
+  <Label fx:id="errorLabel" style="-fx-text-fill: red;" visible="false" managed="false"/>
+
+  <HBox spacing="12">
+    <Button text="Mark as Delivered" onAction="#handleMarkDelivered"/>
+    <Button text="Back to Home" onAction="#handleGoHome"/>
+  </HBox>
+
+</VBox>
