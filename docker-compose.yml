@@ -20,8 +20,8 @@ services:
   # ---- monolito --------------------------------------------------------------------
   monolito:
     build:
-      context: ./TascaEats
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: TascaEats/Dockerfile
     container_name: monolito
     restart: unless-stopped
     expose:
@@ -41,8 +41,8 @@ services:
   # ----- delivery micro ----------------------------------------------------------------
   delivery-service:
     build:
-      context: ./DeliveryService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: DeliveryService/Dockerfile
     container_name: delivery-service
     restart: unless-stopped
     expose:

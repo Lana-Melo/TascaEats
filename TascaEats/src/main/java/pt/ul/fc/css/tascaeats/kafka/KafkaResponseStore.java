@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.dto.delivery.DeliveryResponseDto;
-import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 
 @Component
 public class KafkaResponseStore {
@@ -19,7 +20,7 @@ public class KafkaResponseStore {
   private final SynchronousQueue<List<DeliveryResponseDto>> deliveriesQueue =
       new SynchronousQueue<>();
   private final SynchronousQueue<DeliveryResponseDto> deliveryQueue = new SynchronousQueue<>();
-  private final SynchronousQueue<DeliveryPersonResponseDto> deliveryPersonQueue =
+  private final SynchronousQueue<KafkaResponse<DeliveryPersonRegistertDto>> deliveryPersonQueue =
       new SynchronousQueue<>();
 
   public void putDeliveries(String json) throws Exception {
@@ -41,11 +42,13 @@ public class KafkaResponseStore {
   }
 
   public void putDeliveryPerson(String json) throws Exception {
-    DeliveryPersonResponseDto dto = mapper.readValue(json, DeliveryPersonResponseDto.class);
+    KafkaResponse<DeliveryPersonRegistertDto> dto =
+        mapper.readValue(json, new TypeReference<KafkaResponse<DeliveryPersonRegistertDto>>() {});
     deliveryPersonQueue.put(dto);
   }
 
-  public DeliveryPersonResponseDto waitForDeliveryPerson(long timeoutMs) throws Exception {
+  public KafkaResponse<DeliveryPersonRegistertDto> waitForDeliveryPerson(long timeoutMs)
+      throws Exception {
     return deliveryPersonQueue.poll(timeoutMs, TimeUnit.MILLISECONDS);
   }
 }

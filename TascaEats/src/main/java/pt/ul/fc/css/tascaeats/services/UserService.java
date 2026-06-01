@@ -7,9 +7,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
+import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
@@ -27,6 +31,7 @@ import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
@@ -102,12 +107,53 @@ public class UserService {
 
   public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request)
       throws Exception {
-    sender.sendAsJson("register-delivery-person", request);
-    DeliveryPersonResponseDto result = kafkaResponseStore.waitForDeliveryPerson(10000);
-    if (result == null) {
+    if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+      throw new UserAlreadyExistsException("Username already exists.");
+    }
+    // traduz o DTO do gRPC para o DTO do Kafka
+    DeliveryPersonRegistertDto kafkaDto = new DeliveryPersonRegistertDto();
+    kafkaDto.setCorrelationId(UUID.randomUUID().toString()); // para garantir idempotencia
+    kafkaDto.setUsername(request.getUsername());
+    kafkaDto.setPassword(request.getPassword());
+    kafkaDto.setName(request.getName());
+    kafkaDto.setPhoneNumber(request.getPhoneNumber());
+    kafkaDto.setNif(request.getNif());
+
+    // emite evento para MS apanhar
+    System.out.println(
+        "Sending delivery person registration event with correlationId: "
+            + kafkaDto.getCorrelationId());
+    sender.sendAsJson(Topics.DELIVERY_PERSON_REGISTER, kafkaDto);
+
+    // aguarda resposta do MS
+    KafkaResponse<DeliveryPersonRegistertDto> response =
+        kafkaResponseStore.waitForDeliveryPerson(10000);
+
+    if (response == null) {
       throw new IllegalStateException("Timeout waiting for delivery person registration");
     }
-    return result;
+
+    // excecoes de negocio
+    if (!response.isSuccess()) {
+      switch (response.getErrorCode()) {
+        case "USER_ALREADY_EXISTS" ->
+            throw new UserAlreadyExistsException(response.getErrorMessage());
+        case "INTERNAL_ERROR" -> throw new IllegalStateException(response.getErrorMessage());
+        default -> throw new Exception(response.getErrorMessage());
+      }
+    }
+
+    // se chegou aqui, é sucesso, entao guardo tbm na minha bd
+    DeliveryPerson deliveryPerson =
+        new DeliveryPerson(
+            response.getData().getUsername(),
+            response.getData().getPassword(),
+            response.getData().getName(),
+            response.getData().getPhoneNumber(),
+            response.getData().getNif());
+    DeliveryPerson saved = userRepository.save(deliveryPerson);
+
+    return mapDeliveryToDeliveryPersonResponse(saved);
   }
 
   /////////////////////////////////////////////////////////////

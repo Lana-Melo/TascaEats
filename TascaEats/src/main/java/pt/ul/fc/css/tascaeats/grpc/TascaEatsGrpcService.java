@@ -21,6 +21,7 @@ import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
@@ -117,6 +118,10 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
               .build());
       responseObserver.onCompleted();
 
+    } catch (UserAlreadyExistsException e) {
+      // erro de negócio — já existe
+      responseObserver.onError(
+          Status.ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
     } catch (IllegalStateException e) {
       responseObserver.onError(
           Status.DEADLINE_EXCEEDED.withDescription(e.getMessage()).asRuntimeException());
