@@ -351,7 +351,7 @@ class OrderServiceTest {
     DeliveryPerson del = new DeliveryPerson("dp", "pass", "DP", "912000000", "111111111");
     del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
     order.setDeliveryPerson(del);
-    order.setDelivery(new Delivery(LocalDateTime.now()));
+    //order.setDelivery(new Delivery(LocalDateTime.now()));
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
     when(orderRepository.save(any(Order.class))).thenReturn(order);
 
