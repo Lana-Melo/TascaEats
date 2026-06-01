@@ -9,6 +9,12 @@ public class Listener {
 
   @Autowired private KafkaResponseStore responseStore;
 
+  @KafkaListener(topics = "delivery-person-created", groupId = "monolito-group")
+  public void listenDeliveryPersonCreated(String message) throws Exception {
+    System.out.println("Received delivery-person-created");
+    responseStore.putDeliveryPerson(message);
+  }
+
   @KafkaListener(topics = "my-deliveries-response", groupId = "monolito-group")
   public void listenMyDeliveries(String message) throws Exception {
     System.out.println("Received my-deliveries-response");

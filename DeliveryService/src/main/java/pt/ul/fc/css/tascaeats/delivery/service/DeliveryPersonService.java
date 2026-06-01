@@ -1,23 +1,10 @@
 package pt.ul.fc.css.tascaeats.delivery.service;
 
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.delivery.dto.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.kafka.Sender;
-import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
-import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
-import pt.ul.fc.css.tascaeats.delivery.model.DeliveryStatus;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryPersonRepository;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryRepository;
 import pt.ul.fc.css.tascaeats.delivery.util.Mapper;
@@ -51,11 +38,10 @@ public class DeliveryPersonService {
             request.getNif());
     DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
 
-    // trocar este return para emitir um evento com as infos necessarias para o monolito
     DeliveryPersonResponseDto response = Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
     sender.sendAsJson("delivery-person-created", response);
   }
-
+  /*
   public DeliveryPersonResponseDto getUserById(Long id) {
     Optional<DeliveryPerson> deliveryPersonOpt = deliveryPersonRepository.findById(id);
     if (deliveryPersonOpt.isEmpty()) {
@@ -133,5 +119,5 @@ public class DeliveryPersonService {
       deliveryPersonRepository.save(deliveryPerson);
     }
     return true;
-  }
+  }*/
 }

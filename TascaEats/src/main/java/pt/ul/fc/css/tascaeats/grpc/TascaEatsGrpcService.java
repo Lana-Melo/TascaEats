@@ -99,24 +99,27 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   // ─── Register Delivery Person ─────────────────────────────────────────────
   @Override
   public void registerDeliveryPerson(
-      UserRequest request, StreamObserver<DeliveryPersonResponse> responseObserver) {
+      UserRequest request, StreamObserver<RegisterDeliveryPersonResponse> responseObserver) {
     try {
       DeliveryPersonRequestDto requestDto =
           grpcMapper.mapDeliveryPersonRegisterReqToReqDto(request);
 
+      responseObserver.onNext(
+          RegisterDeliveryPersonResponse.newBuilder()
+              .setAcknowledged(Acknowledged.getDefaultInstance())
+              .build());
+
       DeliveryPersonResponseDto user = userService.registerNewDeliveryPerson(requestDto);
 
-      if (user == null) {
-        throw new IllegalArgumentException();
-      }
-
-      DeliveryPersonResponse response = grpcMapper.mapDeliveryPersonResponseDtoToResponse(user);
-
-      responseObserver.onNext(response);
+      responseObserver.onNext(
+          RegisterDeliveryPersonResponse.newBuilder()
+              .setPerson(grpcMapper.mapDeliveryPersonResponseDtoToResponse(user))
+              .build());
       responseObserver.onCompleted();
 
-    } catch (IllegalArgumentException e) {
-      responseObserver.onError(Status.Code.ALREADY_EXISTS.toStatus().asRuntimeException());
+    } catch (IllegalStateException e) {
+      responseObserver.onError(
+          Status.DEADLINE_EXCEEDED.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());

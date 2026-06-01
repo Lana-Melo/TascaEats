@@ -27,6 +27,7 @@ import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -39,16 +40,19 @@ public class UserService {
   private final OrderRepository orderRepository;
   private final RestaurantRepository restaurantRepository;
   private final Sender sender;
+  private final KafkaResponseStore kafkaResponseStore;
 
   public UserService(
       UserRepository userRepository,
       OrderRepository orderRepository,
       RestaurantRepository restaurantRepository,
-      Sender sender) {
+      Sender sender,
+      KafkaResponseStore kafkaResponseStore) {
     this.userRepository = userRepository;
     this.orderRepository = orderRepository;
     this.restaurantRepository = restaurantRepository;
     this.sender = sender;
+    this.kafkaResponseStore = kafkaResponseStore;
   }
 
   /** Mock login, any password is accepted if user is valid. */
@@ -96,27 +100,14 @@ public class UserService {
     return mapAUserToUserResponse(saved);
   }
 
-  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
-    /*
+  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request)
+      throws Exception {
     sender.sendAsJson("register-delivery-person", request);
-    como eu posso fazer com que este servico fique a espera do ms?
-
-
-
-    if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      throw new IllegalArgumentException("Username already exists.");
+    DeliveryPersonResponseDto result = kafkaResponseStore.waitForDeliveryPerson(10000);
+    if (result == null) {
+      throw new IllegalStateException("Timeout waiting for delivery person registration");
     }
-    DeliveryPerson deliveryPerson =
-        new DeliveryPerson(
-            request.getUsername(),
-            request.getPassword(),
-            request.getName(),
-            request.getPhoneNumber(),
-            request.getNif());
-    DeliveryPerson saved = userRepository.save(deliveryPerson);
-    return mapDeliveryToDeliveryPersonResponse(saved);
-    */
-    return null;
+    return result;
   }
 
   /////////////////////////////////////////////////////////////

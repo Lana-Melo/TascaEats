@@ -1,15 +1,20 @@
 package pt.ul.fc.di.css.javafxtascaeats.controller;
 
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
-import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
+import pt.ul.fc.css.tascaeats.grpc.RegisterDeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentAdmin;
@@ -31,6 +36,8 @@ public class RegisterController implements ControllerWithModel {
   @FXML private TextField phoneNumberField;
   @FXML private TextField nifField;
   @FXML private Label errorLabel;
+  @FXML private ProgressIndicator loadingIndicator;
+  @FXML private Button registerButton;
 
   @FXML
   void handleRegister(ActionEvent event) {
@@ -95,19 +102,74 @@ public class RegisterController implements ControllerWithModel {
   private void handleDeliveryPersonRegister(
       String username, String password, String name, String phoneNumber, String nif) {
 
-    DeliveryPersonResponse response =
-        ApiClient.registerDeliveryPerson(username, password, name, phoneNumber, nif);
+    ApiClient.registerDeliveryPerson(
+        username,
+        password,
+        name,
+        phoneNumber,
+        nif,
+        new StreamObserver<RegisterDeliveryPersonResponse>() {
+          @Override
+          public void onNext(RegisterDeliveryPersonResponse response) {
+            if (response.getPayloadCase()
+                == RegisterDeliveryPersonResponse.PayloadCase.ACKNOWLEDGED) {
+              Platform.runLater(() -> showLoading());
+            } else if (response.getPayloadCase()
+                == RegisterDeliveryPersonResponse.PayloadCase.PERSON) {
+              Platform.runLater(
+                  () -> {
+                    CurrentUser currentUser = new CurrentDeliveryPerson();
+                    currentUser.setId(response.getPerson().getId());
+                    currentUser.setName(response.getPerson().getName());
+                    currentUser.setPhoneNumber(response.getPerson().getPhoneNumber());
+                    currentUser.setNif(response.getPerson().getNif());
+                    currentUser.setUsername(response.getPerson().getUsername());
+                    model.setCurrentUser(currentUser);
+                    UtilController.switchScene(
+                        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml", "Home", model);
+                  });
+            }
+          }
 
-    CurrentUser currentUser = new CurrentDeliveryPerson();
-    currentUser.setId(response.getId());
-    currentUser.setName(response.getName());
-    currentUser.setPhoneNumber(response.getPhoneNumber());
-    currentUser.setNif(response.getNif());
-    currentUser.setUsername(response.getUsername());
-    model.setCurrentUser(currentUser);
+          @Override
+          public void onError(Throwable t) {
+            Platform.runLater(
+                () -> {
+                  hideLoading();
+                  if (t instanceof StatusRuntimeException e
+                      && e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
+                    showError("This username is already taken.");
+                  } else if (t instanceof StatusRuntimeException) {
+                    showError("An error occurred while registering. Please try again.");
+                  } else {
+                    showError("An error occurred, please try again later.");
+                  }
+                });
+          }
 
-    UtilController.switchScene(
-        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/home.fxml", "Home", model);
+          @Override
+          public void onCompleted() {}
+        });
+  }
+
+  private void showLoading() {
+    loadingIndicator.setVisible(true);
+    loadingIndicator.setManaged(true);
+    registerButton.setDisable(true);
+    errorLabel.setVisible(false);
+    errorLabel.setManaged(false);
+  }
+
+  private void hideLoading() {
+    loadingIndicator.setVisible(false);
+    loadingIndicator.setManaged(false);
+    registerButton.setDisable(false);
+  }
+
+  private void showError(String message) {
+    errorLabel.setText(message);
+    errorLabel.setVisible(true);
+    errorLabel.setManaged(true);
   }
 
   @FXML

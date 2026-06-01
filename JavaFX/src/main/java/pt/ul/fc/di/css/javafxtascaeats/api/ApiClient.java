@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
 import java.util.List;
 import pt.ul.fc.css.tascaeats.grpc.AddProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.AdminRestaurantsRequest;
@@ -15,7 +16,6 @@ import pt.ul.fc.css.tascaeats.grpc.CreateRestaurantRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteProductRequest;
-import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
 import pt.ul.fc.css.tascaeats.grpc.Empty;
 import pt.ul.fc.css.tascaeats.grpc.GetRestaurantProductsRequest;
@@ -32,6 +32,7 @@ import pt.ul.fc.css.tascaeats.grpc.PaymentRequest;
 import pt.ul.fc.css.tascaeats.grpc.ProductResponse;
 import pt.ul.fc.css.tascaeats.grpc.ProductsResponse;
 import pt.ul.fc.css.tascaeats.grpc.ProductsSearchResponse;
+import pt.ul.fc.css.tascaeats.grpc.RegisterDeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantItem;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantsResponse;
 import pt.ul.fc.css.tascaeats.grpc.SearchMenusRequest;
@@ -62,6 +63,9 @@ public class ApiClient {
 
   private static final TascaEatsServiceGrpc.TascaEatsServiceBlockingStub stub =
       TascaEatsServiceGrpc.newBlockingStub(channel);
+
+  private static final TascaEatsServiceGrpc.TascaEatsServiceStub asyncStub =
+      TascaEatsServiceGrpc.newStub(channel);
 
   public static UserResponse login(String username, String password) {
     LoginRequest request =
@@ -96,8 +100,13 @@ public class ApiClient {
     }
   }
 
-  public static DeliveryPersonResponse registerDeliveryPerson(
-      String username, String password, String name, String phoneNumber, String nif) {
+  public static void registerDeliveryPerson(
+      String username,
+      String password,
+      String name,
+      String phoneNumber,
+      String nif,
+      StreamObserver<RegisterDeliveryPersonResponse> observer) {
     UserRequest request =
         UserRequest.newBuilder()
             .setUsername(username)
@@ -106,14 +115,7 @@ public class ApiClient {
             .setPhoneNumber(phoneNumber)
             .setNif(nif)
             .build();
-    try {
-      return stub.registerDeliveryPerson(request);
-    } catch (StatusRuntimeException e) {
-      if (e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
-        throw new IllegalArgumentException("Username already exists");
-      }
-      throw e;
-    }
+    asyncStub.registerDeliveryPerson(request, observer);
   }
 
   public static void updateAdmin(
