@@ -78,7 +78,8 @@ public class UserController {
       @RequestParam(required = false) String name,
       @RequestParam(required = false) String userType,
       @RequestParam(required = false) String orderNumber,
-      @RequestParam(required = false) String deliveryNumber) {
+      @RequestParam(required = false) String deliveryNumber)
+      throws Exception {
     List<UserResponseDto> users = userHandler.searchBy(name, userType, orderNumber, deliveryNumber);
     return ResponseEntity.ok(users);
   }

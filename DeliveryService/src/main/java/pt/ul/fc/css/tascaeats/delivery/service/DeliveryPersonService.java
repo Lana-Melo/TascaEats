@@ -1,21 +1,30 @@
 package pt.ul.fc.css.tascaeats.delivery.service;
 
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.common.dto.DeleteDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.dto.RegisterDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.dto.SearchDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.UpdateDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserAlreadyExistsException;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.delivery.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.delivery.kafka.Sender;
+import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
+import pt.ul.fc.css.tascaeats.delivery.model.DeliveryStatus;
 import pt.ul.fc.css.tascaeats.delivery.model.ProcessedEvent;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryPersonRepository;
 import pt.ul.fc.css.tascaeats.delivery.repository.ProcessedEventRepository;
@@ -105,6 +114,37 @@ public class DeliveryPersonService {
 
     DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
     return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
+  }
+
+  public List<DeliveryPersonResponseDto> searchDeliveryPersons(SearchDeliveryPersonDto request) {
+    Specification<DeliveryPerson> spec =
+        (root, query, cb) -> {
+          List<Predicate> predicates = new ArrayList<>();
+
+          if (request.getName() != null && !request.getName().isEmpty()) {
+            predicates.add(
+                cb.like(cb.upper(root.get("name")), "%" + request.getName().toUpperCase() + "%"));
+          }
+
+          if (request.getDeliveryNumber() != null && !request.getDeliveryNumber().isEmpty()) {
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<Delivery> deliveryRoot = subquery.from(Delivery.class);
+            subquery
+                .select(cb.count(deliveryRoot))
+                .where(
+                    cb.and(
+                        cb.equal(deliveryRoot.get("deliveryPerson"), root),
+                        cb.equal(deliveryRoot.get("status"), DeliveryStatus.DELIVERED)));
+            predicates.add(
+                cb.greaterThanOrEqualTo(subquery, Long.parseLong(request.getDeliveryNumber())));
+          }
+
+          return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+    return deliveryPersonRepository.findAll(spec).stream()
+        .map(Mapper::mapDeliveryPersonToDeliveryPersonResponse)
+        .toList();
   }
 
   // retorna o mode ("HARD"/"SOFT") se aprovado, null se negado pelo monolito

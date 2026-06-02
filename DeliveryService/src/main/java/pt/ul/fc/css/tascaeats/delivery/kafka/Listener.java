@@ -15,6 +15,7 @@ import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonDeleteDecisionDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.dto.RegisterDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.dto.SearchDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.UpdateDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
@@ -127,6 +128,15 @@ public class Listener {
     System.out.println("Received delete denied for correlationId: " + dto.getCorrelationId());
     kafkaResponseStore.putDeleteDecision(
         KafkaResponse.error("DENIED", "Delete denied by monolith"));
+  }
+
+  @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
+  @KafkaListener(topics = Topics.DELIVERY_PERSON_SEARCH_BY)
+  public void listenSearchDeliveryPersons(String message) {
+    SearchDeliveryPersonDto dto = Sender.fromJson(message, new TypeReference<>() {});
+    System.out.println("Received delivery person search event");
+    List<DeliveryPersonResponseDto> results = deliveryPersonService.searchDeliveryPersons(dto);
+    sender.sendAsJson(Topics.DELIVERY_PERSON_SEARCH_BY_RESPONSE, KafkaResponse.ok(results));
   }
 
   @KafkaListener(topics = "get-my-deliveries", groupId = "tascaeats-group")

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pt.ul.fc.css.tascaeats.common.dto.DeleteDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.dto.RegisterDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.dto.SearchDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.UpdateDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
@@ -183,7 +184,38 @@ public class UserService {
   }
 
   public List<UserResponseDto> searchBy(
-      String name, String userType, String orderNumber, String deliveryNumber) {
+      String name, String userType, String orderNumber, String deliveryNumber) throws Exception {
+    if (userType != null && userType.equalsIgnoreCase("DELIVERY PERSON")) {
+      SearchDeliveryPersonDto kafkaDto = new SearchDeliveryPersonDto();
+      kafkaDto.setName(name);
+      kafkaDto.setDeliveryNumber(deliveryNumber);
+
+      System.out.println("Sending delivery person search event");
+      sender.sendAsJson(Topics.DELIVERY_PERSON_SEARCH_BY, kafkaDto);
+
+      KafkaResponse<List<pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto>> response =
+          kafkaResponseStore.waitForDeliveryPersonSearch(10000);
+
+      if (response == null) {
+        throw new IllegalStateException("Timeout waiting for delivery person search");
+      }
+      if (!response.isSuccess()) {
+        throw new IllegalStateException(response.getErrorMessage());
+      }
+
+      return response.getData().stream()
+          .map(
+              dp ->
+                  new UserResponseDto(
+                      dp.id(),
+                      "DELIVERY_PERSON",
+                      dp.username(),
+                      dp.name(),
+                      dp.phoneNumber(),
+                      dp.nif()))
+          .toList();
+    }
+
     Specification<AUser> spec = getSearchSpec(name, userType, orderNumber, deliveryNumber);
     List<AUser> users = userRepository.findAll(spec);
     return users.stream().map(this::mapAUserToUserResponse).toList();

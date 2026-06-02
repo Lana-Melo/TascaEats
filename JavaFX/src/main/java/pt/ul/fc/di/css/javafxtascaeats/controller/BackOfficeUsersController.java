@@ -1,17 +1,21 @@
 package pt.ul.fc.di.css.javafxtascaeats.controller;
 
-import java.util.List;
+import io.grpc.stub.StreamObserver;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import pt.ul.fc.css.tascaeats.grpc.SearchUsersResponse;
 import pt.ul.fc.css.tascaeats.grpc.UserResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
@@ -32,6 +36,8 @@ public class BackOfficeUsersController implements ControllerWithModel {
   @FXML private TextField userDeliveriesField;
 
   @FXML private Label errorLabel;
+  @FXML private Button searchButton;
+  @FXML private ProgressIndicator loadingIndicator;
 
   @FXML private TableView<UserResponse> usersTable;
   @FXML private TableColumn<UserResponse, String> colName;
@@ -86,18 +92,55 @@ public class BackOfficeUsersController implements ControllerWithModel {
     String orderNumber = cbUserOrders.isSelected() ? userOrdersField.getText() : null;
     String deliveryNumber = cbUserDeliveries.isSelected() ? userDeliveriesField.getText() : null;
 
-    try {
-      List<UserResponse> users = ApiClient.searchUsers(name, userType, orderNumber, deliveryNumber);
-      usersTable.setItems(FXCollections.observableArrayList(users));
-      usersTable.setVisible(true);
-      usersTable.setManaged(true);
-      errorLabel.setVisible(false);
-      errorLabel.setManaged(false);
-    } catch (Exception e) {
-      errorLabel.setText("An error occurred, please try again later.");
-      errorLabel.setVisible(true);
-      errorLabel.setManaged(true);
-    }
+    showLoading();
+
+    ApiClient.searchUsers(
+        name,
+        userType,
+        orderNumber,
+        deliveryNumber,
+        new StreamObserver<SearchUsersResponse>() {
+          @Override
+          public void onNext(SearchUsersResponse response) {
+            Platform.runLater(
+                () -> {
+                  hideLoading();
+                  usersTable.setItems(FXCollections.observableArrayList(response.getUsersList()));
+                  usersTable.setVisible(true);
+                  usersTable.setManaged(true);
+                  errorLabel.setVisible(false);
+                  errorLabel.setManaged(false);
+                });
+          }
+
+          @Override
+          public void onError(Throwable t) {
+            Platform.runLater(
+                () -> {
+                  hideLoading();
+                  errorLabel.setText("An error occurred, please try again later.");
+                  errorLabel.setVisible(true);
+                  errorLabel.setManaged(true);
+                });
+          }
+
+          @Override
+          public void onCompleted() {}
+        });
+  }
+
+  private void showLoading() {
+    loadingIndicator.setVisible(true);
+    loadingIndicator.setManaged(true);
+    searchButton.setDisable(true);
+    errorLabel.setVisible(false);
+    errorLabel.setManaged(false);
+  }
+
+  private void hideLoading() {
+    loadingIndicator.setVisible(false);
+    loadingIndicator.setManaged(false);
+    searchButton.setDisable(false);
   }
 
   @FXML

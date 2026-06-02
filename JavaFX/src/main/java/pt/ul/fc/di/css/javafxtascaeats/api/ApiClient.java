@@ -42,6 +42,7 @@ import pt.ul.fc.css.tascaeats.grpc.SearchOrdersRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchRestaurantsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
+import pt.ul.fc.css.tascaeats.grpc.SearchUsersResponse;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
 import pt.ul.fc.css.tascaeats.grpc.UpdateDeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.UpdateMenuRequest;
@@ -348,8 +349,12 @@ public class ApiClient {
         .toList();
   }
 
-  public static List<UserResponse> searchUsers(
-      String name, String userType, String orderNumber, String deliveryNumber) {
+  public static void searchUsers(
+      String name,
+      String userType,
+      String orderNumber,
+      String deliveryNumber,
+      StreamObserver<SearchUsersResponse> observer) {
     SearchUsersRequest request =
         SearchUsersRequest.newBuilder()
             .setName(name != null ? name : "")
@@ -357,11 +362,7 @@ public class ApiClient {
             .setOrderNumber(orderNumber != null ? orderNumber : "")
             .setDeliveryNumber(deliveryNumber != null ? deliveryNumber : "")
             .build();
-    try {
-      return stub.searchUsers(request).getUsersList();
-    } catch (StatusRuntimeException e) {
-      throw e;
-    }
+    asyncStub.searchUsers(request, observer);
   }
 
   public static List<RestaurantModel> searchRestaurants(

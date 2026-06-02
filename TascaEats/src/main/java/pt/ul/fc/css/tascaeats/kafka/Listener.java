@@ -48,6 +48,13 @@ public class Listener {
     userService.solveDeliveryPersonDeleteRequest(dto.getCorrelationId(), dto.getUsername());
   }
 
+  @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
+  @KafkaListener(topics = Topics.DELIVERY_PERSON_SEARCH_BY_RESPONSE)
+  public void listenDeliveryPersonSearch(String message) throws Exception {
+    System.out.println("Received delivery person search response");
+    responseStore.putDeliveryPersonSearch(message);
+  }
+
   @KafkaListener(topics = "my-deliveries-response", groupId = "monolito-group")
   public void listenMyDeliveries(String message) throws Exception {
     System.out.println("Received my-deliveries-response");

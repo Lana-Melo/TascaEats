@@ -12,4 +12,7 @@ public class Topics {
   public static final String DELIVERY_PERSON_DELETE_REQUESTED = "delivery_person_delete_requested";
   public static final String DELIVERY_PERSON_DELETED_APPROVED = "delivery_person_deleted_approved";
   public static final String DELIVERY_PERSON_DELETED_DENIED = "delivery_person_deleted_denied";
+  public static final String DELIVERY_PERSON_SEARCH_BY = "delivery_person_search_by";
+  public static final String DELIVERY_PERSON_SEARCH_BY_RESPONSE =
+      "delivery_person_search_by_response";
 }
