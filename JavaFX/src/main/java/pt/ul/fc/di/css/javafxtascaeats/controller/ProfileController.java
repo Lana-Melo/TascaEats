@@ -16,6 +16,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import pt.ul.fc.css.tascaeats.grpc.DeleteDPAccountResponse;
 import pt.ul.fc.css.tascaeats.grpc.UpdateDeliveryPersonResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentClient;
@@ -96,7 +97,12 @@ public class ProfileController implements ControllerWithModel {
             response -> {
               if (response == ButtonType.OK) {
                 try {
-                  ApiClient.deleteAccount(model.getCurrentUser().getId());
+                  if (model.getCurrentUser() instanceof CurrentDeliveryPerson) {
+                    ApiClient.deleteDPAccount(
+                        model.getCurrentUser().getUsername(), buildDeleteDPObserver());
+                  } else {
+                    ApiClient.deleteAccount(model.getCurrentUser().getId());
+                  }
                   model.setCurrentUser(null);
                   UtilController.switchScene(
                       stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
@@ -187,6 +193,34 @@ public class ProfileController implements ControllerWithModel {
               } else {
                 showError("An error occurred, please try again later.");
               }
+            });
+      }
+
+      @Override
+      public void onCompleted() {}
+    };
+  }
+
+  private StreamObserver<DeleteDPAccountResponse> buildDeleteDPObserver() {
+    return new StreamObserver<>() {
+      @Override
+      public void onNext(DeleteDPAccountResponse response) {
+        if (response.getPayloadCase() == DeleteDPAccountResponse.PayloadCase.ACKNOWLEDGED) {
+          Platform.runLater(() -> showLoading());
+        } else if (response.getPayloadCase() == DeleteDPAccountResponse.PayloadCase.DELETED) {
+          Platform.runLater(
+              () -> {
+                hideLoading();
+              });
+        }
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        Platform.runLater(
+            () -> {
+              hideLoading();
+              showError("An error occurred while deleting the account. Please try again.");
             });
       }
 

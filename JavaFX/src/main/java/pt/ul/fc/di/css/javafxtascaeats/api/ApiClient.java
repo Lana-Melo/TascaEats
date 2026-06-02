@@ -14,6 +14,8 @@ import pt.ul.fc.css.tascaeats.grpc.ChangeStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.CreateMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.CreateRestaurantRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeleteDPAccountRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeleteDPAccountResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeleteMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
@@ -193,6 +195,17 @@ public class ApiClient {
     DeleteAccountRequest request = DeleteAccountRequest.newBuilder().setId(userId).build();
     try {
       stub.deleteAccount(request);
+    } catch (StatusRuntimeException e) {
+      throw e;
+    }
+  }
+
+  public static void deleteDPAccount(
+      String username, StreamObserver<DeleteDPAccountResponse> observer) {
+    DeleteDPAccountRequest request =
+        DeleteDPAccountRequest.newBuilder().setUsername(username).build();
+    try {
+      asyncStub.deleteDeliveryPersonAccount(request, observer);
     } catch (StatusRuntimeException e) {
       throw e;
     }
