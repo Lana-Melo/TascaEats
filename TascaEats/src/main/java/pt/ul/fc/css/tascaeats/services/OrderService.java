@@ -3,7 +3,6 @@ package pt.ul.fc.css.tascaeats.services;
 import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
@@ -209,23 +208,29 @@ public class OrderService {
           throw new RequirementsNotMetException(
               "Preparing order cannot update to specified status");
         } else {
-          /*
-          Optional<DeliveryPerson> delOpt =
-              userRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
-          DeliveryPerson del = delOpt.isEmpty() ? null : delOpt.get();
+          try {
+            sender.sendAsJson(Topics.CREATE_DELIVERY, order.getId());
 
-          if (del != null) {
-            Delivery delivery = new Delivery(LocalDateTime.now());
-            order.setDelivery(delivery);
-            del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
-            order.setDeliveryPerson(del);
-            userRepository.save(del);
-          }*/
+            DeliveryResponseDto delivery = kafkaResponseStore.waitForDelivery(10000);
+
+            if (delivery != null && delivery.deliveryPersonId() != null) {
+              Optional<AUser> dpOpt = userRepository.findByUsername(delivery.deliveryPersonUsername());
+              if (dpOpt.isPresent() && dpOpt.get() instanceof DeliveryPerson) {
+                DeliveryPerson del = (DeliveryPerson) dpOpt.get();
+                del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
+                userRepository.save(del);
+                order.setDeliveryPerson(del);
+                ordStat = OrderStatus.INCOMING;
+              }
+            }
+          } catch (Exception e) {
+            throw new IllegalStateException("Timeout waiting for delivery registration");
+          }
         }
         break;
-      case READY:
+      case INCOMING:
         if (ordStat != OrderStatus.DELIVERED) {
-          throw new RequirementsNotMetException("Ready order cannot update to specified status");
+          throw new RequirementsNotMetException("Incoming order cannot update to specified status");
         }
         break;
       default:

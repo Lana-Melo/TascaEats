@@ -55,6 +55,12 @@ public class Listener {
     responseStore.putDelivery(message);
   }
 
+  @KafkaListener(topics = Topics.CREATE_DELIVERY_RESPONSE, groupId = "monolito-group")
+  public void listenCreateDeliveryResponse(String message) throws Exception {
+    System.out.println("Received create-delivery-response");
+    responseStore.putDelivery(message);
+  }
+
   @DltHandler
   public void handleDlt(String requestMsg, @Header(KafkaHeaders.EXCEPTION_MESSAGE) String error) {
     System.out.println("Message sent to DLT after retries. Payload: " + requestMsg);

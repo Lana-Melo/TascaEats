@@ -10,5 +10,5 @@ public record DeliveryResponseDto(
     LocalDateTime pickedUpTimeStamp,
     LocalDateTime deliveryTimeStamp,
     Long deliveryPersonId,
-    String deliveryPersonName,
+    String deliveryPersonUsername,
     String deliveryPersonNif) {}

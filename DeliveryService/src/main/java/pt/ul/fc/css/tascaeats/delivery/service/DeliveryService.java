@@ -1,23 +1,17 @@
 package pt.ul.fc.css.tascaeats.delivery.service;
 
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import pt.ul.fc.css.tascaeats.delivery.dto.request.DeliveryPersonRequestDto;
-import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.RequirementsNotMetException;
 import pt.ul.fc.css.tascaeats.delivery.kafka.Sender;
+import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
@@ -34,59 +28,30 @@ public class DeliveryService {
 
   @Autowired private Sender sender;
 
-  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
-    if (deliveryPersonRepository.findByUsername(request.getUsername()).isPresent()) {
-      throw new IllegalArgumentException("Username already exists.");
-    }
-    DeliveryPerson deliveryPerson =
-        new DeliveryPerson(
-            request.getUsername(),
-            request.getPassword(),
-            request.getName(),
-            request.getPhoneNumber(),
-            request.getNif());
-    DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
-    return mapDeliveryToDeliveryPersonResponse(saved);
-  }
-
   public DeliveryResponseDto createDelivery(Long orderId) {
     Delivery delivery = new Delivery(LocalDateTime.now(), orderId);
     Delivery saved = deliveryRepository.save(delivery);
+
+    Optional<DeliveryPerson> availableOpt =
+        deliveryPersonRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
+    if (availableOpt.isPresent()) {
+      DeliveryPerson dp = availableOpt.get();
+      DeliveryResponseDto assigned = assignDeliveryPerson(saved.getId(), dp.getId());
+      sender.sendAsJson(Topics.CREATE_DELIVERY_RESPONSE, assigned);
+      return assigned;
+    }
+
+    sender.sendAsJson(
+        Topics.CREATE_DELIVERY_RESPONSE,
+        Map.of(
+            "orderId", saved.getOrderId(),
+            "deliveryId", saved.getId(),
+            "status", saved.getStatus().toString()));
     return mapDeliveryToDeliveryResponse(saved);
   }
 
   public List<DeliveryResponseDto> getAllDeliveries() {
     return deliveryRepository.findAll().stream().map(this::mapDeliveryToDeliveryResponse).toList();
-  }
-
-  private Specification<DeliveryPerson> getSearchSpec(
-      String name, String userType, String delStatus, String deliveryNumber) {
-    return (root, query, cb) -> {
-      List<Predicate> predicates = new ArrayList<>();
-
-      if (name != null && !name.isEmpty()) {
-        predicates.add(cb.like(cb.upper(root.get("name")), "%" + name.toUpperCase() + "%"));
-      }
-
-      if (delStatus != null && !delStatus.isEmpty()) {
-        DeliveryPersonStatus status = DeliveryPersonStatus.valueOf(delStatus);
-        predicates.add(cb.equal(root.get("deliveryPersonStatus"), status));
-      }
-
-      if (deliveryNumber != null && !deliveryNumber.isEmpty()) {
-        Subquery<Long> subquery = query.subquery(Long.class);
-        Root<Delivery> orderRoot = subquery.from(Delivery.class);
-        subquery
-            .select(cb.count(orderRoot))
-            .where(
-                cb.and(
-                    cb.equal(orderRoot.get("deliveryPerson"), root),
-                    cb.equal(orderRoot.get("status"), DeliveryStatus.DELIVERED)));
-        predicates.add(cb.greaterThanOrEqualTo(subquery, Long.parseLong(deliveryNumber)));
-      }
-
-      return cb.and(predicates.toArray(new Predicate[0]));
-    };
   }
 
   @Transactional
@@ -107,6 +72,7 @@ public class DeliveryService {
       throw new RequirementsNotMetException("Delivery person must be available");
     }
     delivery.setDeliveryPerson(del);
+    delivery.setStatus(DeliveryStatus.INCOMING);
     del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
 
     deliveryPersonRepository.save(del);
@@ -116,7 +82,7 @@ public class DeliveryService {
         Map.of(
             "orderId", saved.getOrderId(),
             "deliveryPersonId", del.getId(),
-            "deliveryPersonName", del.getName()));
+            "deliveryPersonUsername", del.getUsername()));
     return mapDeliveryToDeliveryResponse(saved);
   }
 
@@ -151,8 +117,8 @@ public class DeliveryService {
 
   private DeliveryResponseDto mapDeliveryToDeliveryResponse(Delivery delivery) {
     Long delId = delivery.getDeliveryPerson() == null ? null : delivery.getDeliveryPerson().getId();
-    String delName =
-        delivery.getDeliveryPerson() == null ? null : delivery.getDeliveryPerson().getName();
+    String delUsername =
+        delivery.getDeliveryPerson() == null ? null : delivery.getDeliveryPerson().getUsername();
     String delNif =
         delivery.getDeliveryPerson() == null ? null : delivery.getDeliveryPerson().getNif();
 
@@ -163,18 +129,7 @@ public class DeliveryService {
         delivery.getPickedUpTimeStamp(),
         delivery.getDeliveryTimeStamp(),
         delId,
-        delName,
+        delUsername,
         delNif);
-  }
-
-  private DeliveryPersonResponseDto mapDeliveryToDeliveryPersonResponse(
-      DeliveryPerson deliveryPerson) {
-    return new DeliveryPersonResponseDto(
-        deliveryPerson.getId(),
-        deliveryPerson.getUsername(),
-        deliveryPerson.getName(),
-        deliveryPerson.getPhoneNumber(),
-        deliveryPerson.getNif(),
-        deliveryPerson.getDeliveryPersonStatus().toString());
   }
 }

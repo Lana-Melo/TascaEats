@@ -12,6 +12,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonUpdateDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
@@ -21,7 +22,6 @@ import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.AddressDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponseDto;
-import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.AUser;
 import pt.ul.fc.css.tascaeats.entities.Address;
@@ -131,7 +131,7 @@ public class UserService {
     sender.sendAsJson(Topics.DELIVERY_PERSON_REGISTER, kafkaDto);
 
     // aguarda resposta do MS
-    KafkaResponse<pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto> response =
+    KafkaResponse<DeliveryPersonResponseDto> response =
         kafkaResponseStore.waitForDeliveryPerson(10000);
 
     if (response == null) {

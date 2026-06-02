@@ -136,6 +136,18 @@ public class Listener {
     }
   }
 
+  @KafkaListener(topics = Topics.CREATE_DELIVERY, groupId = "tascaeats-group")
+  public void listenCreateDelivery(String message) {
+    try {
+      Long orderId = Sender.fromJson(message, new TypeReference<Long>() {});
+      System.out.println("Received create-delivery for orderId: " + orderId);
+      DeliveryResponseDto response = deliveryService.createDelivery(orderId);
+      sender.sendAsJson(Topics.CREATE_DELIVERY_RESPONSE, response);
+    } catch (Exception e) {
+      System.err.println("Error processing create-delivery: " + e.getMessage());
+    }
+  }
+
   @DltHandler
   public void handleDlt(String requestMsg, @Header(KafkaHeaders.EXCEPTION_MESSAGE) String error) {
     System.out.println("Message sent to DLT after retries. Payload: " + requestMsg);

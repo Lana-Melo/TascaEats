@@ -11,4 +11,5 @@ public interface DeliveryPersonRepository
     extends JpaRepository<DeliveryPerson, Long>, JpaSpecificationExecutor<DeliveryPerson> {
 
   Optional<DeliveryPerson> findByUsername(String username);
+  Optional<DeliveryPerson> findFirstByStatus(pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus status);
 }
