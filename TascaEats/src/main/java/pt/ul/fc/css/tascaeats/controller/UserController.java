@@ -60,7 +60,7 @@ public class UserController {
   @PostMapping("/register/delivery")
   @ApiOperation(value = "Register delivery person", notes = "Register a new delivery person")
   public ResponseEntity<DeliveryPersonResponseDto> registerDelivery(
-      @RequestBody @Valid DeliveryPersonRequestDto request) {
+      @RequestBody @Valid DeliveryPersonRequestDto request) throws Exception {
     DeliveryPersonResponseDto user = userHandler.registerNewDeliveryPerson(request);
     return ResponseEntity.ok(user);
   }

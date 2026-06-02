@@ -7,9 +7,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
+import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
@@ -27,6 +31,8 @@ import pt.ul.fc.css.tascaeats.entities.Order;
 import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.RestaurantRepository;
@@ -39,16 +45,19 @@ public class UserService {
   private final OrderRepository orderRepository;
   private final RestaurantRepository restaurantRepository;
   private final Sender sender;
+  private final KafkaResponseStore kafkaResponseStore;
 
   public UserService(
       UserRepository userRepository,
       OrderRepository orderRepository,
       RestaurantRepository restaurantRepository,
-      Sender sender) {
+      Sender sender,
+      KafkaResponseStore kafkaResponseStore) {
     this.userRepository = userRepository;
     this.orderRepository = orderRepository;
     this.restaurantRepository = restaurantRepository;
     this.sender = sender;
+    this.kafkaResponseStore = kafkaResponseStore;
   }
 
   /** Mock login, any password is accepted if user is valid. */
@@ -96,23 +105,57 @@ public class UserService {
     return mapAUserToUserResponse(saved);
   }
 
-  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
-    sender.sendAsJson("register-delivery-person", request);
-    /*
+  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request)
+      throws Exception {
+    // primeiramente, verifico se o username já existe na bd do monolito
     if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-      throw new IllegalArgumentException("Username already exists.");
+      throw new UserAlreadyExistsException("Username already exists.");
     }
+
+    // traduz o DTO do gRPC para o DTO do Kafka
+    DeliveryPersonRegistertDto kafkaDto = new DeliveryPersonRegistertDto();
+    kafkaDto.setCorrelationId(UUID.randomUUID().toString()); // para garantir idempotencia
+    kafkaDto.setUsername(request.getUsername());
+    kafkaDto.setPassword(request.getPassword());
+    kafkaDto.setName(request.getName());
+    kafkaDto.setPhoneNumber(request.getPhoneNumber());
+    kafkaDto.setNif(request.getNif());
+
+    // emite evento para MS apanhar
+    System.out.println(
+        "Sending delivery person registration event with correlationId: "
+            + kafkaDto.getCorrelationId());
+    sender.sendAsJson(Topics.DELIVERY_PERSON_REGISTER, kafkaDto);
+
+    // aguarda resposta do MS
+    KafkaResponse<pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto> response =
+        kafkaResponseStore.waitForDeliveryPerson(10000);
+
+    if (response == null) {
+      throw new IllegalStateException("Timeout waiting for delivery person registration");
+    }
+
+    // excecoes de negocio
+    if (!response.isSuccess()) {
+      switch (response.getErrorCode()) {
+        case "USER_ALREADY_EXISTS" ->
+            throw new UserAlreadyExistsException(response.getErrorMessage());
+        case "INTERNAL_ERROR" -> throw new IllegalStateException(response.getErrorMessage());
+        default -> throw new Exception(response.getErrorMessage());
+      }
+    }
+
+    // se chegou aqui, é sucesso, entao guardo tbm na minha bd
     DeliveryPerson deliveryPerson =
         new DeliveryPerson(
-            request.getUsername(),
+            response.getData().username(),
             request.getPassword(),
-            request.getName(),
-            request.getPhoneNumber(),
-            request.getNif());
+            response.getData().name(),
+            response.getData().phoneNumber(),
+            response.getData().nif());
     DeliveryPerson saved = userRepository.save(deliveryPerson);
+
     return mapDeliveryToDeliveryPersonResponse(saved);
-    */
-    return null;
   }
 
   /////////////////////////////////////////////////////////////

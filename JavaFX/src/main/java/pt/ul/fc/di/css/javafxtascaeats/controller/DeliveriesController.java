@@ -1,6 +1,8 @@
 package pt.ul.fc.di.css.javafxtascaeats.controller;
 
+import io.grpc.stub.StreamObserver;
 import java.util.List;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -10,6 +12,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryItem;
+import pt.ul.fc.css.tascaeats.grpc.DeliveryResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentDeliveryPerson;
 import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
@@ -60,16 +63,40 @@ public class DeliveriesController implements ControllerWithModel {
       showError("Select a delivery first.");
       return;
     }
-    try {
-      ApiClient.markDeliveryAsDelivered(selected.getId());
-      loadDeliveries(); // refresh
-      Alert alert = new Alert(Alert.AlertType.INFORMATION);
-      alert.setTitle("Success");
-      alert.setContentText("Delivery marked as delivered!");
-      alert.showAndWait();
-    } catch (Exception e) {
-      showError("Failed to mark delivery as delivered.");
-    }
+    ApiClient.markDeliveryAsDelivered(
+        selected.getId(),
+        new StreamObserver<>() {
+          @Override
+          public void onNext(DeliveryResponse value) {
+            Platform.runLater(
+                () -> {
+                  // atualiza o item na lista sem ir ao Kafka outra vez
+                  int index = deliveriesListView.getItems().indexOf(selected);
+                  if (index >= 0) {
+                    DeliveryItem updated =
+                        DeliveryItem.newBuilder()
+                            .setId(value.getId())
+                            .setOrderId(value.getOrderId())
+                            .setStatus(value.getStatus())
+                            .setPickedUpAt(value.getPickedUpAt())
+                            .setDeliveredAt(value.getDeliveredAt())
+                            .build();
+                    deliveriesListView.getItems().set(index, updated);
+                  }
+                });
+          }
+
+          @Override
+          public void onError(Throwable t) {
+            Platform.runLater(() -> showError("Failed: " + t.getMessage()));
+          }
+
+          @Override
+          public void onCompleted() {
+            Platform.runLater(
+                () -> new Alert(Alert.AlertType.INFORMATION, "Marked as delivered!").showAndWait());
+          }
+        });
   }
 
   @FXML

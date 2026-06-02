@@ -4,6 +4,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -20,7 +21,6 @@ import pt.ul.fc.css.tascaeats.grpc.DeleteProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryIdRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryItem;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonIdRequest;
-import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryPersonUpdateRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryResponse;
 import pt.ul.fc.css.tascaeats.grpc.Empty;
@@ -38,6 +38,7 @@ import pt.ul.fc.css.tascaeats.grpc.PaymentRequest;
 import pt.ul.fc.css.tascaeats.grpc.ProductResponse;
 import pt.ul.fc.css.tascaeats.grpc.ProductsResponse;
 import pt.ul.fc.css.tascaeats.grpc.ProductsSearchResponse;
+import pt.ul.fc.css.tascaeats.grpc.RegisterDeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantItem;
 import pt.ul.fc.css.tascaeats.grpc.RestaurantsResponse;
 import pt.ul.fc.css.tascaeats.grpc.SearchMenusRequest;
@@ -68,6 +69,9 @@ public class ApiClient {
 
   private static final TascaEatsServiceGrpc.TascaEatsServiceBlockingStub stub =
       TascaEatsServiceGrpc.newBlockingStub(channel);
+
+  private static final TascaEatsServiceGrpc.TascaEatsServiceStub asyncStub =
+      TascaEatsServiceGrpc.newStub(channel);
 
   public static UserResponse login(String username, String password) {
     LoginRequest request =
@@ -102,8 +106,13 @@ public class ApiClient {
     }
   }
 
-  public static DeliveryPersonResponse registerDeliveryPerson(
-      String username, String password, String name, String phoneNumber, String nif) {
+  public static void registerDeliveryPerson(
+      String username,
+      String password,
+      String name,
+      String phoneNumber,
+      String nif,
+      StreamObserver<RegisterDeliveryPersonResponse> observer) {
     UserRequest request =
         UserRequest.newBuilder()
             .setUsername(username)
@@ -112,14 +121,7 @@ public class ApiClient {
             .setPhoneNumber(phoneNumber)
             .setNif(nif)
             .build();
-    try {
-      return stub.registerDeliveryPerson(request);
-    } catch (StatusRuntimeException e) {
-      if (e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
-        throw new IllegalArgumentException("Username already exists");
-      }
-      throw e;
-    }
+    asyncStub.registerDeliveryPerson(request, observer);
   }
 
   public static void updateAdmin(
@@ -597,8 +599,9 @@ public class ApiClient {
     return deliveries;
   }
 
-  public static DeliveryResponse markDeliveryAsDelivered(long deliveryId) {
+  public static void markDeliveryAsDelivered(
+      long deliveryId, StreamObserver<DeliveryResponse> observer) {
     DeliveryIdRequest request = DeliveryIdRequest.newBuilder().setDeliveryId(deliveryId).build();
-    return stub.markDeliveryAsDelivered(request);
+    asyncStub.markDeliveryAsDelivered(request, observer);
   }
 }

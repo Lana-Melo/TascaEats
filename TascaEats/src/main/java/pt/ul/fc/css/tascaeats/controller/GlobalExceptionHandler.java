@@ -50,6 +50,14 @@ public class GlobalExceptionHandler {
     return problemDetail;
   }
 
+  @ExceptionHandler(IllegalStateException.class)
+  public ProblemDetail handleIllegalStateException(IllegalStateException ex) {
+    ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.SERVICE_UNAVAILABLE);
+    problemDetail.setDetail("Service temporarily unavailable");
+    problemDetail.setProperty("message", ex.getMessage());
+    return problemDetail;
+  }
+
   // Catch generic exceptions as a fallback
   @ExceptionHandler(Exception.class)
   public ProblemDetail handleGenericException(Exception ex) {

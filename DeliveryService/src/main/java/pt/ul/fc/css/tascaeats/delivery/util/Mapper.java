@@ -1,7 +1,7 @@
 package pt.ul.fc.css.tascaeats.delivery.util;
 
 import org.springframework.stereotype.Component;
-import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryPersonResponseDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;

@@ -9,7 +9,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +23,6 @@ import pt.ul.fc.css.tascaeats.dto.order.PaymentRequestDto;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
 import pt.ul.fc.css.tascaeats.entities.Client;
-import pt.ul.fc.css.tascaeats.entities.Delivery;
 import pt.ul.fc.css.tascaeats.entities.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.entities.Menu;
 import pt.ul.fc.css.tascaeats.entities.Order;
@@ -351,7 +349,7 @@ class OrderServiceTest {
     DeliveryPerson del = new DeliveryPerson("dp", "pass", "DP", "912000000", "111111111");
     del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
     order.setDeliveryPerson(del);
-    //order.setDelivery(new Delivery(LocalDateTime.now()));
+    // order.setDelivery(new Delivery(LocalDateTime.now()));
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
     when(orderRepository.save(any(Order.class))).thenReturn(order);
 
