@@ -26,6 +26,8 @@ import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
 public class ProfileController implements ControllerWithModel {
 
+  private static final String GENERIC_ERROR = "An error occurred, please try again later.";
+
   private DataModel model;
   private Stage stage;
 
@@ -102,12 +104,12 @@ public class ProfileController implements ControllerWithModel {
                         model.getCurrentUser().getUsername(), buildDeleteDPObserver());
                   } else {
                     ApiClient.deleteAccount(model.getCurrentUser().getId());
+                    model.setCurrentUser(null);
+                    UtilController.switchScene(
+                        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
                   }
-                  model.setCurrentUser(null);
-                  UtilController.switchScene(
-                      stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
                 } catch (Exception e) {
-                  showError("An error occurred, please try again later.");
+                  showError(e.getMessage());
                 }
               }
             });
@@ -155,7 +157,7 @@ public class ProfileController implements ControllerWithModel {
           ApiClient.updateAdmin(user.getId(), username, passwordToSend, name, phone, nif);
         }
       } catch (Exception e) {
-        showError("An error occurred, please try again later.");
+        showError(e.getMessage());
         return;
       }
       applyUpdate(user, username, name, phone, nif);
@@ -187,11 +189,16 @@ public class ProfileController implements ControllerWithModel {
         Platform.runLater(
             () -> {
               hideLoading();
-              if (t instanceof StatusRuntimeException e
-                  && e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
-                showError("This username is already taken.");
+              if (t instanceof StatusRuntimeException e) {
+                Status.Code code = e.getStatus().getCode();
+                switch (code) {
+                  case ALREADY_EXISTS -> showError("This username is already taken.");
+                  case NOT_FOUND -> showError("User not found.");
+                  case PERMISSION_DENIED -> showError(e.getStatus().getDescription());
+                  default -> showError(GENERIC_ERROR);
+                }
               } else {
-                showError("An error occurred, please try again later.");
+                showError(GENERIC_ERROR);
               }
             });
       }
@@ -211,6 +218,9 @@ public class ProfileController implements ControllerWithModel {
           Platform.runLater(
               () -> {
                 hideLoading();
+                model.setCurrentUser(null);
+                UtilController.switchScene(
+                    stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
               });
         }
       }
@@ -220,7 +230,18 @@ public class ProfileController implements ControllerWithModel {
         Platform.runLater(
             () -> {
               hideLoading();
-              showError("An error occurred while deleting the account. Please try again.");
+              if (t instanceof StatusRuntimeException e) {
+                Status.Code code = e.getStatus().getCode();
+                if (code == Status.Code.NOT_FOUND) {
+                  showError("Account not found.");
+                } else if (code == Status.Code.PERMISSION_DENIED) {
+                  showError(e.getStatus().getDescription());
+                } else {
+                  showError("An error occurred while deleting the account. Please try again.");
+                }
+              } else {
+                showError("An error occurred while deleting the account. Please try again.");
+              }
             });
       }
 

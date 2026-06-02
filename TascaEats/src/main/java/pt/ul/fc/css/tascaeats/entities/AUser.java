@@ -8,10 +8,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import java.time.LocalDateTime;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "user_type") // nome da coluna com o tipo do usuário
+@DiscriminatorColumn(name = "user_type")
+@Where(clause = "deleted_at IS NULL")
 public abstract class AUser {
 
   @Id
@@ -32,6 +35,9 @@ public abstract class AUser {
 
   @Column(unique = true, nullable = false)
   private String nif;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
 
   protected AUser() {}
 
@@ -87,10 +93,18 @@ public abstract class AUser {
     this.password = password;
   }
 
+  public LocalDateTime getDeletedAt() {
+    return deletedAt;
+  }
+
+  public void setDeletedAt(LocalDateTime deletedAt) {
+    this.deletedAt = deletedAt;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (o instanceof AUser other) {
-        return this.id.equals(other.id);
+      return this.id.equals(other.id);
     }
     return false;
   }

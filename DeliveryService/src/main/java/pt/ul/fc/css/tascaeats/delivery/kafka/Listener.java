@@ -10,10 +10,12 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
-import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeleteDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonDeleteDecisionDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
-import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonUpdateDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
+import pt.ul.fc.css.tascaeats.common.dto.RegisterDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.dto.UpdateDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserAlreadyExistsException;
@@ -25,39 +27,31 @@ import pt.ul.fc.css.tascaeats.delivery.service.DeliveryService;
 public class Listener {
 
   @Autowired private DeliveryPersonService deliveryPersonService;
-
   @Autowired private DeliveryService deliveryService;
-
   @Autowired private Sender sender;
+  @Autowired private KafkaResponseStore kafkaResponseStore;
 
   @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
   @KafkaListener(topics = Topics.DELIVERY_PERSON_REGISTER)
   public void listenRegisterDeliveryPerson(String message) throws Exception {
-
-    DeliveryPersonRegistertDto dto = Sender.fromJson(message, new TypeReference<>() {});
-
+    RegisterDeliveryPersonDto dto = Sender.fromJson(message, new TypeReference<>() {});
     System.out.println(
         "Received delivery person event with correlationId: " + dto.getCorrelationId());
 
     try {
       DeliveryPersonResponseDto result = deliveryPersonService.registerNewDeliveryPerson(dto);
-
       if (result == null) {
-        // evento já processado, não envia resposta
         return;
       }
-
       System.out.println(
           "Successfully registered delivery person, sending response for correlationId: "
               + dto.getCorrelationId());
       sender.sendAsJson(Topics.DELIVERY_PERSON_REGISTER_RESPONSE, KafkaResponse.ok(result));
     } catch (UserAlreadyExistsException e) {
-      // erro de negócio — não faz sentido retry, resolve logo
       sender.sendAsJson(
           Topics.DELIVERY_PERSON_REGISTER_RESPONSE,
           KafkaResponse.error("USER_ALREADY_EXISTS", e.getMessage()));
     } catch (Exception e) {
-      // erro técnico — deixa o @RetryableTopic tentar novamente
       throw e;
     }
   }
@@ -65,33 +59,74 @@ public class Listener {
   @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
   @KafkaListener(topics = Topics.DELIVERY_PERSON_UPDATE)
   public void listenUpdateDeliveryPerson(String message) throws Exception {
-
-    DeliveryPersonUpdateDto dto = Sender.fromJson(message, new TypeReference<>() {});
-
+    UpdateDeliveryPersonDto dto = Sender.fromJson(message, new TypeReference<>() {});
     System.out.println(
         "Received delivery person update event with correlationId: " + dto.getCorrelationId());
 
     try {
       DeliveryPersonResponseDto result = deliveryPersonService.updateDeliveryPerson(dto);
-
       if (result == null) {
-        // evento já processado, não envia resposta
         return;
       }
-
       System.out.println(
           "Successfully update delivery person, sending response for correlationId: "
               + dto.getCorrelationId());
       sender.sendAsJson(Topics.DELIVERY_PERSON_UPDATE_RESPONSE, KafkaResponse.ok(result));
     } catch (UserNotFoundException e) {
-      // erro de negócio — não faz sentido retry, resolve logo
       sender.sendAsJson(
           Topics.DELIVERY_PERSON_UPDATE_RESPONSE,
           KafkaResponse.error("USER_NOT_FOUND", e.getMessage()));
     } catch (Exception e) {
-      // erro técnico — deixa o @RetryableTopic tentar novamente
       throw e;
     }
+  }
+
+  @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
+  @KafkaListener(topics = Topics.DELIVERY_PERSON_DELETE)
+  public void listenDeleteDeliveryPerson(String message) throws Exception {
+    DeleteDeliveryPersonDto dto = Sender.fromJson(message, new TypeReference<>() {});
+    System.out.println(
+        "Received delivery person delete event with correlationId: " + dto.getCorrelationId());
+
+    try {
+      String mode = deliveryPersonService.deleteDeliveryPerson(dto);
+      KafkaResponse<String> response =
+          mode != null
+              ? KafkaResponse.ok(mode)
+              : KafkaResponse.error("DENIED", "Delete denied by monolith");
+      System.out.println(
+          "Delete processed (mode="
+              + mode
+              + "), sending response for correlationId: "
+              + dto.getCorrelationId());
+      sender.sendAsJson(Topics.DELIVERY_PERSON_DELETE_RESPONSE, response);
+    } catch (Exception e) {
+      sender.sendAsJson(
+          Topics.DELIVERY_PERSON_DELETE_RESPONSE,
+          KafkaResponse.error("INTERNAL_ERROR", e.getMessage()));
+      throw e;
+    }
+  }
+
+  @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
+  @KafkaListener(topics = Topics.DELIVERY_PERSON_DELETED_APPROVED)
+  public void listenDeleteApproved(String message) throws Exception {
+    DeliveryPersonDeleteDecisionDto dto = Sender.fromJson(message, new TypeReference<>() {});
+    System.out.println(
+        "Received delete approved (mode="
+            + dto.getMode()
+            + ") for correlationId: "
+            + dto.getCorrelationId());
+    kafkaResponseStore.putDeleteDecision(KafkaResponse.ok(dto.getMode()));
+  }
+
+  @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
+  @KafkaListener(topics = Topics.DELIVERY_PERSON_DELETED_DENIED)
+  public void listenDeleteDenied(String message) throws Exception {
+    DeleteDeliveryPersonDto dto = Sender.fromJson(message, new TypeReference<>() {});
+    System.out.println("Received delete denied for correlationId: " + dto.getCorrelationId());
+    kafkaResponseStore.putDeleteDecision(
+        KafkaResponse.error("DENIED", "Delete denied by monolith"));
   }
 
   @KafkaListener(topics = "get-my-deliveries", groupId = "tascaeats-group")

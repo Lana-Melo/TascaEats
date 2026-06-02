@@ -1,13 +1,19 @@
 package pt.ul.fc.css.tascaeats.delivery.service;
 
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
-import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeleteDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
-import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonUpdateDto;
+import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
+import pt.ul.fc.css.tascaeats.common.dto.RegisterDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.dto.UpdateDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserAlreadyExistsException;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserNotFoundException;
+import pt.ul.fc.css.tascaeats.delivery.kafka.KafkaResponseStore;
+import pt.ul.fc.css.tascaeats.delivery.kafka.Sender;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.delivery.model.ProcessedEvent;
@@ -20,22 +26,26 @@ public class DeliveryPersonService {
 
   private final DeliveryPersonRepository deliveryPersonRepository;
   private final ProcessedEventRepository processedEventRepository;
+  private final Sender sender;
+  private final KafkaResponseStore kafkaResponseStore;
 
   public DeliveryPersonService(
       DeliveryPersonRepository deliveryPersonRepository,
-      ProcessedEventRepository processedEventRepository) {
+      ProcessedEventRepository processedEventRepository,
+      Sender sender,
+      KafkaResponseStore kafkaResponseStore) {
     this.deliveryPersonRepository = deliveryPersonRepository;
     this.processedEventRepository = processedEventRepository;
+    this.sender = sender;
+    this.kafkaResponseStore = kafkaResponseStore;
   }
 
   @Transactional
-  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRegistertDto request)
+  public DeliveryPersonResponseDto registerNewDeliveryPerson(RegisterDeliveryPersonDto request)
       throws Exception {
-    // garantir idempotencia
     if (request.getCorrelationId() != null) {
       if (processedEventRepository.existsById(request.getCorrelationId())) {
         System.out.println("Event " + request.getCorrelationId() + " already processed. Ignoring.");
-        // devolve null ou um resultado vazio — o listener não envia resposta
         return null;
       }
       System.out.println("Saving event with correlationId: " + request.getCorrelationId());
@@ -58,93 +68,11 @@ public class DeliveryPersonService {
     return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
   }
 
-  /*
-  public DeliveryPersonResponseDto getUserById(Long id) {
-    Optional<DeliveryPerson> deliveryPersonOpt = deliveryPersonRepository.findById(id);
-    if (deliveryPersonOpt.isEmpty()) {
-      throw new ResourceNotFoundException("Delivery person not found");
-    }
-    return Mapper.mapDeliveryPersonToDeliveryPersonResponse(deliveryPersonOpt.get());
-  }
-
-  public List<DeliveryPersonResponseDto> searchBy(
-      String name, String userType, String delStatus, String deliveryNumber) {
-    Specification<DeliveryPerson> spec = getSearchSpec(name, userType, delStatus, deliveryNumber);
-    List<DeliveryPerson> users = deliveryPersonRepository.findAll(spec);
-    return users.stream().map(Mapper::mapDeliveryPersonToDeliveryPersonResponse).toList();
-  }
-
-  private Specification<DeliveryPerson> getSearchSpec(
-      String name, String userType, String delStatus, String deliveryNumber) {
-    return (root, query, cb) -> {
-      List<Predicate> predicates = new ArrayList<>();
-      if (name != null && !name.isEmpty()) {
-        predicates.add(cb.like(cb.upper(root.get("name")), "%" + name.toUpperCase() + "%"));
-      }
-      if (delStatus != null && !delStatus.isEmpty()) {
-        predicates.add(
-            cb.equal(root.get("deliveryPersonStatus"), DeliveryPersonStatus.valueOf(delStatus)));
-      }
-      if (deliveryNumber != null && !deliveryNumber.isEmpty()) {
-        Subquery<Long> subquery = query.subquery(Long.class);
-        Root<Delivery> orderRoot = subquery.from(Delivery.class);
-        subquery
-            .select(cb.count(orderRoot))
-            .where(
-                cb.and(
-                    cb.equal(orderRoot.get("deliveryPerson"), root),
-                    cb.equal(orderRoot.get("status"), DeliveryStatus.DELIVERED)));
-        predicates.add(cb.greaterThanOrEqualTo(subquery, Long.parseLong(deliveryNumber)));
-      }
-      return cb.and(predicates.toArray(new Predicate[0]));
-    };
-  }
-
   @Transactional
-  public DeliveryPersonResponseDto updateDeliveryPerson(Long id, DeliveryPersonRequestDto request) {
-    Optional<DeliveryPerson> userOpt = deliveryPersonRepository.findById(id);
-    if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
-      throw new ResourceNotFoundException("User not found");
-    }
-
-    DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
-    deliveryPerson.setName(request.getName());
-    deliveryPerson.setUsername(request.getUsername());
-    deliveryPerson.setPhoneNumber(request.getPhoneNumber());
-    deliveryPerson.setNif(request.getNif());
-    deliveryPerson.setPassword(request.getPassword());
-    if (request.getStatus() != null && !request.getStatus().isEmpty()) {
-      deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus()));
-    }
-
-    DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
-    return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
-  }
-
-  public boolean deleteDeliveryPerson(Long user) {
-    DeliveryPerson deliveryPerson =
-        deliveryPersonRepository
-            .findById(user)
-            .orElseThrow(() -> new ResourceNotFoundException("Delivery person not found"));
-    if (!deliveryRepository.existsByDeliveryPersonId(deliveryPerson.getId())) {
-      deliveryPersonRepository.deleteById(deliveryPerson.getId()); // definitively delete
-    } else if (deliveryRepository.existsByDeliveryPersonIdAndStatusNotIn(
-        deliveryPerson.getId(), List.of(DeliveryStatus.DELIVERED))) {
-      return false;
-    } else {
-      deliveryPerson.setDeletedAt(LocalDateTime.now());
-      deliveryPersonRepository.save(deliveryPerson);
-    }
-    return true;
-  }*/
-
-  @Transactional
-  public DeliveryPersonResponseDto updateDeliveryPerson(DeliveryPersonUpdateDto request) {
-
+  public DeliveryPersonResponseDto updateDeliveryPerson(UpdateDeliveryPersonDto request) {
     if (request.getCorrelationId() != null) {
       if (processedEventRepository.existsById(request.getCorrelationId())) {
         System.out.println("Event " + request.getCorrelationId() + " already processed. Ignoring.");
-        // devolve null ou um resultado vazio — o listener não envia resposta
         return null;
       }
       System.out.println("Saving event with correlationId: " + request.getCorrelationId());
@@ -177,5 +105,36 @@ public class DeliveryPersonService {
 
     DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
     return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
+  }
+
+  // retorna o mode ("HARD"/"SOFT") se aprovado, null se negado pelo monolito
+  public String deleteDeliveryPerson(DeleteDeliveryPersonDto request) throws Exception {
+    sender.sendAsJson(Topics.DELIVERY_PERSON_DELETE_REQUESTED, request);
+
+    KafkaResponse<String> decision = kafkaResponseStore.waitForDeleteDecision(10000);
+
+    if (decision == null) {
+      throw new IllegalStateException("Timeout waiting for delete decision from monolith");
+    }
+
+    if (!decision.isSuccess()) {
+      // DENIED — delete não é permitido
+      return null;
+    }
+
+    String mode = decision.getData(); // "HARD" ou "SOFT"
+    DeliveryPerson deliveryPerson =
+        deliveryPersonRepository
+            .findByUsername(request.getUsername())
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+    if ("HARD".equals(mode)) {
+      deliveryPersonRepository.deleteById(deliveryPerson.getId());
+    } else {
+      deliveryPerson.setDeletedAt(LocalDateTime.now());
+      deliveryPersonRepository.save(deliveryPerson);
+    }
+
+    return mode;
   }
 }

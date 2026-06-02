@@ -34,6 +34,7 @@ import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.exceptions.UserCannotBeDeletedException;
 import pt.ul.fc.css.tascaeats.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
@@ -378,46 +379,26 @@ public class UserService {
   private boolean deleteDeliveryPerson(AUser user) throws Exception {
     DeliveryPerson deliveryPerson = (DeliveryPerson) user;
 
-    // no futuro, com a migracao da OrderService, estas verificacoes teriam de ser
-    // feitas via troca de eventos kafka.
-    // fail fast:
-    if (orderRepository.existsByDeliveryPersonIdAndStatusNotIn(
-        deliveryPerson.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))) {
-      return false;
-    }
-
-    // user pode ser deletado, basta saber se é soft ou hard delete.
-    boolean isSoftDelete = orderRepository.existsByDeliveryPersonId(deliveryPerson.getId());
-
     DeleteDeliveryPersonDto kafkaDto = new DeleteDeliveryPersonDto();
     kafkaDto.setCorrelationId(UUID.randomUUID().toString());
     kafkaDto.setUsername(deliveryPerson.getUsername());
 
-    if (isSoftDelete) {
-      System.out.println(
-          "Sending delivery person soft delete event with correlationId: "
-              + kafkaDto.getCorrelationId());
-      sender.sendAsJson(Topics.DELIVERY_PERSON_SOFT_DELETE, kafkaDto);
-      // deliveryPerson.setDeletedAt(LocalDateTime.now());
-      // userRepository.save(deliveryPerson);
-    } else {
-      System.out.println(
-          "Sending delivery person hard delete event with correlationId: "
-              + kafkaDto.getCorrelationId());
-      sender.sendAsJson(Topics.DELIVERY_PERSON_DELETE, kafkaDto);
-      // userRepository.deleteById(deliveryPerson.getId()); // definitively delete
-    }
+    System.out.println(
+        "Sending delivery person delete event with correlationId: " + kafkaDto.getCorrelationId());
+    sender.sendAsJson(Topics.DELIVERY_PERSON_DELETE, kafkaDto);
 
-    // aguarda resposta do MS
-    KafkaResponse<Void> response = kafkaResponseStore.waitForDeliveryPersonDelete(10000);
+    // aguarda resposta do MS (inclui o mode: HARD ou SOFT)
+    KafkaResponse<String> response = kafkaResponseStore.waitForDeliveryPersonDelete(10000);
 
     if (response == null) {
       throw new IllegalStateException("Timeout waiting for delivery person delete");
     }
 
-    // excecoes de negocio
     if (!response.isSuccess()) {
       switch (response.getErrorCode()) {
+        case "DENIED" ->
+            throw new UserCannotBeDeletedException(
+                "This user cannot be deleted because is assigned to a pending order");
         case "USER_NOT_FOUND" ->
             throw new UserNotFoundException("User not found in delivery service");
         case "INTERNAL_ERROR" -> throw new IllegalStateException(response.getErrorMessage());
@@ -425,12 +406,13 @@ public class UserService {
       }
     }
 
-    // se chegou aqui, é sucesso, entao faço delete tbm na minha bd
-    if (isSoftDelete) {
+    // MS confirmou o delete — aplico o mesmo na minha bd
+    String mode = response.getData();
+    if ("HARD".equals(mode)) {
+      userRepository.deleteById(deliveryPerson.getId());
+    } else {
       deliveryPerson.setDeletedAt(LocalDateTime.now());
       userRepository.save(deliveryPerson);
-    } else {
-      userRepository.deleteById(deliveryPerson.getId()); // definitively delete
     }
 
     return true;
@@ -444,6 +426,42 @@ public class UserService {
             .findByUsername(username)
             .orElseThrow(() -> new UserNotFoundException("User not found"));
     deleteDeliveryPerson(user);
+  }
+
+  // chamado pelo listener quando o MS pede decisão de delete
+  // esse método passaria para um eventual MS de orders
+  public void solveDeliveryPersonDeleteRequest(String correlationId, String username) {
+    DeleteDeliveryPersonDto denied = new DeleteDeliveryPersonDto();
+    denied.setCorrelationId(correlationId);
+    denied.setUsername(username);
+
+    Optional<AUser> userOpt = userRepository.findByUsername(username);
+    if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
+      sender.sendAsJson(Topics.DELIVERY_PERSON_DELETED_DENIED, denied);
+      return;
+    }
+
+    DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
+
+    // fail fast: ordens ativas impedem o delete
+    if (orderRepository.existsByDeliveryPersonIdAndStatusNotIn(
+        deliveryPerson.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))) {
+      System.out.println("Sending delete decision DENIED for correlationId: " + correlationId);
+      sender.sendAsJson(Topics.DELIVERY_PERSON_DELETED_DENIED, denied);
+      return;
+    }
+
+    boolean isSoftDelete = orderRepository.existsByDeliveryPersonId(deliveryPerson.getId());
+    String mode = isSoftDelete ? "SOFT" : "HARD";
+
+    pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonDeleteDecisionDto approved =
+        new pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonDeleteDecisionDto();
+    approved.setCorrelationId(correlationId);
+    approved.setMode(mode);
+
+    System.out.println(
+        "Sending delete decision APPROVED (" + mode + ") for correlationId: " + correlationId);
+    sender.sendAsJson(Topics.DELIVERY_PERSON_DELETED_APPROVED, approved);
   }
 
   private boolean deleteClient(AUser user) {
