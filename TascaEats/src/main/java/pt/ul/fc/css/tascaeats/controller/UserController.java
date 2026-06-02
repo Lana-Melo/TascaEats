@@ -111,7 +111,7 @@ public class UserController {
 
   @DeleteMapping("/{id}")
   @ApiOperation(value = "Delete user", notes = "Removes an existing user.")
-  public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteUser(@PathVariable Long id) throws Exception {
     return userHandler.deleteUser(id)
         ? ResponseEntity.noContent().build()
         : ResponseEntity.notFound().build();

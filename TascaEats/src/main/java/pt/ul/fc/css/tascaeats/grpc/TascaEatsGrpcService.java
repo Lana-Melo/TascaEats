@@ -216,6 +216,33 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
     }
   }
 
+  @Override
+  public void deleteDeliveryPersonAccount(
+      DeleteDPAccountRequest request, StreamObserver<DeleteDPAccountResponse> responseObserver) {
+    try {
+
+      String username = request.getUsername();
+      userService.deleteDeliveryPersonByUsername(username);
+
+      responseObserver.onNext(
+          DeleteDPAccountResponse.newBuilder()
+              .setAcknowledged(Acknowledged.getDefaultInstance())
+              .build());
+
+      responseObserver.onNext(
+          DeleteDPAccountResponse.newBuilder().setDeleted(Deleted.getDefaultInstance()).build());
+
+      responseObserver.onCompleted();
+
+    } catch (UserNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
   // ─── Search Users ─────────────────────────────────────────────
   @Override
   public void searchUsers(

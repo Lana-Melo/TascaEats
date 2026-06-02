@@ -393,7 +393,7 @@ class UserServiceTest {
   }
   */
   @Test
-  void deleteDeliveryPerson_shouldSoftDelete_whenHasCompletedOrders() {
+  void deleteDeliveryPerson_shouldSoftDelete_whenHasCompletedOrders() throws Exception {
     DeliveryPerson dp = deliveryPerson();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
@@ -420,13 +420,13 @@ class UserServiceTest {
   // ─── deleteUser ─────────────────────────────────────────────────────────────
 
   @Test
-  void deleteUser_shouldReturnFalse_whenNotFound() {
+  void deleteUser_shouldReturnFalse_whenNotFound() throws Exception {
     when(userRepository.existsById(99L)).thenReturn(false);
     assertFalse(userService.deleteUser(99L));
   }
 
   @Test
-  void deleteUser_shouldDeleteAdmin_whenNoRestaurants() {
+  void deleteUser_shouldDeleteAdmin_whenNoRestaurants() throws Exception {
     Admin a = admin();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -436,7 +436,7 @@ class UserServiceTest {
   }
 
   @Test
-  void deleteUser_shouldReturnFalse_whenAdminHasRestaurants() {
+  void deleteUser_shouldReturnFalse_whenAdminHasRestaurants() throws Exception {
     Admin a = admin();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -446,7 +446,7 @@ class UserServiceTest {
   }
 
   @Test
-  void deleteUser_shouldDeleteClientPermanently_whenNoOrders() {
+  void deleteUser_shouldDeleteClientPermanently_whenNoOrders() throws Exception {
     Client c = client();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(c));
@@ -456,7 +456,7 @@ class UserServiceTest {
   }
 
   @Test
-  void deleteUser_shouldSoftDeleteClient_whenHasCompletedOrders() {
+  void deleteUser_shouldSoftDeleteClient_whenHasCompletedOrders() throws Exception {
     Client c = client();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(c));
@@ -468,7 +468,7 @@ class UserServiceTest {
   }
 
   @Test
-  void deleteUser_shouldReturnFalse_whenClientHasActiveOrders() {
+  void deleteUser_shouldReturnFalse_whenClientHasActiveOrders() throws Exception {
     Client c = client();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(c));
@@ -479,7 +479,7 @@ class UserServiceTest {
   }
 
   @Test
-  void deleteUser_shouldDeleteDeliveryPersonPermanently_whenNoOrders() {
+  void deleteUser_shouldDeleteDeliveryPersonPermanently_whenNoOrders() throws Exception {
     DeliveryPerson dp = deliveryPerson();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(dp));
@@ -489,7 +489,7 @@ class UserServiceTest {
   }
 
   @Test
-  void deleteUser_shouldReturnFalse_whenDeliveryPersonHasActiveOrders() {
+  void deleteUser_shouldReturnFalse_whenDeliveryPersonHasActiveOrders() throws Exception {
     DeliveryPerson dp = deliveryPerson();
     when(userRepository.existsById(1L)).thenReturn(true);
     when(userRepository.findById(1L)).thenReturn(Optional.of(dp));

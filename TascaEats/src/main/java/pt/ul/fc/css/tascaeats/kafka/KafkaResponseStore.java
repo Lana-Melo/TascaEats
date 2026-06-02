@@ -22,6 +22,9 @@ public class KafkaResponseStore {
   private final SynchronousQueue<DeliveryResponseDto> deliveryQueue = new SynchronousQueue<>();
   private final SynchronousQueue<KafkaResponse<DeliveryPersonResponseDto>> deliveryPersonQueue =
       new SynchronousQueue<>();
+  // void pq nao ha conteudo efetivo, mas importa saber o status da operacao (sucesso ou falha)
+  private final SynchronousQueue<KafkaResponse<Void>> deliveryPersonDeleteQueue =
+      new SynchronousQueue<>();
 
   public void putDeliveries(String json) throws Exception {
     List<DeliveryResponseDto> list = mapper.readValue(json, new TypeReference<>() {});
@@ -50,5 +53,14 @@ public class KafkaResponseStore {
   public KafkaResponse<DeliveryPersonResponseDto> waitForDeliveryPerson(long timeoutMs)
       throws Exception {
     return deliveryPersonQueue.poll(timeoutMs, TimeUnit.MILLISECONDS);
+  }
+
+  public void putDeliveryPersonDelete(String json) throws Exception {
+    KafkaResponse<Void> dto = mapper.readValue(json, new TypeReference<KafkaResponse<Void>>() {});
+    deliveryPersonDeleteQueue.put(dto);
+  }
+
+  public KafkaResponse<Void> waitForDeliveryPersonDelete(long timeoutMs) throws Exception {
+    return deliveryPersonDeleteQueue.poll(timeoutMs, TimeUnit.MILLISECONDS);
   }
 }

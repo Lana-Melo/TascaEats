@@ -11,9 +11,10 @@ import java.util.UUID;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
-import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonUpdateDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeleteDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
+import pt.ul.fc.css.tascaeats.common.dto.RegisterDeliveryPersonDto;
+import pt.ul.fc.css.tascaeats.common.dto.UpdateDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
@@ -116,7 +117,7 @@ public class UserService {
     }
 
     // traduz o DTO do gRPC para o DTO do Kafka
-    DeliveryPersonRegistertDto kafkaDto = new DeliveryPersonRegistertDto();
+    RegisterDeliveryPersonDto kafkaDto = new RegisterDeliveryPersonDto();
     kafkaDto.setCorrelationId(UUID.randomUUID().toString()); // para garantir idempotencia
     kafkaDto.setUsername(request.getUsername());
     kafkaDto.setPassword(request.getPassword());
@@ -299,11 +300,12 @@ public class UserService {
     return mapClientToClientResponse(userRepository.save(client));
   }
 
+  // MIGRADO PARA MS
   @Transactional
   public DeliveryPersonResponseDto updateDeliveryPerson(DeliveryPersonRequestDto request)
       throws Exception {
     // traduz o DTO do gRPC para o DTO do Kafka
-    DeliveryPersonUpdateDto kafkaDto = new DeliveryPersonUpdateDto();
+    UpdateDeliveryPersonDto kafkaDto = new UpdateDeliveryPersonDto();
     kafkaDto.setCorrelationId(UUID.randomUUID().toString()); // para garantir idempotencia
     kafkaDto.setUsername(request.getUsername());
     kafkaDto.setPassword(request.getPassword());
@@ -359,32 +361,89 @@ public class UserService {
   /////////////////////////////////////////////////////////////
 
   @Transactional
-  public boolean deleteUser(Long id) {
-    if (userRepository.existsById(id)) {
-      AUser user = userRepository.findById(id).get();
-      if (user instanceof Admin) {
-        return deleteAdmin(user);
-      } else if (user instanceof Client) {
-        return deleteClient(user);
-      } else if (user instanceof DeliveryPerson) {
-        return deleteDeliveryPerson(user);
-      }
+  public boolean deleteUser(Long id) throws Exception {
+    AUser user =
+        userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+    if (user instanceof Admin) {
+      return deleteAdmin(user);
+    } else if (user instanceof Client) {
+      return deleteClient(user);
+    } else if (user instanceof DeliveryPerson) {
+      return deleteDeliveryPerson(user);
     }
     return false;
   }
 
-  private boolean deleteDeliveryPerson(AUser user) {
+  // MIGRADO PARA MS
+  private boolean deleteDeliveryPerson(AUser user) throws Exception {
     DeliveryPerson deliveryPerson = (DeliveryPerson) user;
-    if (!orderRepository.existsByDeliveryPersonId(deliveryPerson.getId())) {
-      userRepository.deleteById(deliveryPerson.getId()); // definitively delete
-    } else if (orderRepository.existsByDeliveryPersonIdAndStatusNotIn(
+
+    // no futuro, com a migracao da OrderService, estas verificacoes teriam de ser
+    // feitas via troca de eventos kafka.
+    // fail fast:
+    if (orderRepository.existsByDeliveryPersonIdAndStatusNotIn(
         deliveryPerson.getId(), List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED))) {
       return false;
+    }
+
+    // user pode ser deletado, basta saber se é soft ou hard delete.
+    boolean isSoftDelete = orderRepository.existsByDeliveryPersonId(deliveryPerson.getId());
+
+    DeleteDeliveryPersonDto kafkaDto = new DeleteDeliveryPersonDto();
+    kafkaDto.setCorrelationId(UUID.randomUUID().toString());
+    kafkaDto.setUsername(deliveryPerson.getUsername());
+
+    if (isSoftDelete) {
+      System.out.println(
+          "Sending delivery person soft delete event with correlationId: "
+              + kafkaDto.getCorrelationId());
+      sender.sendAsJson(Topics.DELIVERY_PERSON_SOFT_DELETE, kafkaDto);
+      // deliveryPerson.setDeletedAt(LocalDateTime.now());
+      // userRepository.save(deliveryPerson);
     } else {
+      System.out.println(
+          "Sending delivery person hard delete event with correlationId: "
+              + kafkaDto.getCorrelationId());
+      sender.sendAsJson(Topics.DELIVERY_PERSON_DELETE, kafkaDto);
+      // userRepository.deleteById(deliveryPerson.getId()); // definitively delete
+    }
+
+    // aguarda resposta do MS
+    KafkaResponse<Void> response = kafkaResponseStore.waitForDeliveryPersonDelete(10000);
+
+    if (response == null) {
+      throw new IllegalStateException("Timeout waiting for delivery person delete");
+    }
+
+    // excecoes de negocio
+    if (!response.isSuccess()) {
+      switch (response.getErrorCode()) {
+        case "USER_NOT_FOUND" ->
+            throw new UserNotFoundException("User not found in delivery service");
+        case "INTERNAL_ERROR" -> throw new IllegalStateException(response.getErrorMessage());
+        default -> throw new Exception(response.getErrorMessage());
+      }
+    }
+
+    // se chegou aqui, é sucesso, entao faço delete tbm na minha bd
+    if (isSoftDelete) {
       deliveryPerson.setDeletedAt(LocalDateTime.now());
       userRepository.save(deliveryPerson);
+    } else {
+      userRepository.deleteById(deliveryPerson.getId()); // definitively delete
     }
+
     return true;
+  }
+
+  // workaround para deletar dp pelo username.
+  // o delete via REST continua a ser pelo id, mas javafx manda o username
+  public void deleteDeliveryPersonByUsername(String username) throws Exception {
+    AUser user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+    deleteDeliveryPerson(user);
   }
 
   private boolean deleteClient(AUser user) {
