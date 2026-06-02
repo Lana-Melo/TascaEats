@@ -12,6 +12,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.services.OrderService;
+import pt.ul.fc.css.tascaeats.services.UserService;
 
 @Component
 public class Listener {
@@ -19,6 +20,8 @@ public class Listener {
   @Autowired private KafkaResponseStore responseStore;
 
   @Autowired private OrderService orderService;
+
+  @Autowired private UserService userService;
 
   @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
   @KafkaListener(topics = Topics.DELIVERY_PERSON_REGISTER_RESPONSE)
@@ -39,7 +42,9 @@ public class Listener {
     System.out.println("Received delivery-delivered");
     Map<String, Object> payload = Sender.fromJson(message, new TypeReference<>() {});
     Long orderId = Long.valueOf(payload.get("orderId").toString());
+    String username = payload.get("deliveryPersonUsername").toString();
     orderService.markOrderAsDelivered(orderId);
+    userService.markDeliveryPersonAsAvailable(username);
   }
 
   @KafkaListener(topics = Topics.DELIVERY_MARKED_DELIVERED_RESPONSE, groupId = "monolito-group")
