@@ -47,6 +47,7 @@ import pt.ul.fc.css.tascaeats.grpc.SearchProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchRestaurantsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
+import pt.ul.fc.css.tascaeats.grpc.UpdateDeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.UpdateMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.UpdateOrderStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.UpdateProductRequest;
@@ -171,16 +172,15 @@ public class ApiClient {
   }
 
   public static void updateDeliveryPerson(
-      Long userId,
       String username,
       String newPassword,
       String name,
       String phoneNumber,
       String nif,
-      String status) {
+      String status,
+      StreamObserver<UpdateDeliveryPersonResponse> observer) {
     DeliveryPersonUpdateRequest request =
         DeliveryPersonUpdateRequest.newBuilder()
-            .setId(userId)
             .setUsername(username)
             .setPassword(newPassword)
             .setName(name)
@@ -189,7 +189,7 @@ public class ApiClient {
             .setStatus(status)
             .build();
     try {
-      stub.updateDeliveryPerson(request);
+      asyncStub.updateDeliveryPerson(request, observer);
     } catch (StatusRuntimeException e) {
       throw e;
     }

@@ -1,11 +1,10 @@
-package pt.ul.fc.css.tascaeats.delivery.dto.request;
+package pt.ul.fc.css.tascaeats.common.dto;
 
-import jakarta.validation.constraints.NotNull;
 
 public class AssignmentRequestDto {
 
-  @NotNull private Long deliveryId;
-  @NotNull private Long deliveryPersonId;
+  private Long deliveryId;
+  private Long deliveryPersonId;
 
   public AssignmentRequestDto() {}
 

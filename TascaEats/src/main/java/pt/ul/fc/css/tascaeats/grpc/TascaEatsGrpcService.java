@@ -22,6 +22,7 @@ import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
@@ -175,15 +176,24 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   @Override
   public void updateDeliveryPerson(
       DeliveryPersonUpdateRequest request,
-      StreamObserver<DeliveryPersonResponse> responseObserver) {
+      StreamObserver<UpdateDeliveryPersonResponse> responseObserver) {
     try {
-      Long id = request.getId();
       DeliveryPersonRequestDto requestDto = grpcMapper.mapDeliveryPersonUpdateReqToReqDto(request);
-      DeliveryPersonResponseDto user = userService.updateDeliveryPerson(id, requestDto);
-      DeliveryPersonResponse response = grpcMapper.mapDeliveryPersonResponseDtoToResponse(user);
-      responseObserver.onNext(response);
+
+      responseObserver.onNext(
+          UpdateDeliveryPersonResponse.newBuilder()
+              .setAcknowledged(Acknowledged.getDefaultInstance())
+              .build());
+
+      DeliveryPersonResponseDto user = userService.updateDeliveryPerson(requestDto);
+
+      responseObserver.onNext(
+          UpdateDeliveryPersonResponse.newBuilder()
+              .setPerson(grpcMapper.mapDeliveryPersonResponseDtoToResponse(user))
+              .build());
       responseObserver.onCompleted();
-    } catch (ResourceNotFoundException e) {
+
+    } catch (UserNotFoundException e) {
       responseObserver.onError(
           Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {

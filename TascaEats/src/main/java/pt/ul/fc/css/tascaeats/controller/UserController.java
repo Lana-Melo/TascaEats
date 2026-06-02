@@ -99,11 +99,13 @@ public class UserController {
     return ResponseEntity.ok(admin);
   }
 
+  // TROCAR DPS, NAO VAI MAIS PASSAR ID, O ATRIBUTO CHAVE É USERNAME
   @PutMapping("/delivery/{id}")
   @ApiOperation(value = "Update delivery person", notes = "Updates an existing delivery person.")
   public ResponseEntity<DeliveryPersonResponseDto> updateDeliveryPerson(
-      @PathVariable Long id, @RequestBody @Valid DeliveryPersonRequestDto request) {
-    DeliveryPersonResponseDto deliveryPerson = userHandler.updateDeliveryPerson(id, request);
+      @PathVariable Long id, @RequestBody @Valid DeliveryPersonRequestDto request)
+      throws Exception {
+    DeliveryPersonResponseDto deliveryPerson = userHandler.updateDeliveryPerson(request);
     return ResponseEntity.ok(deliveryPerson);
   }
 
