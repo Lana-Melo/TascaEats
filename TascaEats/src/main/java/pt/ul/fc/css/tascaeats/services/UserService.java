@@ -12,6 +12,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonUpdateDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.users.request.ClientRequestDto;
@@ -32,6 +33,7 @@ import pt.ul.fc.css.tascaeats.entities.enums.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.entities.enums.OrderStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
@@ -105,6 +107,7 @@ public class UserService {
     return mapAUserToUserResponse(saved);
   }
 
+  // MIGRADO PARA MS
   public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRequestDto request)
       throws Exception {
     // primeiramente, verifico se o username já existe na bd do monolito
@@ -297,23 +300,57 @@ public class UserService {
   }
 
   @Transactional
-  public DeliveryPersonResponseDto updateDeliveryPerson(Long id, DeliveryPersonRequestDto request) {
-    Optional<AUser> userOpt = userRepository.findById(id);
-    if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
-      throw new ResourceNotFoundException("User not found");
+  public DeliveryPersonResponseDto updateDeliveryPerson(DeliveryPersonRequestDto request)
+      throws Exception {
+    // traduz o DTO do gRPC para o DTO do Kafka
+    DeliveryPersonUpdateDto kafkaDto = new DeliveryPersonUpdateDto();
+    kafkaDto.setCorrelationId(UUID.randomUUID().toString()); // para garantir idempotencia
+    kafkaDto.setUsername(request.getUsername());
+    kafkaDto.setPassword(request.getPassword());
+    kafkaDto.setName(request.getName());
+    kafkaDto.setPhoneNumber(request.getPhoneNumber());
+    kafkaDto.setNif(request.getNif());
+    kafkaDto.setStatus(request.getStatus());
+
+    // emite evento para MS apanhar
+    System.out.println(
+        "Sending delivery person update event with correlationId: " + kafkaDto.getCorrelationId());
+    sender.sendAsJson(Topics.DELIVERY_PERSON_UPDATE, kafkaDto);
+
+    // aguarda resposta do MS
+    KafkaResponse<pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto> response =
+        kafkaResponseStore.waitForDeliveryPerson(10000);
+
+    if (response == null) {
+      throw new IllegalStateException("Timeout waiting for delivery person update");
     }
 
-    DeliveryPerson deliveryPerson = (DeliveryPerson) userOpt.get();
-    deliveryPerson.setName(request.getName());
-    deliveryPerson.setUsername(request.getUsername());
-    deliveryPerson.setPhoneNumber(request.getPhoneNumber());
-    deliveryPerson.setNif(request.getNif());
-    deliveryPerson.setPassword(request.getPassword());
-    if (request.getStatus() != null && !request.getStatus().isEmpty()) {
-      deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus()));
+    // excecoes de negocio
+    if (!response.isSuccess()) {
+      switch (response.getErrorCode()) {
+        case "USER_NOT_FOUND" ->
+            throw new UserNotFoundException("User not found in delivery service");
+        case "INTERNAL_ERROR" -> throw new IllegalStateException(response.getErrorMessage());
+        default -> throw new Exception(response.getErrorMessage());
+      }
     }
 
+    // se chegou aqui, é sucesso, entao dou update tbm na minha bd
+    DeliveryPerson deliveryPerson =
+        (DeliveryPerson)
+            userRepository
+                .findByUsername(request.getUsername())
+                .orElseThrow(() -> new UserNotFoundException("User not found in monolith"));
+    deliveryPerson.setName(response.getData().name());
+    deliveryPerson.setPhoneNumber(response.getData().phoneNumber());
+    deliveryPerson.setNif(response.getData().nif());
+    deliveryPerson.setDeliveryPersonStatus(
+        DeliveryPersonStatus.valueOf(response.getData().status()));
+    if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+      deliveryPerson.setPassword(request.getPassword());
+    }
     DeliveryPerson saved = userRepository.save(deliveryPerson);
+
     return mapDeliveryToDeliveryPersonResponse(saved);
   }
 

@@ -23,6 +23,14 @@ public class Listener {
     responseStore.putDeliveryPerson(message);
   }
 
+  @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
+  @KafkaListener(topics = Topics.DELIVERY_PERSON_UPDATE_RESPONSE)
+  public void listenDeliveryPersonUpdated(String message) throws Exception {
+    System.out.println("Received delivery person update response");
+    // desbloqueia o servico que está à espera da resposta do update de delivery person
+    responseStore.putDeliveryPerson(message);
+  }
+
   @KafkaListener(topics = "my-deliveries-response", groupId = "monolito-group")
   public void listenMyDeliveries(String message) throws Exception {
     System.out.println("Received my-deliveries-response");

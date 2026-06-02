@@ -14,7 +14,7 @@ service TascaEatsService {
   rpc DeleteAccount (DeleteAccountRequest) returns (Empty);
   rpc UpdateAdmin (UserRequest) returns (UserResponse);
   rpc UpdateClient (UserRequest) returns (UserResponse);
-  rpc UpdateDeliveryPerson (DeliveryPersonUpdateRequest) returns (DeliveryPersonResponse);
+  rpc UpdateDeliveryPerson (DeliveryPersonUpdateRequest) returns (stream UpdateDeliveryPersonResponse);
   rpc SearchUsers (SearchUsersRequest) returns (SearchUsersResponse);
   rpc SearchRestaurants (SearchRestaurantsRequest) returns (RestaurantsResponse);
   rpc SearchAdminRestaurants (AdminRestaurantsRequest) returns (AdminRestaurantsResponse);
@@ -158,7 +158,6 @@ message UserRequest {
 }
 
 message DeliveryPersonUpdateRequest {
-  int64 id = 1;
   string username = 2;
   string password = 3;
   string name = 4;
@@ -181,6 +180,13 @@ message Acknowledged {}
 
 message RegisterDeliveryPersonResponse {
   oneof payload {
+    Acknowledged acknowledged = 1;
+    DeliveryPersonResponse person = 2;
+  }
+}
+
+message UpdateDeliveryPersonResponse {
+  oneof playload {
     Acknowledged acknowledged = 1;
     DeliveryPersonResponse person = 2;
   }

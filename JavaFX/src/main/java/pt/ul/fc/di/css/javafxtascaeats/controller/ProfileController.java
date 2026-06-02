@@ -1,5 +1,9 @@
 package pt.ul.fc.di.css.javafxtascaeats.controller;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -9,8 +13,10 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import pt.ul.fc.css.tascaeats.grpc.UpdateDeliveryPersonResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentDeliveryPerson;
@@ -31,6 +37,8 @@ public class ProfileController implements ControllerWithModel {
   @FXML private Label statusLabel;
   @FXML private ComboBox<String> statusComboBox;
   @FXML private Button myAddressesButton;
+  @FXML private Button updateButton;
+  @FXML private ProgressIndicator loadingIndicator;
   @FXML private Label errorLabel;
 
   @Override
@@ -108,7 +116,7 @@ public class ProfileController implements ControllerWithModel {
     String phone = phoneNumberField.getText().trim();
     String nif = nifField.getText().trim();
 
-    if (username.isEmpty() || name.isEmpty() || phone.isEmpty() || nif.isEmpty()) {
+    if (name.isEmpty() || phone.isEmpty() || nif.isEmpty()) {
       showError("All fields are required.");
       return;
     }
@@ -123,28 +131,80 @@ public class ProfileController implements ControllerWithModel {
     if (user == null) return;
     String passwordToSend = changingPassword ? newPassword : "";
 
-    try {
-      if (user instanceof CurrentDeliveryPerson dp) { // pegar o status caso currUser seja delivery
-        String status = statusComboBox.getValue();
-        ApiClient.updateDeliveryPerson(
-            user.getId(), username, passwordToSend, name, phone, nif, status);
-        dp.setStatus(status);
-      } else if (user instanceof CurrentClient) {
-        ApiClient.updateClient(user.getId(), username, passwordToSend, name, phone, nif);
-      } else {
-        ApiClient.updateAdmin(user.getId(), username, passwordToSend, name, phone, nif);
+    if (user instanceof CurrentDeliveryPerson) {
+      String status = statusComboBox.getValue();
+      ApiClient.updateDeliveryPerson(
+          username,
+          passwordToSend,
+          name,
+          phone,
+          nif,
+          status,
+          buildUpdateObserver(username, name, phone, nif, status));
+    } else {
+      try {
+        if (user instanceof CurrentClient) {
+          ApiClient.updateClient(user.getId(), username, passwordToSend, name, phone, nif);
+        } else {
+          ApiClient.updateAdmin(user.getId(), username, passwordToSend, name, phone, nif);
+        }
+      } catch (Exception e) {
+        showError("An error occurred, please try again later.");
+        return;
       }
-    } catch (Exception e) {
-      showError("An error occurred, please try again later.");
-      return;
+      applyUpdate(user, username, name, phone, nif);
+      showSuccess();
     }
+  }
 
-    // atualiza model que vai ser passado para outros controllers
+  private StreamObserver<UpdateDeliveryPersonResponse> buildUpdateObserver(
+      String username, String name, String phone, String nif, String status) {
+    return new StreamObserver<>() {
+      @Override
+      public void onNext(UpdateDeliveryPersonResponse response) {
+        if (response.getPlayloadCase() == UpdateDeliveryPersonResponse.PlayloadCase.ACKNOWLEDGED) {
+          Platform.runLater(() -> showLoading());
+        } else if (response.getPlayloadCase() == UpdateDeliveryPersonResponse.PlayloadCase.PERSON) {
+          Platform.runLater(
+              () -> {
+                hideLoading();
+                CurrentUser user = model.getCurrentUser();
+                applyUpdate(user, username, name, phone, nif);
+                ((CurrentDeliveryPerson) user).setStatus(status);
+                showSuccess();
+              });
+        }
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        Platform.runLater(
+            () -> {
+              hideLoading();
+              if (t instanceof StatusRuntimeException e
+                  && e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
+                showError("This username is already taken.");
+              } else {
+                showError("An error occurred, please try again later.");
+              }
+            });
+      }
+
+      @Override
+      public void onCompleted() {}
+    };
+  }
+
+  private void applyUpdate(
+      CurrentUser user, String username, String name, String phone, String nif) {
     user.setUsername(username);
     user.setName(name);
     user.setPhoneNumber(phone);
     user.setNif(nif);
     hideError();
+  }
+
+  private void showSuccess() {
     Alert success = new Alert(Alert.AlertType.INFORMATION);
     success.setTitle("Profile Updated");
     success.setHeaderText(null);
@@ -160,6 +220,20 @@ public class ProfileController implements ControllerWithModel {
   @Override
   public void setStage(Stage stage) {
     this.stage = stage;
+  }
+
+  private void showLoading() {
+    loadingIndicator.setVisible(true);
+    loadingIndicator.setManaged(true);
+    updateButton.setDisable(true);
+    errorLabel.setVisible(false);
+    errorLabel.setManaged(false);
+  }
+
+  private void hideLoading() {
+    loadingIndicator.setVisible(false);
+    loadingIndicator.setManaged(false);
+    updateButton.setDisable(false);
   }
 
   private void showError(String message) {

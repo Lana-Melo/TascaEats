@@ -1,10 +1,15 @@
 package pt.ul.fc.css.tascaeats.delivery.service;
 
+import jakarta.transaction.Transactional;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonUpdateDto;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.delivery.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
+import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
 import pt.ul.fc.css.tascaeats.delivery.model.ProcessedEvent;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryPersonRepository;
 import pt.ul.fc.css.tascaeats.delivery.repository.ProcessedEventRepository;
@@ -23,7 +28,7 @@ public class DeliveryPersonService {
     this.processedEventRepository = processedEventRepository;
   }
 
-  // NAO ESQUECER DE ADICIONAR STATUS
+  @Transactional
   public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRegistertDto request)
       throws Exception {
     // garantir idempotencia
@@ -51,8 +56,8 @@ public class DeliveryPersonService {
     DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
 
     return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
-    // sender.sendAsJson("delivery-person-created", response);
   }
+
   /*
   public DeliveryPersonResponseDto getUserById(Long id) {
     Optional<DeliveryPerson> deliveryPersonOpt = deliveryPersonRepository.findById(id);
@@ -132,4 +137,45 @@ public class DeliveryPersonService {
     }
     return true;
   }*/
+
+  @Transactional
+  public DeliveryPersonResponseDto updateDeliveryPerson(DeliveryPersonUpdateDto request) {
+
+    if (request.getCorrelationId() != null) {
+      if (processedEventRepository.existsById(request.getCorrelationId())) {
+        System.out.println("Event " + request.getCorrelationId() + " already processed. Ignoring.");
+        // devolve null ou um resultado vazio — o listener não envia resposta
+        return null;
+      }
+      System.out.println("Saving event with correlationId: " + request.getCorrelationId());
+      processedEventRepository.save(new ProcessedEvent(request.getCorrelationId()));
+    }
+
+    Optional<DeliveryPerson> userOpt =
+        deliveryPersonRepository.findByUsername(request.getUsername());
+    if (userOpt.isEmpty()) {
+      throw new UserNotFoundException("User not found");
+    }
+
+    DeliveryPerson deliveryPerson = userOpt.get();
+
+    if (request.getName() != null && !request.getName().isEmpty()) {
+      deliveryPerson.setName(request.getName());
+    }
+    if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
+      deliveryPerson.setPhoneNumber(request.getPhoneNumber());
+    }
+    if (request.getNif() != null && !request.getNif().isEmpty()) {
+      deliveryPerson.setNif(request.getNif());
+    }
+    if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+      deliveryPerson.setPassword(request.getPassword());
+    }
+    if (request.getStatus() != null && !request.getStatus().isEmpty()) {
+      deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus()));
+    }
+
+    DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
+    return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
+  }
 }

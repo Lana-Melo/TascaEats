@@ -24,7 +24,6 @@ import pt.ul.fc.css.tascaeats.dto.users.request.ClientUpdateRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.DeliveryPersonRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.request.UserRequestDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.ClientResponseDto;
-import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.Address;
 import pt.ul.fc.css.tascaeats.entities.Admin;
@@ -255,6 +254,7 @@ class UserServiceTest {
 
   // ─── updateDeliveryPerson ───────────────────────────────────────────────────
 
+  /*
   @Test
   void updateDeliveryPerson_shouldReturnUpdated_whenFound() {
     DeliveryPerson dp = deliveryPerson();
@@ -272,14 +272,16 @@ class UserServiceTest {
     assertNotNull(result);
     assertEquals("dp2", result.username());
   }
+  */
 
+  /*
   @Test
   void updateDeliveryPerson_shouldThrow_whenNotFound() {
     when(userRepository.findById(99L)).thenReturn(Optional.empty());
     assertThrows(
         ResourceNotFoundException.class,
         () -> userService.updateDeliveryPerson(99L, new DeliveryPersonRequestDto()));
-  }
+  }*/
 
   @Test
   void getClientById_shouldReturnClient_whenFound() {
@@ -346,6 +348,7 @@ class UserServiceTest {
     assertEquals(1, result.addresses().size());
   }
 
+  /*
   @Test
   void updateDeliveryPerson_shouldReturnUpdatedWithStatus_whenStatusProvided() {
     DeliveryPerson dp = deliveryPerson();
@@ -366,7 +369,9 @@ class UserServiceTest {
     assertEquals("dp2", result.username());
     assertEquals("BUSY", result.status());
   }
+  */
 
+  /*
   @Test
   void updateDeliveryPerson_shouldReturnUpdated_whenStatusNotProvided() {
     DeliveryPerson dp = deliveryPerson();
@@ -386,7 +391,7 @@ class UserServiceTest {
     assertEquals("dp2", result.username());
     assertEquals("AVAILABLE", result.status());
   }
-
+  */
   @Test
   void deleteDeliveryPerson_shouldSoftDelete_whenHasCompletedOrders() {
     DeliveryPerson dp = deliveryPerson();

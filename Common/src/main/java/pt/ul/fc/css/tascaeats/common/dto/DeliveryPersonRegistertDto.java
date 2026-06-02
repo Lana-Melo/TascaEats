@@ -2,7 +2,6 @@ package pt.ul.fc.css.tascaeats.common.dto;
 
 public class DeliveryPersonRegistertDto {
   private String correlationId; // relacionado ao evento
-  private Long id;
   private String username;
   private String password;
   private String name;
@@ -11,14 +10,6 @@ public class DeliveryPersonRegistertDto {
   private String status;
 
   public DeliveryPersonRegistertDto() {}
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
 
   public String getCorrelationId() {
     return correlationId;
