@@ -111,6 +111,12 @@ public class DeliveryService {
 
     deliveryPersonRepository.save(del);
     Delivery saved = deliveryRepository.save(delivery);
+    sender.sendAsJson(
+        "delivery-person-assigned",
+        Map.of(
+            "orderId", saved.getOrderId(),
+            "deliveryPersonId", del.getId(),
+            "deliveryPersonName", del.getName()));
     return mapDeliveryToDeliveryResponse(saved);
   }
 

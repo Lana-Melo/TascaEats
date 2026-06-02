@@ -15,6 +15,7 @@ import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
+import pt.ul.fc.css.tascaeats.delivery.dto.request.AssignmentRequestDto;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserAlreadyExistsException;
 import pt.ul.fc.css.tascaeats.delivery.service.DeliveryPersonService;
 import pt.ul.fc.css.tascaeats.delivery.service.DeliveryService;
@@ -79,6 +80,24 @@ public class Listener {
       sender.sendAsJson(Topics.DELIVERY_MARKED_DELIVERED_RESPONSE, response);
     } catch (Exception e) {
       System.err.println("Error processing mark-delivery-delivered: " + e.getMessage());
+    }
+  }
+
+  @KafkaListener(topics = Topics.ASSIGN_DELIVERY_PERSON, groupId = "tascaeats-group")
+  public void listenAssignDeliveryPerson(String message) {
+    try {
+      AssignmentRequestDto dto = Sender.fromJson(message, new TypeReference<AssignmentRequestDto>() {});
+      System.out.println(
+          "Received assign-delivery-person for deliveryId: "
+              + dto.getDeliveryId()
+              + ", deliveryPersonId: "
+              + dto.getDeliveryPersonId());
+      DeliveryResponseDto response =
+          deliveryService.assignDeliveryPerson(dto.getDeliveryId(), dto.getDeliveryPersonId());
+      // publica a resposta para o monolito desbloquear o waitForDelivery
+      sender.sendAsJson(Topics.DELIVERY_PERSON_ASSIGNED, response);
+    } catch (Exception e) {
+      System.err.println("Error processing assign-delivery-person: " + e.getMessage());
     }
   }
 

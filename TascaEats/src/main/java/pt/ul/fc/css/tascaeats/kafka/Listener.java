@@ -2,6 +2,7 @@ package pt.ul.fc.css.tascaeats.kafka;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -45,6 +46,18 @@ public class Listener {
   @KafkaListener(topics = Topics.DELIVERY_MARKED_DELIVERED_RESPONSE, groupId = "monolito-group")
   public void listenDeliveryMarkedDelivered(String message) throws Exception {
     System.out.println("Received delivery-marked-delivered response");
+    responseStore.putDelivery(message);
+  }
+
+  @KafkaListener(topics = Topics.DELIVERY_PERSON_ASSIGNED, groupId = "monolito-group")
+  public void listenDeliveryPersonAssigned(String message) throws Exception {
+    System.out.println("Received delivery-person-assigned");
+    responseStore.putDelivery(message);
+  }
+
+  @KafkaListener(topics = Topics.ASSIGN_DELIVERY_PERSON_RESPONSE, groupId = "monolito-group")
+  public void listenAssignDeliveryPersonResponse(String message) throws Exception {
+    System.out.println("Received assign-delivery-person-response");
     responseStore.putDelivery(message);
   }
 

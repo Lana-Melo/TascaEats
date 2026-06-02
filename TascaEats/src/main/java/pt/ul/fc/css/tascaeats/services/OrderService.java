@@ -221,13 +221,6 @@ public class OrderService {
             order.setDeliveryPerson(del);
             userRepository.save(del);
           }*/
-          sender.sendAsJson(
-              "order-ready",
-              Map.of(
-                  "orderId", order.getId(),
-                  "street", order.getAddress().getStreet(),
-                  "city", order.getAddress().getCity(),
-                  "postalCode", order.getAddress().getPostalCode()));
         }
         break;
       case READY:
