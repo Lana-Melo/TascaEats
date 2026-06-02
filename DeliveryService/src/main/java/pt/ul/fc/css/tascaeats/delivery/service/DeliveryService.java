@@ -32,8 +32,7 @@ public class DeliveryService {
     Delivery delivery = new Delivery(LocalDateTime.now(), orderId);
     Delivery saved = deliveryRepository.save(delivery);
 
-    Optional<DeliveryPerson> availableOpt =
-        deliveryPersonRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
+    Optional<DeliveryPerson> availableOpt = deliveryPersonRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
     if (availableOpt.isPresent()) {
       DeliveryPerson dp = availableOpt.get();
       DeliveryResponseDto assigned = assignDeliveryPerson(saved.getId(), dp.getId());
@@ -78,7 +77,7 @@ public class DeliveryService {
     deliveryPersonRepository.save(del);
     Delivery saved = deliveryRepository.save(delivery);
     sender.sendAsJson(
-        "delivery-person-assigned",
+        Topics.DELIVERY_PERSON_ASSIGNED,
         Map.of(
             "orderId", saved.getOrderId(),
             "deliveryPersonId", del.getId(),
@@ -111,7 +110,7 @@ public class DeliveryService {
     delivery.setStatus(DeliveryStatus.DELIVERED);
     Delivery saved = deliveryRepository.save(delivery);
     sender.sendAsJson(
-        "delivery-delivered", Map.of("orderId", saved.getOrderId())); // vai monolito tua vez
+        Topics.DELIVERY_DELIVERED, Map.of("orderId", saved.getOrderId())); // vai monolito tua vez
     return mapDeliveryToDeliveryResponse(saved);
   }
 
