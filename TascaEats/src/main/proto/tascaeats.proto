@@ -10,7 +10,7 @@ service TascaEatsService {
 
   rpc Login (LoginRequest) returns (UserResponse);
   rpc RegisterAdmin (UserRequest) returns (UserResponse);
-  rpc RegisterDeliveryPerson (UserRequest) returns (DeliveryPersonResponse);
+  rpc RegisterDeliveryPerson (UserRequest) returns (stream RegisterDeliveryPersonResponse);
   rpc DeleteAccount (DeleteAccountRequest) returns (Empty);
   rpc UpdateAdmin (UserRequest) returns (UserResponse);
   rpc UpdateClient (UserRequest) returns (UserResponse);
@@ -175,6 +175,15 @@ message DeliveryPersonResponse {
   string phoneNumber = 5;
   string nif = 6;
   string status = 7;
+}
+
+message Acknowledged {}
+
+message RegisterDeliveryPersonResponse {
+  oneof payload {
+    Acknowledged acknowledged = 1;
+    DeliveryPersonResponse person = 2;
+  }
 }
 
 message DeleteAccountRequest {

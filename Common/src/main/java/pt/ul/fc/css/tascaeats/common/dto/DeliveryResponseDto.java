@@ -1,4 +1,4 @@
-package pt.ul.fc.css.tascaeats.dto.delivery;
+package pt.ul.fc.css.tascaeats.common.dto;
 
 import java.time.LocalDateTime;
 

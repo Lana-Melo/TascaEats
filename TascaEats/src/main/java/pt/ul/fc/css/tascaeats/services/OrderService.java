@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
+import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderResponseDto;
@@ -28,6 +30,7 @@ import pt.ul.fc.css.tascaeats.entities.enums.RestaurantStatus;
 import pt.ul.fc.css.tascaeats.exceptions.IncompleteInputException;
 import pt.ul.fc.css.tascaeats.exceptions.RequirementsNotMetException;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.repository.OrderRepository;
 import pt.ul.fc.css.tascaeats.repository.ProductItemRepository;
@@ -42,18 +45,21 @@ public class OrderService {
   private final RestaurantRepository restaurantRepository;
   private final ProductItemRepository productItemRepository;
   private final Sender sender;
+  private final KafkaResponseStore kafkaResponseStore;
 
   public OrderService(
       OrderRepository orderRepository,
       UserRepository userRepository,
       RestaurantRepository restaurantRepository,
       ProductItemRepository productItemRepository,
-      Sender sender) {
+      Sender sender,
+      KafkaResponseStore kafkaResponseStore) {
     this.orderRepository = orderRepository;
     this.userRepository = userRepository;
     this.restaurantRepository = restaurantRepository;
     this.productItemRepository = productItemRepository;
     this.sender = sender;
+    this.kafkaResponseStore = kafkaResponseStore;
   }
 
   /////////////////////////////////////////////////////////////
@@ -284,6 +290,18 @@ public class OrderService {
             .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     order.setOrderStatus(OrderStatus.DELIVERED);
     orderRepository.save(order);
+  }
+
+  public List<DeliveryResponseDto> getMyDeliveries(Long deliveryPersonId) throws Exception {
+    sender.sendAsJson(Topics.GET_MY_DELIVERIES, deliveryPersonId);
+
+    List<DeliveryResponseDto> deliveries = kafkaResponseStore.waitForDeliveries(10000);
+
+    if (deliveries == null) {
+      throw new IllegalStateException("Timeout waiting for deliveries from delivery service");
+    }
+
+    return deliveries;
   }
 
   /////////////////////////////////////////////////////////////

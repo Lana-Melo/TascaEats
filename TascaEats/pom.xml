@@ -118,6 +118,12 @@
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>pt.ul.fc.css.tascaeats</groupId>
+            <artifactId>shared-kafka</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>

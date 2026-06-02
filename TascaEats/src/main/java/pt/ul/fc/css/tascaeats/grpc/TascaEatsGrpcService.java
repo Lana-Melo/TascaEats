@@ -5,7 +5,7 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import pt.ul.fc.css.tascaeats.dto.delivery.DeliveryResponseDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
@@ -21,6 +21,7 @@ import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
@@ -99,24 +100,33 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   // ─── Register Delivery Person ─────────────────────────────────────────────
   @Override
   public void registerDeliveryPerson(
-      UserRequest request, StreamObserver<DeliveryPersonResponse> responseObserver) {
+      UserRequest request, StreamObserver<RegisterDeliveryPersonResponse> responseObserver) {
     try {
       DeliveryPersonRequestDto requestDto =
           grpcMapper.mapDeliveryPersonRegisterReqToReqDto(request);
 
+      // enviar resposta de reconhecimento imediato para evitar timeout no cliente
+      responseObserver.onNext(
+          RegisterDeliveryPersonResponse.newBuilder()
+              .setAcknowledged(Acknowledged.getDefaultInstance())
+              .build());
+
       DeliveryPersonResponseDto user = userService.registerNewDeliveryPerson(requestDto);
 
-      if (user == null) {
-        throw new IllegalArgumentException();
-      }
-
-      DeliveryPersonResponse response = grpcMapper.mapDeliveryPersonResponseDtoToResponse(user);
-
-      responseObserver.onNext(response);
+      // enviar resposta final com os dados do usuário registrado
+      responseObserver.onNext(
+          RegisterDeliveryPersonResponse.newBuilder()
+              .setPerson(grpcMapper.mapDeliveryPersonResponseDtoToResponse(user))
+              .build());
       responseObserver.onCompleted();
 
-    } catch (IllegalArgumentException e) {
-      responseObserver.onError(Status.Code.ALREADY_EXISTS.toStatus().asRuntimeException());
+    } catch (UserAlreadyExistsException e) {
+      // erro de negócio — já existe
+      responseObserver.onError(
+          Status.ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
+    } catch (IllegalStateException e) {
+      responseObserver.onError(
+          Status.DEADLINE_EXCEEDED.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
@@ -818,17 +828,8 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   public void getMyDeliveries(
       DeliveryPersonIdRequest request, StreamObserver<DeliveryItem> responseObserver) {
     try {
-      sender.sendAsJson("get-my-deliveries", request.getDeliveryPersonId());
-
-      List<DeliveryResponseDto> deliveries = kafkaResponseStore.waitForDeliveries(10000);
-
-      if (deliveries == null) {
-        responseObserver.onError(
-            Status.DEADLINE_EXCEEDED
-                .withDescription("Timeout waiting for deliveries")
-                .asRuntimeException());
-        return;
-      }
+      List<DeliveryResponseDto> deliveries =
+          orderService.getMyDeliveries(request.getDeliveryPersonId());
 
       for (DeliveryResponseDto d : deliveries) {
         responseObserver.onNext(
@@ -844,6 +845,9 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       }
       responseObserver.onCompleted();
 
+    } catch (IllegalStateException e) {
+      responseObserver.onError(
+          Status.DEADLINE_EXCEEDED.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
