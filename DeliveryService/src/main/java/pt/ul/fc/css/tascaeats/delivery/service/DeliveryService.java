@@ -109,8 +109,23 @@ public class DeliveryService {
 
     delivery.setStatus(DeliveryStatus.DELIVERED);
     Delivery saved = deliveryRepository.save(delivery);
+
+    Optional<Delivery> pendingOpt = deliveryRepository.findFirstByStatus(DeliveryStatus.PENDING);
+    if (pendingOpt.isPresent()) {
+      Delivery d = pendingOpt.get();
+      DeliveryResponseDto assigned = assignDeliveryPerson(d.getId(), del.getId());
+      sender.sendAsJson(Topics.DELIVERY_DELIVERED, Map.of(
+          "id", saved.getOrderId(),
+          "username", assigned.deliveryPersonUsername(),
+          "orderId", assigned.orderId()));
+      return assigned;
+    }
+
     sender.sendAsJson(
-        Topics.DELIVERY_DELIVERED, Map.of("orderId", saved.getOrderId())); // vai monolito tua vez
+        Topics.DELIVERY_DELIVERED, Map.of(
+            "id", saved.getOrderId(),
+            "username", del.getUsername(), 
+            "orderId", null));
     return mapDeliveryToDeliveryResponse(saved);
   }
 

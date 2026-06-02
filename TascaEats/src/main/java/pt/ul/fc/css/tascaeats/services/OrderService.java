@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
+import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderRequestDto;
@@ -211,10 +212,10 @@ public class OrderService {
           try {
             sender.sendAsJson(Topics.CREATE_DELIVERY, order.getId());
 
-            DeliveryResponseDto delivery = kafkaResponseStore.waitForDelivery(10000);
+            KafkaResponse<DeliveryResponseDto> delivery = kafkaResponseStore.waitForDelivery(10000);
 
-            if (delivery != null && delivery.deliveryPersonId() != null) {
-              Optional<AUser> dpOpt = userRepository.findByUsername(delivery.deliveryPersonUsername());
+            if (delivery != null && delivery.getData().deliveryPersonId() != null) {
+              Optional<AUser> dpOpt = userRepository.findByUsername(delivery.getData().deliveryPersonUsername());
               if (dpOpt.isPresent() && dpOpt.get() instanceof DeliveryPerson) {
                 DeliveryPerson del = (DeliveryPerson) dpOpt.get();
                 del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
@@ -236,17 +237,7 @@ public class OrderService {
       default:
         throw new IllegalArgumentException("Invalid or unchangeable order status");
     }
-
-    /* if (ordStat == OrderStatus.DELIVERED && order.getDelivery() == null) {
-      throw new RequirementsNotMetException(
-          "Delivered order must have a delivery associated with it");
-    } else if (ordStat == OrderStatus.DELIVERED) {
-      order.getDelivery().setDeliveryTimeStamp();
-      DeliveryPerson del = order.getDeliveryPerson();
-      del.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
-      userRepository.save(del);
-    }*/
-
+    
     order.setOrderStatus(ordStat);
     Order saved = orderRepository.save(order);
     return mapOrderToOrderResponse(saved);
@@ -281,12 +272,25 @@ public class OrderService {
   }
 
   @Transactional
-  public void markOrderAsDelivered(Long orderId) {
+  public void markOrderAsDelivered(Long orderId, String username, Long deliveryId) {
     Order order =
         orderRepository
             .findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     order.setOrderStatus(OrderStatus.DELIVERED);
+
+    Optional<AUser> userOpt = userRepository.findByUsername(username);
+    if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
+      throw new ResourceNotFoundException("User not found");
+    }
+    DeliveryPerson del = (DeliveryPerson) userOpt.get();
+    del.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
+
+    if (deliveryId != null) {
+      assignDeliveryPerson(deliveryId, del.getId());
+    }
+
+    userRepository.save(del);
     orderRepository.save(order);
   }
 

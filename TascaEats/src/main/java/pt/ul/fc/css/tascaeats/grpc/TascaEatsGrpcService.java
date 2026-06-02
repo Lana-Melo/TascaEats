@@ -7,6 +7,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
+import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
@@ -871,15 +872,26 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
     try {
       sender.sendAsJson("mark-delivery-delivered", request.getDeliveryId());
 
-      DeliveryResponseDto delivery = kafkaResponseStore.waitForDelivery(10000);
+      KafkaResponse<DeliveryResponseDto> response = kafkaResponseStore.waitForDelivery(10000);
 
-      if (delivery == null) {
+      if (response == null) {
         responseObserver.onError(
             Status.DEADLINE_EXCEEDED
                 .withDescription("Timeout waiting for delivery update")
                 .asRuntimeException());
         return;
       }
+
+      if (!response.isSuccess()) {
+        responseObserver.onError(
+            Status.FAILED_PRECONDITION
+                .withDescription(response.getErrorMessage())
+                .asRuntimeException());
+        return;
+      }
+
+      DeliveryResponseDto delivery = response.getData();
+
 
       responseObserver.onNext(
           DeliveryResponse.newBuilder()
