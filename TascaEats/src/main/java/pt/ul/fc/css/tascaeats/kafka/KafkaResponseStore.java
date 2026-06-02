@@ -19,7 +19,8 @@ public class KafkaResponseStore {
 
   private final SynchronousQueue<List<DeliveryResponseDto>> deliveriesQueue =
       new SynchronousQueue<>();
-  private final SynchronousQueue<DeliveryResponseDto> deliveryQueue = new SynchronousQueue<>();
+  private final SynchronousQueue<KafkaResponse<DeliveryResponseDto>> deliveryQueue =
+      new SynchronousQueue<>();
   private final SynchronousQueue<KafkaResponse<DeliveryPersonResponseDto>> deliveryPersonQueue =
       new SynchronousQueue<>();
 
@@ -33,11 +34,12 @@ public class KafkaResponseStore {
   }
 
   public void putDelivery(String json) throws Exception {
-    DeliveryResponseDto dto = mapper.readValue(json, DeliveryResponseDto.class);
-    deliveryQueue.put(dto);
+    KafkaResponse<DeliveryResponseDto> response =
+        mapper.readValue(json, new TypeReference<KafkaResponse<DeliveryResponseDto>>() {});
+    deliveryQueue.put(response);
   }
 
-  public DeliveryResponseDto waitForDelivery(long timeoutMs) throws Exception {
+  public KafkaResponse<DeliveryResponseDto> waitForDelivery(long timeoutMs) throws Exception {
     return deliveryQueue.poll(timeoutMs, TimeUnit.MILLISECONDS);
   }
 
