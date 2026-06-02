@@ -1,47 +1,51 @@
 package pt.ul.fc.css.tascaeats.delivery.service;
 
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import org.apache.kafka.common.errors.ResourceNotFoundException;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import pt.ul.fc.css.tascaeats.delivery.dto.request.DeliveryPersonRequestDto;
-import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryPersonResponseDto;
-import pt.ul.fc.css.tascaeats.delivery.kafka.Sender;
-import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonUpdateDto;
+import pt.ul.fc.css.tascaeats.delivery.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.delivery.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
-import pt.ul.fc.css.tascaeats.delivery.model.DeliveryStatus;
+import pt.ul.fc.css.tascaeats.delivery.model.ProcessedEvent;
 import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryPersonRepository;
-import pt.ul.fc.css.tascaeats.delivery.repository.DeliveryRepository;
+import pt.ul.fc.css.tascaeats.delivery.repository.ProcessedEventRepository;
 import pt.ul.fc.css.tascaeats.delivery.util.Mapper;
 
 @Service
 public class DeliveryPersonService {
 
   private final DeliveryPersonRepository deliveryPersonRepository;
-  private final Sender sender;
-  private final DeliveryRepository deliveryRepository;
+  private final ProcessedEventRepository processedEventRepository;
 
   public DeliveryPersonService(
       DeliveryPersonRepository deliveryPersonRepository,
-      Sender sender,
-      DeliveryRepository deliveryRepository) {
+      ProcessedEventRepository processedEventRepository) {
     this.deliveryPersonRepository = deliveryPersonRepository;
-    this.sender = sender;
-    this.deliveryRepository = deliveryRepository;
+    this.processedEventRepository = processedEventRepository;
   }
 
-  public void registerNewDeliveryPerson(DeliveryPersonRequestDto request) {
-    if (deliveryPersonRepository.findByUsername(request.getUsername()).isPresent()) {
-      throw new IllegalArgumentException("Username already exists.");
+  @Transactional
+  public DeliveryPersonResponseDto registerNewDeliveryPerson(DeliveryPersonRegistertDto request)
+      throws Exception {
+    // garantir idempotencia
+    if (request.getCorrelationId() != null) {
+      if (processedEventRepository.existsById(request.getCorrelationId())) {
+        System.out.println("Event " + request.getCorrelationId() + " already processed. Ignoring.");
+        // devolve null ou um resultado vazio — o listener não envia resposta
+        return null;
+      }
+      System.out.println("Saving event with correlationId: " + request.getCorrelationId());
+      processedEventRepository.save(new ProcessedEvent(request.getCorrelationId()));
     }
+
+    if (deliveryPersonRepository.findByUsername(request.getUsername()).isPresent()) {
+      throw new UserAlreadyExistsException("Username already exists.");
+    }
+
     DeliveryPerson deliveryPerson =
         new DeliveryPerson(
             request.getUsername(),
@@ -51,11 +55,10 @@ public class DeliveryPersonService {
             request.getNif());
     DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
 
-    // trocar este return para emitir um evento com as infos necessarias para o monolito
-    DeliveryPersonResponseDto response = Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
-    sender.sendAsJson("delivery-person-created", response);
+    return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
   }
 
+  /*
   public DeliveryPersonResponseDto getUserById(Long id) {
     Optional<DeliveryPerson> deliveryPersonOpt = deliveryPersonRepository.findById(id);
     if (deliveryPersonOpt.isEmpty()) {
@@ -133,5 +136,46 @@ public class DeliveryPersonService {
       deliveryPersonRepository.save(deliveryPerson);
     }
     return true;
+  }*/
+
+  @Transactional
+  public DeliveryPersonResponseDto updateDeliveryPerson(DeliveryPersonUpdateDto request) {
+
+    if (request.getCorrelationId() != null) {
+      if (processedEventRepository.existsById(request.getCorrelationId())) {
+        System.out.println("Event " + request.getCorrelationId() + " already processed. Ignoring.");
+        // devolve null ou um resultado vazio — o listener não envia resposta
+        return null;
+      }
+      System.out.println("Saving event with correlationId: " + request.getCorrelationId());
+      processedEventRepository.save(new ProcessedEvent(request.getCorrelationId()));
+    }
+
+    Optional<DeliveryPerson> userOpt =
+        deliveryPersonRepository.findByUsername(request.getUsername());
+    if (userOpt.isEmpty()) {
+      throw new UserNotFoundException("User not found");
+    }
+
+    DeliveryPerson deliveryPerson = userOpt.get();
+
+    if (request.getName() != null && !request.getName().isEmpty()) {
+      deliveryPerson.setName(request.getName());
+    }
+    if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
+      deliveryPerson.setPhoneNumber(request.getPhoneNumber());
+    }
+    if (request.getNif() != null && !request.getNif().isEmpty()) {
+      deliveryPerson.setNif(request.getNif());
+    }
+    if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+      deliveryPerson.setPassword(request.getPassword());
+    }
+    if (request.getStatus() != null && !request.getStatus().isEmpty()) {
+      deliveryPerson.setDeliveryPersonStatus(DeliveryPersonStatus.valueOf(request.getStatus()));
+    }
+
+    DeliveryPerson saved = deliveryPersonRepository.save(deliveryPerson);
+    return Mapper.mapDeliveryPersonToDeliveryPersonResponse(saved);
   }
 }

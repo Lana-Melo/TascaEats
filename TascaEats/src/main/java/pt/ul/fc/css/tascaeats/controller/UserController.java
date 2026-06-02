@@ -60,7 +60,7 @@ public class UserController {
   @PostMapping("/register/delivery")
   @ApiOperation(value = "Register delivery person", notes = "Register a new delivery person")
   public ResponseEntity<DeliveryPersonResponseDto> registerDelivery(
-      @RequestBody @Valid DeliveryPersonRequestDto request) {
+      @RequestBody @Valid DeliveryPersonRequestDto request) throws Exception {
     DeliveryPersonResponseDto user = userHandler.registerNewDeliveryPerson(request);
     return ResponseEntity.ok(user);
   }
@@ -99,11 +99,13 @@ public class UserController {
     return ResponseEntity.ok(admin);
   }
 
+  // TROCAR DPS, NAO VAI MAIS PASSAR ID, O ATRIBUTO CHAVE É USERNAME
   @PutMapping("/delivery/{id}")
   @ApiOperation(value = "Update delivery person", notes = "Updates an existing delivery person.")
   public ResponseEntity<DeliveryPersonResponseDto> updateDeliveryPerson(
-      @PathVariable Long id, @RequestBody @Valid DeliveryPersonRequestDto request) {
-    DeliveryPersonResponseDto deliveryPerson = userHandler.updateDeliveryPerson(id, request);
+      @PathVariable Long id, @RequestBody @Valid DeliveryPersonRequestDto request)
+      throws Exception {
+    DeliveryPersonResponseDto deliveryPerson = userHandler.updateDeliveryPerson(request);
     return ResponseEntity.ok(deliveryPerson);
   }
 

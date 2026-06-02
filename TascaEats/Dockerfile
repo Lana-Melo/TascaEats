@@ -1,14 +1,15 @@
-FROM maven:latest as builder
-ADD pom.xml .
-RUN mvn dependency:go-offline
-COPY . .
-RUN mvn clean package -Dmaven.test.skip=true
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /workspace
 
-FROM docker.io/eclipse-temurin:17
+COPY Common/ Common/
+COPY TascaEats/ TascaEats/
+
+RUN mvn -f Common/pom.xml install -DskipTests -B && \
+    mvn -f TascaEats/pom.xml package -DskipTests -B
+
+FROM eclipse-temurin:17
 VOLUME /tmp
-RUN mkdir -p /app/
 RUN mkdir -p /app/logs/
-COPY --from=builder /target/tascaeats-1.0.jar app/app.jar
-#COPY --from=builder /target/site/jacoco /app/jacoco-report
+COPY --from=builder /workspace/TascaEats/target/tascaeats-1.0.jar /app/app.jar
 EXPOSE 8080 8082
-ENTRYPOINT ["java","-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -21,6 +21,8 @@ import pt.ul.fc.css.tascaeats.dto.users.response.DeliveryPersonResponseDto;
 import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
+import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
 import pt.ul.fc.css.tascaeats.mapper.GrpcMapper;
@@ -99,24 +101,33 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   // ─── Register Delivery Person ─────────────────────────────────────────────
   @Override
   public void registerDeliveryPerson(
-      UserRequest request, StreamObserver<DeliveryPersonResponse> responseObserver) {
+      UserRequest request, StreamObserver<RegisterDeliveryPersonResponse> responseObserver) {
     try {
       DeliveryPersonRequestDto requestDto =
           grpcMapper.mapDeliveryPersonRegisterReqToReqDto(request);
 
+      // enviar resposta de reconhecimento imediato para evitar timeout no cliente
+      responseObserver.onNext(
+          RegisterDeliveryPersonResponse.newBuilder()
+              .setAcknowledged(Acknowledged.getDefaultInstance())
+              .build());
+
       DeliveryPersonResponseDto user = userService.registerNewDeliveryPerson(requestDto);
 
-      if (user == null) {
-        throw new IllegalArgumentException();
-      }
-
-      DeliveryPersonResponse response = grpcMapper.mapDeliveryPersonResponseDtoToResponse(user);
-
-      responseObserver.onNext(response);
+      // enviar resposta final com os dados do usuário registrado
+      responseObserver.onNext(
+          RegisterDeliveryPersonResponse.newBuilder()
+              .setPerson(grpcMapper.mapDeliveryPersonResponseDtoToResponse(user))
+              .build());
       responseObserver.onCompleted();
 
-    } catch (IllegalArgumentException e) {
-      responseObserver.onError(Status.Code.ALREADY_EXISTS.toStatus().asRuntimeException());
+    } catch (UserAlreadyExistsException e) {
+      // erro de negócio — já existe
+      responseObserver.onError(
+          Status.ALREADY_EXISTS.withDescription(e.getMessage()).asRuntimeException());
+    } catch (IllegalStateException e) {
+      responseObserver.onError(
+          Status.DEADLINE_EXCEEDED.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
@@ -165,15 +176,24 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   @Override
   public void updateDeliveryPerson(
       DeliveryPersonUpdateRequest request,
-      StreamObserver<DeliveryPersonResponse> responseObserver) {
+      StreamObserver<UpdateDeliveryPersonResponse> responseObserver) {
     try {
-      Long id = request.getId();
       DeliveryPersonRequestDto requestDto = grpcMapper.mapDeliveryPersonUpdateReqToReqDto(request);
-      DeliveryPersonResponseDto user = userService.updateDeliveryPerson(id, requestDto);
-      DeliveryPersonResponse response = grpcMapper.mapDeliveryPersonResponseDtoToResponse(user);
-      responseObserver.onNext(response);
+
+      responseObserver.onNext(
+          UpdateDeliveryPersonResponse.newBuilder()
+              .setAcknowledged(Acknowledged.getDefaultInstance())
+              .build());
+
+      DeliveryPersonResponseDto user = userService.updateDeliveryPerson(requestDto);
+
+      responseObserver.onNext(
+          UpdateDeliveryPersonResponse.newBuilder()
+              .setPerson(grpcMapper.mapDeliveryPersonResponseDtoToResponse(user))
+              .build());
       responseObserver.onCompleted();
-    } catch (ResourceNotFoundException e) {
+
+    } catch (UserNotFoundException e) {
       responseObserver.onError(
           Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
