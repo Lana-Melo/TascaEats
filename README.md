@@ -175,11 +175,9 @@ Services:
   - postgres-monolith: PostgreSQL for monolith
   - postgres-delivery: PostgreSQL for delivery service
   - kafka: Apache Kafka message broker
-  - zookeeper: Kafka dependency for coordination
   - monolith: Spring Boot application (TascaEats)
   - delivery-service: Spring Boot microservice
   - nginx: Reverse proxy
-  - pgadmin (optional): Database administration UI
 ```
 
 All services communicate within a Docker network, with external access controlled through Nginx.
