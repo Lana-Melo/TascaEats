@@ -54,18 +54,6 @@ The application uses **PostgreSQL**. You can connect via [DBeaver](https://dbeav
 
 ---
 
-## Sample Data
-
-For convenience, the database is automatically populated on startup via `BdLoader.java`, located in `src/main/java/.../config`. This seeds the database with sample data to make it easier to test the endpoints right away.
-
----
-
-## Code Quality
-
-Code quality in this phase was enforced using **pre-commit hooks**, ensuring that checks run automatically before each commit.
-
----
-
 ## Phase 3 — Microservices Architecture
 
 ### Overview
@@ -78,6 +66,18 @@ The key objectives were:
 - Ensure eventual consistency across the system
 - Maintain seamless user experience across all interfaces
 - Containerize and orchestrate all services using Docker Compose
+
+## Sample Data
+
+For convenience, the database is automatically populated on startup via `BdLoader.java`, located in `src/main/java/.../config`. This seeds the database with sample data to make it easier to test the endpoints right away.
+
+---
+
+## Code Quality
+
+Code quality in this phase was enforced using **pre-commit hooks**, ensuring that checks run automatically before each commit.
+
+---
 
 ### Backend / Architecture
 
