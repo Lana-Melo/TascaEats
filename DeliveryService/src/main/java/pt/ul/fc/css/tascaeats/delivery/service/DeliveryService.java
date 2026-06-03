@@ -8,10 +8,10 @@ import java.util.Optional;
 import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.RequirementsNotMetException;
 import pt.ul.fc.css.tascaeats.delivery.kafka.Sender;
-import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPerson;
 import pt.ul.fc.css.tascaeats.delivery.model.DeliveryPersonStatus;
@@ -32,7 +32,8 @@ public class DeliveryService {
     Delivery delivery = new Delivery(LocalDateTime.now(), orderId);
     Delivery saved = deliveryRepository.save(delivery);
 
-    Optional<DeliveryPerson> availableOpt = deliveryPersonRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
+    Optional<DeliveryPerson> availableOpt =
+        deliveryPersonRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
     if (availableOpt.isPresent()) {
       DeliveryPerson dp = availableOpt.get();
       DeliveryResponseDto assigned = assignDeliveryPerson(saved.getId(), dp.getId());
@@ -109,7 +110,10 @@ public class DeliveryService {
 
     delivery.setStatus(DeliveryStatus.DELIVERED);
     Delivery saved = deliveryRepository.save(delivery);
-
+    /*
+    comentando pq isto ta mal, a delivery que foi assigned para um delivery person
+    ainda esta INCOMING, nao DELIVERED
+    // tenta atribuir uma nova entrega pendente a este delivery person
     Optional<Delivery> pendingOpt = deliveryRepository.findFirstByStatus(DeliveryStatus.PENDING);
     if (pendingOpt.isPresent()) {
       Delivery d = pendingOpt.get();
@@ -120,12 +124,12 @@ public class DeliveryService {
           "orderId", assigned.orderId()));
       return assigned;
     }
-
+    */
     sender.sendAsJson(
-        Topics.DELIVERY_DELIVERED, Map.of(
-            "id", saved.getOrderId(),
-            "username", del.getUsername(), 
-            "orderId", null));
+        Topics.DELIVERY_DELIVERED,
+        Map.of(
+            "orderId", saved.getOrderId(),
+            "username", del.getUsername()));
     return mapDeliveryToDeliveryResponse(saved);
   }
 

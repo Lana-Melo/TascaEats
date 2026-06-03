@@ -215,7 +215,8 @@ public class OrderService {
             KafkaResponse<DeliveryResponseDto> delivery = kafkaResponseStore.waitForDelivery(10000);
 
             if (delivery != null && delivery.getData().deliveryPersonId() != null) {
-              Optional<AUser> dpOpt = userRepository.findByUsername(delivery.getData().deliveryPersonUsername());
+              Optional<AUser> dpOpt =
+                  userRepository.findByUsername(delivery.getData().deliveryPersonUsername());
               if (dpOpt.isPresent() && dpOpt.get() instanceof DeliveryPerson) {
                 DeliveryPerson del = (DeliveryPerson) dpOpt.get();
                 del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
@@ -237,7 +238,7 @@ public class OrderService {
       default:
         throw new IllegalArgumentException("Invalid or unchangeable order status");
     }
-    
+
     order.setOrderStatus(ordStat);
     Order saved = orderRepository.save(order);
     return mapOrderToOrderResponse(saved);
@@ -272,26 +273,35 @@ public class OrderService {
   }
 
   @Transactional
-  public void markOrderAsDelivered(Long orderId, String username, Long deliveryId) {
+  public void markOrderAsDelivered(Long orderId) {
     Order order =
         orderRepository
             .findById(orderId)
             .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     order.setOrderStatus(OrderStatus.DELIVERED);
-
-    Optional<AUser> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
-      throw new ResourceNotFoundException("User not found");
-    }
-    DeliveryPerson del = (DeliveryPerson) userOpt.get();
-    del.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
-
-    if (deliveryId != null) {
-      assignDeliveryPerson(deliveryId, del.getId());
-    }
-
-    userRepository.save(del);
     orderRepository.save(order);
+
+    /*
+      Order order =
+          orderRepository
+              .findById(orderId)
+              .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+      order.setOrderStatus(OrderStatus.DELIVERED);
+
+      Optional<AUser> userOpt = userRepository.findByUsername(username);
+      if (userOpt.isEmpty() || !(userOpt.get() instanceof DeliveryPerson)) {
+        throw new ResourceNotFoundException("User not found");
+      }
+      DeliveryPerson del = (DeliveryPerson) userOpt.get();
+      del.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
+
+      if (deliveryId != null) {
+        assignDeliveryPerson(deliveryId, del.getId());
+      }
+
+      userRepository.save(del);
+      orderRepository.save(order);
+    */
   }
 
   public List<DeliveryResponseDto> getMyDeliveries(Long deliveryPersonId) throws Exception {

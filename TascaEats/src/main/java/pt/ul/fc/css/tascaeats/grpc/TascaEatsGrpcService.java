@@ -5,9 +5,10 @@ import io.grpc.stub.StreamObserver;
 import java.util.List;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
+import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
+import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuRequestDto;
 import pt.ul.fc.css.tascaeats.dto.menu.MenuResponseDto;
 import pt.ul.fc.css.tascaeats.dto.order.OrderProductItemDto;
@@ -866,11 +867,12 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   }
 
   // ─── MarkDeliveryAsDelivered ─────────────────────────────────────
+  // metodo chamado pelo javafx na view de orders de um entregador
   @Override
   public void markDeliveryAsDelivered(
       DeliveryIdRequest request, StreamObserver<DeliveryResponse> responseObserver) {
     try {
-      sender.sendAsJson("mark-delivery-delivered", request.getDeliveryId());
+      sender.sendAsJson(Topics.MARK_DELIVERY_DELIVERED, request.getDeliveryId());
 
       KafkaResponse<DeliveryResponseDto> response = kafkaResponseStore.waitForDelivery(10000);
 
@@ -891,7 +893,6 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       }
 
       DeliveryResponseDto delivery = response.getData();
-
 
       responseObserver.onNext(
           DeliveryResponse.newBuilder()

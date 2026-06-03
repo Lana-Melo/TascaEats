@@ -10,7 +10,6 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
-
 import pt.ul.fc.css.tascaeats.common.dto.AssignmentRequestDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonRegistertDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryPersonResponseDto;
@@ -112,7 +111,7 @@ public class Listener {
       System.out.println("Received mark-delivery-delivered for deliveryId: " + deliveryId);
       DeliveryResponseDto response = deliveryService.updateDeliveryStatus(deliveryId);
       // publica a resposta para o monolito desbloquear o waitForDelivery
-      sender.sendAsJson(Topics.DELIVERY_MARKED_DELIVERED_RESPONSE, response);
+      sender.sendAsJson(Topics.DELIVERY_MARKED_DELIVERED_RESPONSE, KafkaResponse.ok(response));
     } catch (Exception e) {
       System.err.println("Error processing mark-delivery-delivered: " + e.getMessage());
     }
@@ -121,7 +120,8 @@ public class Listener {
   @KafkaListener(topics = Topics.ASSIGN_DELIVERY_PERSON, groupId = "tascaeats-group")
   public void listenAssignDeliveryPerson(String message) {
     try {
-      AssignmentRequestDto dto = Sender.fromJson(message, new TypeReference<AssignmentRequestDto>() {});
+      AssignmentRequestDto dto =
+          Sender.fromJson(message, new TypeReference<AssignmentRequestDto>() {});
       System.out.println(
           "Received assign-delivery-person for deliveryId: "
               + dto.getDeliveryId()

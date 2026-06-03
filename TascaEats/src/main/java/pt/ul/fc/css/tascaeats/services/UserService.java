@@ -410,6 +410,19 @@ public class UserService {
     return false; // don't delete admin associated with restaurants
   }
 
+  @Transactional
+  public void markDeliveryPersonAsAvailable(String username) {
+    userRepository
+        .findByUsername(username)
+        .ifPresent(
+            user -> {
+              if (user instanceof DeliveryPerson dp) {
+                dp.setDeliveryPersonStatus(DeliveryPersonStatus.AVAILABLE);
+                userRepository.save(dp);
+              }
+            });
+  }
+
   /////////////////////////////////////////////////////////////
   /// MAPPER METHODS
   /////////////////////////////////////////////////////////////

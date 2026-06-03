@@ -1,7 +1,7 @@
 package pt.ul.fc.css.tascaeats.kafka;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -10,11 +10,9 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.services.OrderService;
+import pt.ul.fc.css.tascaeats.services.UserService;
 
 @Component
 public class Listener {
@@ -22,6 +20,8 @@ public class Listener {
   @Autowired private KafkaResponseStore responseStore;
 
   @Autowired private OrderService orderService;
+
+  @Autowired private UserService userService;
 
   @RetryableTopic(attempts = "4", backoff = @Backoff(delay = 2000), dltTopicSuffix = "-dlt")
   @KafkaListener(topics = Topics.DELIVERY_PERSON_REGISTER_RESPONSE)
@@ -49,12 +49,11 @@ public class Listener {
   public void listenDeliveryDelivered(String message) {
     System.out.println("Received delivery-delivered");
     Map<String, Object> payload = Sender.fromJson(message, new TypeReference<>() {});
-    Long id = Long.valueOf(payload.get("id").toString());
-    String username = payload.get("deliveryPersonUsername").toString();
+    String username = payload.get("username").toString();
     Long orderId = Long.valueOf(payload.get("orderId").toString());
-    orderService.markOrderAsDelivered(id, username, orderId);
+    orderService.markOrderAsDelivered(orderId);
+    userService.markDeliveryPersonAsAvailable(username);
   }
-
 
   @KafkaListener(topics = Topics.DELIVERY_MARKED_DELIVERED_RESPONSE, groupId = "monolito-group")
   public void listenDeliveryMarkedDelivered(String message) throws Exception {

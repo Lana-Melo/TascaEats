@@ -34,8 +34,9 @@ public class KafkaResponseStore {
   }
 
   public void putDelivery(String json) throws Exception {
-    KafkaResponse<DeliveryResponseDto> dto = mapper.readValue(json, new TypeReference<KafkaResponse<DeliveryResponseDto>>() {});
-    deliveryQueue.put(dto);
+    KafkaResponse<DeliveryResponseDto> response =
+        mapper.readValue(json, new TypeReference<KafkaResponse<DeliveryResponseDto>>() {});
+    deliveryQueue.put(response);
   }
 
   public KafkaResponse<DeliveryResponseDto> waitForDelivery(long timeoutMs) throws Exception {
