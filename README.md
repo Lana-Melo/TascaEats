@@ -36,7 +36,7 @@ Core features include:
 > **Note:** The video does not cover every implemented feature exhaustively, but walks through the main user flows across the three interfaces.
 
 ## Domain Model
-![Domain Model](DiagramaTascaEats-2a-fase.jpeg)
+![Domain Model](DiagramaTascaEats-3a-fase.png)
 
 ## Phase 2 — Changes and Extensions
 
