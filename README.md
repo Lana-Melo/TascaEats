@@ -193,7 +193,7 @@ docker compose up --build
 This command:
 - Builds all service images
 - Creates isolated PostgreSQL databases for each service
-- Starts Kafka and Zookeeper
+- Starts Kafka
 - Initializes the monolith and DeliveryService
 - Configures Nginx as the entry point
 
