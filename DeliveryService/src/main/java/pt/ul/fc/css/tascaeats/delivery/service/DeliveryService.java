@@ -37,16 +37,9 @@ public class DeliveryService {
     if (availableOpt.isPresent()) {
       DeliveryPerson dp = availableOpt.get();
       DeliveryResponseDto assigned = assignDeliveryPerson(saved.getId(), dp.getId());
-      sender.sendAsJson(Topics.CREATE_DELIVERY_RESPONSE, assigned);
       return assigned;
     }
 
-    sender.sendAsJson(
-        Topics.CREATE_DELIVERY_RESPONSE,
-        Map.of(
-            "orderId", saved.getOrderId(),
-            "deliveryId", saved.getId(),
-            "status", saved.getStatus().toString()));
     return mapDeliveryToDeliveryResponse(saved);
   }
 
@@ -77,12 +70,12 @@ public class DeliveryService {
 
     deliveryPersonRepository.save(del);
     Delivery saved = deliveryRepository.save(delivery);
-    sender.sendAsJson(
-        Topics.DELIVERY_PERSON_ASSIGNED,
-        Map.of(
-            "orderId", saved.getOrderId(),
-            "deliveryPersonId", del.getId(),
-            "deliveryPersonUsername", del.getUsername()));
+    /*sender.sendAsJson(
+    Topics.DELIVERY_PERSON_ASSIGNED,
+    Map.of(
+        "orderId", saved.getOrderId(),
+        "deliveryPersonId", del.getId(),
+        "deliveryPersonUsername", del.getUsername()));*/
     return mapDeliveryToDeliveryResponse(saved);
   }
 

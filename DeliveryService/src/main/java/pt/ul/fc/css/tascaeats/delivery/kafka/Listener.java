@@ -142,7 +142,7 @@ public class Listener {
       Long orderId = Sender.fromJson(message, new TypeReference<Long>() {});
       System.out.println("Received create-delivery for orderId: " + orderId);
       DeliveryResponseDto response = deliveryService.createDelivery(orderId);
-      sender.sendAsJson(Topics.CREATE_DELIVERY_RESPONSE, response);
+      sender.sendAsJson(Topics.CREATE_DELIVERY_RESPONSE, KafkaResponse.ok(response));
     } catch (Exception e) {
       System.err.println("Error processing create-delivery: " + e.getMessage());
     }

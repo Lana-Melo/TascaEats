@@ -211,10 +211,18 @@ public class OrderService {
         } else {
           try {
             sender.sendAsJson(Topics.CREATE_DELIVERY, order.getId());
+            System.out.println("Sent create-delivery for orderId: " + order.getId());
 
             KafkaResponse<DeliveryResponseDto> delivery = kafkaResponseStore.waitForDelivery(10000);
 
-            if (delivery != null && delivery.getData().deliveryPersonId() != null) {
+            if (delivery == null) {
+              throw new IllegalStateException("Timeout waiting for delivery response");
+            }
+            if (!delivery.isSuccess()) {
+              throw new IllegalStateException("Failed to create delivery");
+            }
+
+            if (delivery.getData().deliveryPersonId() != null) {
               Optional<AUser> dpOpt =
                   userRepository.findByUsername(delivery.getData().deliveryPersonUsername());
               if (dpOpt.isPresent() && dpOpt.get() instanceof DeliveryPerson) {
@@ -225,6 +233,7 @@ public class OrderService {
                 ordStat = OrderStatus.INCOMING;
               }
             }
+            order.setDeliveryId(delivery.getData().id());
           } catch (Exception e) {
             throw new IllegalStateException("Timeout waiting for delivery registration");
           }
