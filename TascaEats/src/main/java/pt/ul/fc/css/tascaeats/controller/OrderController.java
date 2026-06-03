@@ -55,7 +55,7 @@ public class OrderController {
   @PatchMapping("/{id}/deliveryPerson/{deliveryPersonId}")
   @ApiOperation(value = "Assign delivery person", notes = "Assigns a delivery person to an order.")
   public ResponseEntity<OrderResponseDto> assignDeliveryPerson(
-      @PathVariable Long id, @PathVariable Long deliveryPersonId) {
+      @PathVariable Long id, @PathVariable Long deliveryPersonId) throws Exception {
     OrderResponseDto order = orderHandler.assignDeliveryPerson(id, deliveryPersonId);
     return ResponseEntity.ok(order);
   }

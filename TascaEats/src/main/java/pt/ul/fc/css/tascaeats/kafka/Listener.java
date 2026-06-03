@@ -85,9 +85,6 @@ public class Listener {
   @KafkaListener(topics = Topics.DELIVERY_PERSON_ASSIGNED, groupId = "monolito-group")
   public void listenDeliveryPersonAssigned(String message) throws Exception {
     System.out.println("Received delivery-person-assigned");
-    // aqui é pra ter logica de por a delivery person status a busy na bd do monolito e mudar tbm a
-    // o status
-    // da oder para incoming na bd do monolito
     responseStore.putDelivery(message);
   }
 

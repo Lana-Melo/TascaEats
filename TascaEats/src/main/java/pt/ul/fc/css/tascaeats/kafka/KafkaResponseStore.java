@@ -23,7 +23,6 @@ public class KafkaResponseStore {
       new SynchronousQueue<>();
   private final SynchronousQueue<KafkaResponse<DeliveryPersonResponseDto>> deliveryPersonQueue =
       new SynchronousQueue<>();
-  // void pq nao ha conteudo efetivo, mas importa saber o status da operacao (sucesso ou falha)
   private final SynchronousQueue<KafkaResponse<String>> deliveryPersonDeleteQueue =
       new SynchronousQueue<>();
   private final SynchronousQueue<KafkaResponse<List<DeliveryPersonResponseDto>>>

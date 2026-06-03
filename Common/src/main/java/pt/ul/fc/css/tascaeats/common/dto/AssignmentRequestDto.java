@@ -1,10 +1,9 @@
 package pt.ul.fc.css.tascaeats.common.dto;
 
-
 public class AssignmentRequestDto {
 
   private Long deliveryId;
-  private Long deliveryPersonId;
+  private String deliveryPersonUsername;
 
   public AssignmentRequestDto() {}
 
@@ -16,11 +15,11 @@ public class AssignmentRequestDto {
     this.deliveryId = deliveryId;
   }
 
-  public Long getDeliveryPersonId() {
-    return deliveryPersonId;
+  public String getDeliveryPersonUsername() {
+    return deliveryPersonUsername;
   }
 
-  public void setDeliveryPersonId(Long deliveryPersonId) {
-    this.deliveryPersonId = deliveryPersonId;
+  public void setDeliveryPersonUsername(String deliveryPersonUsername) {
+    this.deliveryPersonUsername = deliveryPersonUsername;
   }
 }

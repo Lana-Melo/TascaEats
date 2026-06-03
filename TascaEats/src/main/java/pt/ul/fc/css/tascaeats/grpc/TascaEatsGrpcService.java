@@ -871,8 +871,7 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
   public void getMyDeliveries(
       DeliveryPersonIdRequest request, StreamObserver<DeliveryItem> responseObserver) {
     try {
-      List<DeliveryResponseDto> deliveries =
-          orderService.getMyDeliveries(request.getDeliveryPersonId());
+      List<DeliveryResponseDto> deliveries = orderService.getMyDeliveries(request.getUsername());
 
       for (DeliveryResponseDto d : deliveries) {
         responseObserver.onNext(

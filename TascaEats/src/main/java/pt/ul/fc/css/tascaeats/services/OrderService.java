@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import pt.ul.fc.css.tascaeats.common.dto.AssignmentRequestDto;
 import pt.ul.fc.css.tascaeats.common.dto.DeliveryResponseDto;
 import pt.ul.fc.css.tascaeats.common.dto.KafkaResponse;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
@@ -254,7 +255,8 @@ public class OrderService {
   }
 
   @Transactional
-  public OrderResponseDto assignDeliveryPerson(Long id, Long deliveryPersonId) {
+  public OrderResponseDto assignDeliveryPerson(Long id, Long deliveryPersonId) throws Exception {
+
     Optional<Order> ordOpt = orderRepository.findById(id);
     if (ordOpt.isEmpty()) {
       throw new ResourceNotFoundException("Order not found");
@@ -264,19 +266,43 @@ public class OrderService {
       throw new ResourceNotFoundException("User not found");
     }
 
-    DeliveryPerson del = (DeliveryPerson) userOpt.get();
-    Order order = ordOpt.get();
-    if (del.getDeliveryPersonStatus() == DeliveryPersonStatus.BUSY
-        || order.getOrderStatus() != OrderStatus.READY) {
-      throw new RequirementsNotMetException(
-          "Order must be ready/Delivery person must be available");
-    }
-    // Delivery delivery = new Delivery(LocalDateTime.now());
-    // order.setDelivery(delivery);
-    del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
-    order.setDeliveryPerson(del);
+    AssignmentRequestDto kafkaDto = new AssignmentRequestDto();
+    kafkaDto.setDeliveryId(ordOpt.get().getDeliveryId());
+    kafkaDto.setDeliveryPersonUsername(userOpt.get().getUsername());
 
+    System.out.println(
+        "Sending assign-delivery-person for deliveryId: "
+            + kafkaDto.getDeliveryId()
+            + ", deliveryPersonUsername: "
+            + kafkaDto.getDeliveryPersonUsername());
+
+    sender.sendAsJson(Topics.ASSIGN_DELIVERY_PERSON, kafkaDto);
+
+    // esperar resposta do MS
+    KafkaResponse<DeliveryResponseDto> response = kafkaResponseStore.waitForDelivery(10000);
+
+    if (response == null) {
+      throw new IllegalStateException("Timeout waiting for delivery response");
+    }
+    if (!response.isSuccess()) {
+      String errorCode = response.getErrorCode();
+      String errorMessage = response.getErrorMessage();
+      switch (errorCode != null ? errorCode : "") {
+        case "RESOURCE_NOT_FOUND" -> throw new ResourceNotFoundException(errorMessage);
+        case "REQUIREMENTS_NOT_MET" -> throw new RequirementsNotMetException(errorMessage);
+        default ->
+            throw new IllegalStateException(
+                errorMessage != null ? errorMessage : "Failed to assign delivery person");
+      }
+    }
+    // se assign foi bem sucedido, atualiza-se o status do dp(BUSY) e da order(INCOMING)
+    DeliveryPerson del = (DeliveryPerson) userOpt.get();
+    del.setDeliveryPersonStatus(DeliveryPersonStatus.BUSY);
     userRepository.save(del);
+
+    Order order = ordOpt.get();
+    order.setOrderStatus(OrderStatus.INCOMING);
+    order.setDeliveryPerson(del);
     Order saved = orderRepository.save(order);
     return mapOrderToOrderResponse(saved);
   }
@@ -313,8 +339,9 @@ public class OrderService {
     */
   }
 
-  public List<DeliveryResponseDto> getMyDeliveries(Long deliveryPersonId) throws Exception {
-    sender.sendAsJson(Topics.GET_MY_DELIVERIES, deliveryPersonId);
+  public List<DeliveryResponseDto> getMyDeliveries(String username) throws Exception {
+
+    sender.sendAsJson(Topics.GET_MY_DELIVERIES, username);
 
     List<DeliveryResponseDto> deliveries = kafkaResponseStore.waitForDeliveries(10000);
 

@@ -36,7 +36,7 @@ public class DeliveriesController implements ControllerWithModel {
   private void loadDeliveries() {
     try {
       CurrentDeliveryPerson dp = (CurrentDeliveryPerson) model.getCurrentUser();
-      deliveries = ApiClient.getMyDeliveries(dp.getId());
+      deliveries = ApiClient.getMyDeliveries(dp.getUsername());
       deliveriesListView.setItems(FXCollections.observableArrayList(deliveries));
       deliveriesListView.setCellFactory(
           lv ->

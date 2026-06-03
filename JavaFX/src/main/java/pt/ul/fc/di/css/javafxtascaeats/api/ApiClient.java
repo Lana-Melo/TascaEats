@@ -604,9 +604,9 @@ public class ApiClient {
     stub.deleteMenu(request);
   }
 
-  public static List<DeliveryItem> getMyDeliveries(long deliveryPersonId) {
+  public static List<DeliveryItem> getMyDeliveries(String username) {
     DeliveryPersonIdRequest request =
-        DeliveryPersonIdRequest.newBuilder().setDeliveryPersonId(deliveryPersonId).build();
+        DeliveryPersonIdRequest.newBuilder().setUsername(username).build();
     Iterator<DeliveryItem> iterator = stub.getMyDeliveries(request);
     List<DeliveryItem> deliveries = new ArrayList<>();
     iterator.forEachRemaining(deliveries::add);

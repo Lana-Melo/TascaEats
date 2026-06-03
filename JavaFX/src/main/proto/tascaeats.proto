@@ -390,7 +390,7 @@ message DeliveriesResponse {
 }
 
 message DeliveryPersonIdRequest {
-  int64 deliveryPersonId = 1;
+  string username = 1;
 }
 
 message DeliveryIdRequest {

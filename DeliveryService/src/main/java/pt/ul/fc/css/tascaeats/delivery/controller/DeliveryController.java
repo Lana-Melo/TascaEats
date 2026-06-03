@@ -36,13 +36,13 @@ public class DeliveryController {
     return ResponseEntity.ok(delivery);
   }
 
-  @PatchMapping("/{id}/deliveryPerson/{deliveryPersonId}")
+  @PatchMapping("/{id}/deliveryPerson/{deliveryPersonUsername}")
   @ApiOperation(
       value = "Assign delivery person",
       notes = "Assigns a delivery person to a delivery.")
   public ResponseEntity<DeliveryResponseDto> assignDeliveryPerson(
-      @PathVariable Long id, @PathVariable Long deliveryPersonId) {
-    DeliveryResponseDto delivery = deliveryHandler.assignDeliveryPerson(id, deliveryPersonId);
+      @PathVariable Long id, @PathVariable String deliveryPersonUsername) {
+    DeliveryResponseDto delivery = deliveryHandler.assignDeliveryPerson(id, deliveryPersonUsername);
     return ResponseEntity.ok(delivery);
   }
 

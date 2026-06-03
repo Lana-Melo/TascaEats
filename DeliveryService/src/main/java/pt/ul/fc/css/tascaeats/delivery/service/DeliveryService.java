@@ -36,7 +36,7 @@ public class DeliveryService {
         deliveryPersonRepository.findFirstByStatus(DeliveryPersonStatus.AVAILABLE);
     if (availableOpt.isPresent()) {
       DeliveryPerson dp = availableOpt.get();
-      DeliveryResponseDto assigned = assignDeliveryPerson(saved.getId(), dp.getId());
+      DeliveryResponseDto assigned = assignDeliveryPerson(saved.getId(), dp.getUsername());
       return assigned;
     }
 
@@ -48,13 +48,13 @@ public class DeliveryService {
   }
 
   @Transactional
-  public DeliveryResponseDto assignDeliveryPerson(Long id, Long deliveryPersonId) {
-    Optional<Delivery> deliveryOpt = deliveryRepository.findById(id);
+  public DeliveryResponseDto assignDeliveryPerson(Long deliveryId, String deliveryPersonUsername) {
+    Optional<Delivery> deliveryOpt = deliveryRepository.findById(deliveryId);
     if (deliveryOpt.isEmpty()) {
       throw new ResourceNotFoundException("Delivery not found");
     }
     Optional<DeliveryPerson> deliveryPersonOpt =
-        deliveryPersonRepository.findById(deliveryPersonId);
+        deliveryPersonRepository.findByUsername(deliveryPersonUsername);
     if (deliveryPersonOpt.isEmpty()) {
       throw new ResourceNotFoundException("Delivery person not found");
     }
@@ -79,8 +79,8 @@ public class DeliveryService {
     return mapDeliveryToDeliveryResponse(saved);
   }
 
-  public List<DeliveryResponseDto> getDeliveriesByDeliveryPerson(Long deliveryPersonId) {
-    return deliveryRepository.findByDeliveryPerson_Id(deliveryPersonId).stream()
+  public List<DeliveryResponseDto> getDeliveriesByDeliveryPerson(String username) {
+    return deliveryRepository.findByDeliveryPerson_Username(username).stream()
         .map(this::mapDeliveryToDeliveryResponse)
         .toList();
   }

@@ -158,7 +158,7 @@ public class BackOfficeOrdersController implements ControllerWithModel {
     productsTable.setItems(FXCollections.observableArrayList(order.getProducts()));
 
     newStatusComboBox.getItems().clear();
-    newStatusComboBox.getItems().addAll("PREPARING", "READY", "CANCELLED", "DELIVERED");
+    newStatusComboBox.getItems().addAll("PREPARING", "READY", "CANCELLED");
 
     paymentMethodComboBox.getItems().clear();
     paymentMethodComboBox.getItems().addAll("Cash", "MBWay", "Card");

@@ -2,7 +2,6 @@ package pt.ul.fc.css.tascaeats.delivery.repository;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import pt.ul.fc.css.tascaeats.delivery.model.Delivery;
@@ -16,6 +15,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
       Long deliveryPersonId, List<DeliveryStatus> statuses);
 
   List<Delivery> findByDeliveryPerson_Id(Long deliveryPersonId);
+
+  List<Delivery> findByDeliveryPerson_Username(String username);
 
   Optional<Delivery> findFirstByStatus(DeliveryStatus status);
 }

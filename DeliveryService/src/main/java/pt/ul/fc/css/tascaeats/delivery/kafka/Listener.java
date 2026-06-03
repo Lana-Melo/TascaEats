@@ -2,6 +2,7 @@ package pt.ul.fc.css.tascaeats.delivery.kafka;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.List;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -20,6 +21,7 @@ import pt.ul.fc.css.tascaeats.common.dto.SearchDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.dto.UpdateDeliveryPersonDto;
 import pt.ul.fc.css.tascaeats.common.kafka.Topics;
 import pt.ul.fc.css.tascaeats.delivery.dto.response.DeliveryResponseDto;
+import pt.ul.fc.css.tascaeats.delivery.exceptions.RequirementsNotMetException;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserAlreadyExistsException;
 import pt.ul.fc.css.tascaeats.delivery.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.delivery.service.DeliveryPersonService;
@@ -142,10 +144,9 @@ public class Listener {
 
   @KafkaListener(topics = Topics.GET_MY_DELIVERIES, groupId = "tascaeats-group")
   public void listenGetMyDeliveries(String message) {
-    Long deliveryPersonId = Sender.fromJson(message, new TypeReference<Long>() {});
-    System.out.println("Received get-my-deliveries for deliveryPersonId: " + deliveryPersonId);
-    List<DeliveryResponseDto> deliveries =
-        deliveryService.getDeliveriesByDeliveryPerson(deliveryPersonId);
+    String username = Sender.fromJson(message, new TypeReference<String>() {});
+    System.out.println("Received get-my-deliveries for username: " + username);
+    List<DeliveryResponseDto> deliveries = deliveryService.getDeliveriesByDeliveryPerson(username);
     sender.sendAsJson(Topics.MY_DELIVERIES_RESPONSE, deliveries);
   }
 
@@ -170,14 +171,25 @@ public class Listener {
       System.out.println(
           "Received assign-delivery-person for deliveryId: "
               + dto.getDeliveryId()
-              + ", deliveryPersonId: "
-              + dto.getDeliveryPersonId());
+              + ", deliveryPersonUsername: "
+              + dto.getDeliveryPersonUsername());
+
       DeliveryResponseDto response =
-          deliveryService.assignDeliveryPerson(dto.getDeliveryId(), dto.getDeliveryPersonId());
+          deliveryService.assignDeliveryPerson(
+              dto.getDeliveryId(), dto.getDeliveryPersonUsername());
       // publica a resposta para o monolito desbloquear o waitForDelivery
-      sender.sendAsJson(Topics.DELIVERY_PERSON_ASSIGNED, response);
+      sender.sendAsJson(Topics.DELIVERY_PERSON_ASSIGNED, KafkaResponse.ok(response));
+    } catch (ResourceNotFoundException e) {
+      sender.sendAsJson(
+          Topics.DELIVERY_PERSON_ASSIGNED,
+          KafkaResponse.error("RESOURCE_NOT_FOUND", e.getMessage()));
+    } catch (RequirementsNotMetException e) {
+      sender.sendAsJson(
+          Topics.DELIVERY_PERSON_ASSIGNED,
+          KafkaResponse.error("REQUIREMENTS_NOT_MET", e.getMessage()));
     } catch (Exception e) {
-      System.err.println("Error processing assign-delivery-person: " + e.getMessage());
+      sender.sendAsJson(
+          Topics.DELIVERY_PERSON_ASSIGNED, KafkaResponse.error("INTERNAL_ERROR", e.getMessage()));
     }
   }
 
