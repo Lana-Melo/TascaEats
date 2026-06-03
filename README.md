@@ -139,13 +139,13 @@ mvn javafx:run
 
 The application uses **PostgreSQL**. You can connect via [DBeaver](https://dbeaver.io/) with the following credentials:
 
-| Field    | Value       |
-|----------|-------------|
-| Host     | `localhost` |
-| Port     | `5432`      |
-| Database | `postgres`  |
-| User     | `user`      |
-| Password | `password`  |
+| Field    | Monolith    | Microservice |
+|----------|-------------|--------------|
+| Host     | `localhost` |  `localhost` |
+| Port     | `5432`      |  `5433`      |
+| Database | `postgres`  | `deliverydb` |
+| User     | `user`      |  `user`      |
+| Password | `password`  |  `password`  |
 
 > **Note:** By default, the database is recreated on each run. To persist data between executions, change `spring.jpa.hibernate.ddl-auto` in `src/main/resources/application.properties` from `create-drop` to `update`.
 
@@ -157,61 +157,232 @@ For convenience, the database is automatically populated on startup via `BdLoade
 
 ---
 
-## Tests & Coverage
-
-Given the scope of the project, the team focused test coverage on the core of the application — the **service layer**, where all business rules are enforced. Coverage above **80%** was achieved for these classes and was demonstrated via the JaCoCo report.
-
-A coverage report is automatically generated during the build. To access it, with the project running in the background:
-
-```bash
-docker compose cp springbootapp:/app/jacoco-report ./jacoco-report
-```
-
-Then open `./jacoco-report/index.html` in your browser.
-
----
-
 ## Code Quality
 
 Code quality in this phase was enforced using **pre-commit hooks**, ensuring that checks run automatically before each commit.
 
 ---
 
-## Implementation Notes
+## Phase 3 — Microservices Architecture
 
-### gRPC Protocol (`tascaeats.proto`)
+### Overview
 
-| RPC | Request | Response | Description |
-|---|---|---|---|
-| `Login` | `LoginRequest` | `UserResponse` | Authenticate a user and return their profile |
-| `RegisterAdmin` | `UserRequest` | `UserResponse` | Register a new admin account |
-| `RegisterDeliveryPerson` | `UserRequest` | `DeliveryPersonResponse` | Register a new delivery person account |
-| `DeleteAccount` | `DeleteAccountRequest` | `Empty` | Delete a user account by ID |
-| `UpdateAdmin` | `UserRequest` | `UserResponse` | Update an admin's profile data |
-| `UpdateClient` | `UserRequest` | `UserResponse` | Update a client's profile data |
-| `UpdateDeliveryPerson` | `DeliveryPersonUpdateRequest` | `DeliveryPersonResponse` | Update a delivery person's profile and status |
-| `SearchUsers` | `SearchUsersRequest` | `SearchUsersResponse` | Search users with optional filters (name, type, order count, delivery count) |
-| `SearchRestaurants` | `SearchRestaurantsRequest` | `RestaurantsResponse` | Search restaurants with optional filters |
-| `SearchAdminRestaurants` | `AdminRestaurantsRequest` | `AdminRestaurantsResponse` | Search restaurants owned by a given admin with optional filters |
-| `SearchMenus` | `SearchMenusRequest` | `MenusSearchResponse` | Search menus with optional filters (name, product count, average price) |
-| `SearchProducts` | `SearchProductsRequest` | `ProductsSearchResponse` | Search products with optional filters (designation, price, description, availability, times ordered) |
-| `GetAllMenus` | `Empty` | `MenusResponse` | Retrieve all available menus |
-| `AssignMenu` | `AssignMenuRequest` | `Empty` | Assign a menu to a restaurant |
-| `ChangeRestaurantStatus` | `ChangeStatusRequest` | `Empty` | Change the status of a restaurant (OPEN / CLOSED) |
-| `CreateRestaurant` | `CreateRestaurantRequest` | `RestaurantItem` | Create a new restaurant for a given admin |
-| `GetRestaurantProducts` | `GetRestaurantProductsRequest` | `ProductsResponse` | Search products of a restaurant with optional filters |
-| `UpdateProductStatus` | `UpdateProductStatusRequest` | `Empty` | Update the availability status of a product within a restaurant |
-| `GetAllOrders` | `Empty` | `OrdersResponse` | Retrieve all orders in the system |
-| `SearchOrders` | `SearchOrdersRequest` | `OrdersResponse` | Search orders filtered by status |
-| `ProcessPayment` | `PaymentRequest` | `OrderResponse` | Process payment for an order |
-| `UpdateOrderStatus` | `UpdateOrderStatusRequest` | `OrderResponse` | Update the status of an order |
-| `CancelOrder` | `OrderIdRequest` | `Empty` | Cancel an order by ID |
-| `GetMenuProducts` | `MenuIdRequest` | `MenuProductsResponse` | Retrieve all products belonging to a menu |
-| `AddProduct` | `AddProductRequest` | `ProductResponse` | Add a new product to a menu |
-| `UpdateProduct` | `UpdateProductRequest` | `ProductResponse` | Update an existing product in a menu |
-| `DeleteProduct` | `DeleteProductRequest` | `Empty` | Delete a product from a menu |
-| `CreateMenu` | `CreateMenuRequest` | `MenuItemMessage` | Create a new menu |
-| `UpdateMenu` | `UpdateMenuRequest` | `MenuItemMessage` | Update an existing menu |
-| `DeleteMenu` | `DeleteMenuRequest` | `Empty` | Delete a menu by ID |
+In Phase 3, the platform underwent a significant architectural transformation to address scalability concerns. Following **Domain-Driven Design** principles, the **Delivery Management bounded context** was extracted into an independent microservice. The system evolved from a monolithic architecture to a distributed, event-driven architecture using **Apache Kafka** for asynchronous communication.
+
+The key objectives were:
+- Extract delivery management logic into a dedicated microservice
+- Implement event-driven communication between services
+- Ensure eventual consistency across the system
+- Maintain seamless user experience across all interfaces
+- Containerize and orchestrate all services using Docker Compose
+
+### Backend / Architecture
+
+#### Microservices Decomposition
+
+**DeliveryService Microservice:**
+The new microservice encapsulates all delivery-related operations:
+- Delivery person registration, and profile management
+- Delivery lifecycle management (creation, status updates, assignment)
+- Search and filtering for delivery persons
+- Automatic and manual delivery person assignment to ready orders
+
+**Monolith (TascaEats):**
+The monolith now focuses on:
+- User and restaurant management (except delivery persons)
+- Order creation and payment processing
+- Menu and product management
+- Acting as an event producer/consumer for delivery operations
+- Serving as the central API gateway through Nginx
+
+**Observations**
+- When the user filter doesn't specify delivery person, it's the monolith that still executes it. This still works consistently as the monolith still saves delivery person in the database with the database in the microservices.
+- The automatic assignment of a delivery person to a delivery only occurs when at least one of the delivery persons in the database has their status as `AVAILABLE`, and the order status is changing from `PREPARING` to `READY`. If all delivery persons in the database have the `BUSY` status, that delivery will need to be manually asigned via Swagger, while utilizing the delivery person's id from the monolith side.
+
+#### Event-Driven Communication
+
+Communication between the monolith and DeliveryService occurs exclusively through **Apache Kafka** topics:
+
+| Topic | Direction | Purpose |
+|---|---|---|
+| `create-delivery` | Monolith → Service | Request delivery creation for a ready order |
+| `create-delivery-response` | Service → Monolith | Confirm delivery created with assignment details |
+| `assign-delivery-person` | Monolith → Service | Request manual delivery person assignment |
+| `delivery-person-assigned` | Service → Monolith | Confirm delivery person assigned |
+| `mark-delivery-delivered` | Monolith → Service | Request delivery status update to delivered |
+| `delivery-marked-delivered-response` | Service → Monolith | Confirm delivery marked as delivered |
+| `delivery-person-register` | Monolith → Service | Register new delivery person |
+| `delivery-person-register-response` | Service → Monolith | Confirm delivery person registration |
+| `delivery-person-update` | Monolith → Service | Update delivery person profile |
+| `delivery-person-update-response` | Service → Monolith | Confirm delivery person update |
+| `get-my-deliveries` | Monolith → Service | Retrieve deliveries for a specific delivery person |
+| `my-deliveries-response` | Service → Monolith | Return list of deliveries |
+
+All responses are wrapped in a `KafkaResponse<T>` envelope containing:
+- `success` (boolean) — indicates if operation succeeded
+- `data` (T) — the actual response payload
+- `errorCode` (String) — error identifier if unsuccessful
+- `errorMessage` (String) — human-readable error message
+
+#### Database Isolation
+
+- **Monolith Database:** PostgreSQL instance maintaining orders, restaurants, menus, products, and clients
+- **DeliveryService Database:** Separate PostgreSQL instance maintaining delivery persons, deliveries, and delivery assignments
+
+Each service has exclusive access to its own database, enforcing bounded context boundaries.
+
+#### Eventual Consistency
+
+The system implements eventual consistency through:
+- **Synchronous request-response over Kafka:** For critical operations like order-to-delivery workflows
+- **Timeouts and retries:** With exponential backoff for resilience
+- **Saga pattern consideration:** For complex multi-step operations requiring transactional guarantees
+- **Event sourcing readiness:** Kafka topics serve as an event log for audit and recovery
+
+### Infrastructure
+
+#### Nginx Reverse Proxy
+
+An Nginx reverse proxy serves as the central entry point:
+- Routes REST requests from the web interface to the monolith
+- Routes gRPC requests from the JavaFX application to the monolith  
+- Handles SSL/TLS termination (if configured)
+- Provides load balancing capabilities for future scaling
+
+Configuration allows clients to connect to a single endpoint without knowledge of internal service topology.
+
+#### Docker Compose Orchestration
+
+The system is fully containerized with the following services:
+
+```yaml
+Services:
+  - postgres-monolith: PostgreSQL for monolith
+  - postgres-delivery: PostgreSQL for delivery service
+  - kafka: Apache Kafka message broker
+  - zookeeper: Kafka dependency for coordination
+  - monolith: Spring Boot application (TascaEats)
+  - delivery-service: Spring Boot microservice
+  - nginx: Reverse proxy
+  - pgadmin (optional): Database administration UI
+```
+
+All services communicate within a Docker network, with external access controlled through Nginx.
+
+#### Running Phase 3
+
+From the project root:
+
+```bash
+docker compose up --build
+```
+
+This command:
+- Builds all service images
+- Creates isolated PostgreSQL databases for each service
+- Starts Kafka and Zookeeper
+- Initializes the monolith and DeliveryService
+- Configures Nginx as the entry point
+
+Access points:
+- **Web Interface:** `http://localhost/` (routed to monolith)
+- **Swagger UI:** `http://localhost/swagger-ui/` (routed to monolith)
+- **Kafka UI (optional):** `http://localhost:8080/` (if included)
+
+#### Running JavaFX with Phase 3
+
+The JavaFX application connects through Nginx without changes to the client code:
+
+```bash
+cd JavaFX
+mvn javafx:run
+```
+
+Internally, gRPC requests are routed through `localhost:80` to Nginx, which forwards them to the monolith.
+
+### Key Implementation Details
+
+#### Order to Delivery Workflow
+
+1. **Order Status Changed to READY:**
+   - Monolith publishes `create-delivery` event with order ID
+
+2. **Delivery Service Processes Event:**
+   - Creates delivery record with unique ID
+   - Searches for available delivery persons
+   - If available, automatically assigns delivery person
+   - Publishes `create-delivery-response` with assignment details
+
+3. **Monolith Receives Response:**
+   - Waits for delivery creation response (10-second timeout)
+   - Updates order status to `INCOMING`
+   - Associates delivery person with order
+   - Updates delivery person status to `BUSY`
+
+4. **User Interfaces Reflect Changes:**
+   - Web and JavaFX interfaces display updated order status
+   - Delivery person sees new assignment in their app
+
+#### Fault Tolerance
+
+- **Timeouts:** 10-second window for critical responses; requests fail gracefully
+- **Dead Letter Topics:** Failed messages route to DLT for manual inspection
+- **Retry Logic:** Transient failures trigger automatic retries with backoff
+- **Idempotency:** Operations designed to be safely retried without side effects
+
+#### Data Consistency Patterns
+
+**Strong Consistency (Critical):**
+- Order creation and payment processing within monolith
+- Delivery person assignment workflow (uses synchronous request-response)
+
+**Eventual Consistency (Non-Critical):**
+- Delivery status updates propagate asynchronously
+- Delivery person profile updates eventual across interfaces
+
+### Demonstration Video
+
+A demonstration video is available showing:
+- Order lifecycle from creation to delivery assignment
+- Kafka event flow and microservice interaction
+- Database isolation and state management
+- Nginx routing of REST and gRPC traffic
+
+> **Video Link:** [To be provided in submission]
+
+### Project Structure (Phase 3)
+
+```
+tascaeats/
+├── TascaEats/                    # Monolith application
+│   ├── src/
+│   ├── pom.xml
+│   ├── Dockerfile
+│   └── ...
+├── DeliveryService/              # Microservice
+│   ├── src/
+│   ├── pom.xml
+│   ├── Dockerfile
+│   └── ...
+├── Common/                        # Shared utilities and DTOs
+│   ├── src/
+│   └── pom.xml
+├── JavaFX/                        # Desktop client
+│   ├── src/
+│   ├── pom.xml
+│   └── ...
+├── nginx.conf                     # Reverse proxy configuration
+├── docker-compose.yml             # Service orchestration
+└── README.md
+```
+
+### Testing and Validation
+
+Phase 3 validation focuses on:
+- **Architectural integrity:** Services communicate only through Kafka
+- **Database isolation:** Monolith cannot access delivery service database and vice versa
+- **Event reliability:** Messages processed reliably with no data loss
+- **User experience:** All interfaces function seamlessly despite distributed architecture
+- **Fault handling:** System recovers gracefully from transient failures
 
 ---
