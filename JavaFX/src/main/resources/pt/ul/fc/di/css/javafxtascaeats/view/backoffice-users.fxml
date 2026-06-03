@@ -12,6 +12,7 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.HBox?>
@@ -80,9 +81,11 @@
             <TextField fx:id="userDeliveriesField" promptText="Min deliveries"
                        visible="false" managed="false"/>
 
-            <Button text="Search" maxWidth="Infinity" onAction="#handleSearch">
+            <Button fx:id="searchButton" text="Search" maxWidth="Infinity" onAction="#handleSearch">
               <font><Font name="AppleGothic Regular" size="13.0"/></font>
             </Button>
+
+            <ProgressIndicator fx:id="loadingIndicator" visible="false" managed="false" maxWidth="Infinity"/>
 
             <Label fx:id="errorLabel" textFill="red" wrapText="true"
                    visible="false" managed="false"/>

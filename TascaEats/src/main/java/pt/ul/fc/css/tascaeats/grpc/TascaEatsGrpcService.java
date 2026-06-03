@@ -24,6 +24,7 @@ import pt.ul.fc.css.tascaeats.dto.users.response.UserResponseDto;
 import pt.ul.fc.css.tascaeats.entities.enums.ProductStatus;
 import pt.ul.fc.css.tascaeats.exceptions.ResourceNotFoundException;
 import pt.ul.fc.css.tascaeats.exceptions.UserAlreadyExistsException;
+import pt.ul.fc.css.tascaeats.exceptions.UserCannotBeDeletedException;
 import pt.ul.fc.css.tascaeats.exceptions.UserNotFoundException;
 import pt.ul.fc.css.tascaeats.kafka.KafkaResponseStore;
 import pt.ul.fc.css.tascaeats.kafka.Sender;
@@ -212,6 +213,36 @@ public class TascaEatsGrpcService extends TascaEatsServiceGrpc.TascaEatsServiceI
       userService.deleteUser(userId);
       responseObserver.onNext(Empty.getDefaultInstance());
       responseObserver.onCompleted();
+    } catch (Exception e) {
+      responseObserver.onError(
+          Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void deleteDeliveryPersonAccount(
+      DeleteDPAccountRequest request, StreamObserver<DeleteDPAccountResponse> responseObserver) {
+    try {
+
+      String username = request.getUsername();
+      userService.deleteDeliveryPersonByUsername(username);
+
+      responseObserver.onNext(
+          DeleteDPAccountResponse.newBuilder()
+              .setAcknowledged(Acknowledged.getDefaultInstance())
+              .build());
+
+      responseObserver.onNext(
+          DeleteDPAccountResponse.newBuilder().setDeleted(Deleted.getDefaultInstance()).build());
+
+      responseObserver.onCompleted();
+
+    } catch (UserNotFoundException e) {
+      responseObserver.onError(
+          Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+    } catch (UserCannotBeDeletedException e) {
+      responseObserver.onError(
+          Status.PERMISSION_DENIED.withDescription(e.getMessage()).asRuntimeException());
     } catch (Exception e) {
       responseObserver.onError(
           Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());

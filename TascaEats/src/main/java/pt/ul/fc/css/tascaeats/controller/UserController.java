@@ -78,7 +78,8 @@ public class UserController {
       @RequestParam(required = false) String name,
       @RequestParam(required = false) String userType,
       @RequestParam(required = false) String orderNumber,
-      @RequestParam(required = false) String deliveryNumber) {
+      @RequestParam(required = false) String deliveryNumber)
+      throws Exception {
     List<UserResponseDto> users = userHandler.searchBy(name, userType, orderNumber, deliveryNumber);
     return ResponseEntity.ok(users);
   }
@@ -111,7 +112,7 @@ public class UserController {
 
   @DeleteMapping("/{id}")
   @ApiOperation(value = "Delete user", notes = "Removes an existing user.")
-  public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteUser(@PathVariable Long id) throws Exception {
     return userHandler.deleteUser(id)
         ? ResponseEntity.noContent().build()
         : ResponseEntity.notFound().build();

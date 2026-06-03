@@ -16,6 +16,8 @@ import pt.ul.fc.css.tascaeats.grpc.ChangeStatusRequest;
 import pt.ul.fc.css.tascaeats.grpc.CreateMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.CreateRestaurantRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteAccountRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeleteDPAccountRequest;
+import pt.ul.fc.css.tascaeats.grpc.DeleteDPAccountResponse;
 import pt.ul.fc.css.tascaeats.grpc.DeleteMenuRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeleteProductRequest;
 import pt.ul.fc.css.tascaeats.grpc.DeliveryIdRequest;
@@ -46,6 +48,7 @@ import pt.ul.fc.css.tascaeats.grpc.SearchOrdersRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchProductsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchRestaurantsRequest;
 import pt.ul.fc.css.tascaeats.grpc.SearchUsersRequest;
+import pt.ul.fc.css.tascaeats.grpc.SearchUsersResponse;
 import pt.ul.fc.css.tascaeats.grpc.TascaEatsServiceGrpc;
 import pt.ul.fc.css.tascaeats.grpc.UpdateDeliveryPersonResponse;
 import pt.ul.fc.css.tascaeats.grpc.UpdateMenuRequest;
@@ -204,6 +207,17 @@ public class ApiClient {
     }
   }
 
+  public static void deleteDPAccount(
+      String username, StreamObserver<DeleteDPAccountResponse> observer) {
+    DeleteDPAccountRequest request =
+        DeleteDPAccountRequest.newBuilder().setUsername(username).build();
+    try {
+      asyncStub.deleteDeliveryPersonAccount(request, observer);
+    } catch (StatusRuntimeException e) {
+      throw e;
+    }
+  }
+
   public static List<MenuModel> getAllMenus() {
     MenusResponse response = stub.getAllMenus(Empty.getDefaultInstance());
     return response.getMenusList().stream()
@@ -341,8 +355,12 @@ public class ApiClient {
         .toList();
   }
 
-  public static List<UserResponse> searchUsers(
-      String name, String userType, String orderNumber, String deliveryNumber) {
+  public static void searchUsers(
+      String name,
+      String userType,
+      String orderNumber,
+      String deliveryNumber,
+      StreamObserver<SearchUsersResponse> observer) {
     SearchUsersRequest request =
         SearchUsersRequest.newBuilder()
             .setName(name != null ? name : "")
@@ -350,11 +368,7 @@ public class ApiClient {
             .setOrderNumber(orderNumber != null ? orderNumber : "")
             .setDeliveryNumber(deliveryNumber != null ? deliveryNumber : "")
             .build();
-    try {
-      return stub.searchUsers(request).getUsersList();
-    } catch (StatusRuntimeException e) {
-      throw e;
-    }
+    asyncStub.searchUsers(request, observer);
   }
 
   public static List<RestaurantModel> searchRestaurants(

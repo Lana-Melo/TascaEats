@@ -2,18 +2,14 @@ package pt.ul.fc.css.tascaeats.entities;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.annotations.Where;
 
 @Entity
-@Where(clause = "deleted_at IS NULL") // For soft deletes
 public class Client extends AUser {
 
   @ElementCollection
@@ -22,9 +18,6 @@ public class Client extends AUser {
 
   @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
   private List<Review> reviews;
-
-  @Column(name = "deleted_at")
-  private LocalDateTime deletedAt; // For soft deletes
 
   protected Client() {}
 
@@ -62,13 +55,5 @@ public class Client extends AUser {
 
   public void setReviews(List<Review> reviews) {
     this.reviews = reviews;
-  }
-
-  public void setDeletedAt(LocalDateTime deletedAt) {
-    this.deletedAt = deletedAt;
-  }
-
-  public LocalDateTime getDeletedAt() {
-    return this.deletedAt;
   }
 }

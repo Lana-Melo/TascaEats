@@ -16,6 +16,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import pt.ul.fc.css.tascaeats.grpc.DeleteDPAccountResponse;
 import pt.ul.fc.css.tascaeats.grpc.UpdateDeliveryPersonResponse;
 import pt.ul.fc.di.css.javafxtascaeats.api.ApiClient;
 import pt.ul.fc.di.css.javafxtascaeats.model.CurrentClient;
@@ -24,6 +25,8 @@ import pt.ul.fc.di.css.javafxtascaeats.model.CurrentUser;
 import pt.ul.fc.di.css.javafxtascaeats.model.DataModel;
 
 public class ProfileController implements ControllerWithModel {
+
+  private static final String GENERIC_ERROR = "An error occurred, please try again later.";
 
   private DataModel model;
   private Stage stage;
@@ -96,12 +99,17 @@ public class ProfileController implements ControllerWithModel {
             response -> {
               if (response == ButtonType.OK) {
                 try {
-                  ApiClient.deleteAccount(model.getCurrentUser().getId());
-                  model.setCurrentUser(null);
-                  UtilController.switchScene(
-                      stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
+                  if (model.getCurrentUser() instanceof CurrentDeliveryPerson) {
+                    ApiClient.deleteDPAccount(
+                        model.getCurrentUser().getUsername(), buildDeleteDPObserver());
+                  } else {
+                    ApiClient.deleteAccount(model.getCurrentUser().getId());
+                    model.setCurrentUser(null);
+                    UtilController.switchScene(
+                        stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
+                  }
                 } catch (Exception e) {
-                  showError("An error occurred, please try again later.");
+                  showError(e.getMessage());
                 }
               }
             });
@@ -149,7 +157,7 @@ public class ProfileController implements ControllerWithModel {
           ApiClient.updateAdmin(user.getId(), username, passwordToSend, name, phone, nif);
         }
       } catch (Exception e) {
-        showError("An error occurred, please try again later.");
+        showError(e.getMessage());
         return;
       }
       applyUpdate(user, username, name, phone, nif);
@@ -181,11 +189,58 @@ public class ProfileController implements ControllerWithModel {
         Platform.runLater(
             () -> {
               hideLoading();
-              if (t instanceof StatusRuntimeException e
-                  && e.getStatus().getCode() == Status.Code.ALREADY_EXISTS) {
-                showError("This username is already taken.");
+              if (t instanceof StatusRuntimeException e) {
+                Status.Code code = e.getStatus().getCode();
+                switch (code) {
+                  case ALREADY_EXISTS -> showError("This username is already taken.");
+                  case NOT_FOUND -> showError("User not found.");
+                  case PERMISSION_DENIED -> showError(e.getStatus().getDescription());
+                  default -> showError(GENERIC_ERROR);
+                }
               } else {
-                showError("An error occurred, please try again later.");
+                showError(GENERIC_ERROR);
+              }
+            });
+      }
+
+      @Override
+      public void onCompleted() {}
+    };
+  }
+
+  private StreamObserver<DeleteDPAccountResponse> buildDeleteDPObserver() {
+    return new StreamObserver<>() {
+      @Override
+      public void onNext(DeleteDPAccountResponse response) {
+        if (response.getPayloadCase() == DeleteDPAccountResponse.PayloadCase.ACKNOWLEDGED) {
+          Platform.runLater(() -> showLoading());
+        } else if (response.getPayloadCase() == DeleteDPAccountResponse.PayloadCase.DELETED) {
+          Platform.runLater(
+              () -> {
+                hideLoading();
+                model.setCurrentUser(null);
+                UtilController.switchScene(
+                    stage, "/pt/ul/fc/di/css/javafxtascaeats/view/login.fxml", "Login", model);
+              });
+        }
+      }
+
+      @Override
+      public void onError(Throwable t) {
+        Platform.runLater(
+            () -> {
+              hideLoading();
+              if (t instanceof StatusRuntimeException e) {
+                Status.Code code = e.getStatus().getCode();
+                if (code == Status.Code.NOT_FOUND) {
+                  showError("Account not found.");
+                } else if (code == Status.Code.PERMISSION_DENIED) {
+                  showError(e.getStatus().getDescription());
+                } else {
+                  showError("An error occurred while deleting the account. Please try again.");
+                }
+              } else {
+                showError("An error occurred while deleting the account. Please try again.");
               }
             });
       }
