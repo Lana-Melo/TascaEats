@@ -38,103 +38,6 @@ Core features include:
 ## Domain Model
 ![Domain Model](DiagramaTascaEats-3a-fase.png)
 
-## Phase 2 — Changes and Extensions
-
-### Backend / Core
-
-The following domain-level changes were introduced in the second phase:
-
-- **Multiple addresses per client:** a client can now have more than one delivery address and may register a new address when placing an order.
-- **Multi-restaurant orders:** an order can include products from more than one restaurant.
-- **Product availability scoped to restaurants:** products belong to menus, and menus can be shared across multiple restaurants. However, a product's availability is managed independently within each restaurant's scope.
-- **Restaurant reviews:** a client can review a restaurant only after having placed an order there. Submitting a review without a prior order is not permitted.
-- **Automatic delivery assignment:** the system automatically assigns an available delivery person to an order once it reaches the `READY` state.
-- **Enriched payment records:** payment information now includes method-specific details beyond the payment method itself — MBWay stores a phone number, card stores the card brand/flag, and cash stores the change amount returned.
-
----
-
-### Interfaces
-
-Three interfaces expose the backend's functionality:
-
-#### 1. REST / Swagger
-
-The existing REST endpoints (accessible via Swagger UI) were updated and extended to reflect the new features introduced in this phase.
-
-#### 2. Web Interface (Thymeleaf)
-
-A web interface was implemented using Thymeleaf, communicating with the backend through dedicated web controllers.
-
-This interface was designed for **client** users and supports:
-- Account creation and profile editing
-- Browsing restaurants and orders
-- Placing and cancelling orders
-- Reviewing a restaurant after placing an order there
-
-If a user with a different role (admin, delivery person) logs in, the interface displays a message indicating that the platform is not designed for their profile and directing them to the appropriate access point.
-
-#### 3. Desktop Application (JavaFX + gRPC)
-
-A native desktop application was built using **JavaFX**, communicating with the backend via **gRPC**. This interface serves as an alternative to Swagger and the web interface, and was designed for three distinct personas:
-
-**Admin:**
-- Register, authenticate, and update their profile
-- Manage their restaurants: edit status, assign menus, and control product availability within the scope of a given restaurant
-- Create new restaurants
-
-**Delivery Person:**
-- Register, authenticate, and update their profile
-- Order listing for delivery persons is not implemented in this phase and is deferred to a future iteration
-
-**BackOffice (system manager):**
-Accessible from the first login screen of the JavaFX app via a dedicated "BackOffice" tab. This persona does not correspond to a concrete domain user — it represents the system's self-management layer, intended for a platform operator or superadmin. It is currently accessible without authentication.
-
-Through the BackOffice, the operator can:
-- Access the custom search/filter views introduced in this phase (filters for users, products, menus, and restaurants)
-- **Menu management (Use case G):** create and edit products — since menus can be shared across restaurants, this was not attributed to any specific admin
-- **Order management (Use cases K, L, and N):** since orders may span multiple restaurants, order lifecycle management was also kept at this system-wide level rather than assigned to a specific restaurant admin
-
-If a **client** attempts to authenticate via this application, a message is displayed informing them that they cannot act as a client here and should use the web platform instead.
-
----
-
-## Project Structure
-
-The project is now split into two independent sub-projects:
-
-| Sub-project | Description | How to run |
-|---|---|---|
-| `TascaEats` | Backend + REST (Swagger) and web (Thymeleaf) controllers | `bash run.sh` (requires Docker) |
-| `JavaFX` | Native desktop application (JavaFX + gRPC) | `cd JavaFX && mvn javafx:run` |
-
-### Running TascaEats (Backend + Web)
-
-The backend has been tested and runs correctly on **Windows** and **Ubuntu**, provided **Docker is installed.**
-
-> **macOS users:** Running the project on Mac would require a `docker-compose.override.yml` with platform-specific adjustments. Although one team member used such a file during development, we decided not to include it in the repository. The project is therefore intended to be run on Windows or Ubuntu only.
-
-From the project root, run:
-
-```bash
-bash run.sh
-```
-
-This starts the application and the PostgreSQL database in a Docker environment. The API is available at `http://localhost:8080`, the Swagger UI at `http://localhost:8080/swagger-ui/index.html`, and the web interface at `http://localhost:8080`.
-
-### Running the JavaFX Application
-
-**Requirements:**
-- Java 21+ (**headful** JDK — the headless variant does not support graphical interfaces)
-- Maven
-- Ensure the `JAVA_HOME` environment variable points to the headful JDK installation
-
-```bash
-cd JavaFX
-mvn javafx:run
-```
-
----
-
 ## Database
 
 The application uses **PostgreSQL**. You can connect via [DBeaver](https://dbeaver.io/) with the following credentials:
@@ -177,6 +80,18 @@ The key objectives were:
 - Containerize and orchestrate all services using Docker Compose
 
 ### Backend / Architecture
+
+**Requirements:**
+- Java 21+ (**headful** JDK — the headless variant does not support graphical interfaces)
+- Maven
+- Ensure the `JAVA_HOME` environment variable points to the headful JDK installation
+
+```bash
+cd JavaFX
+mvn javafx:run
+```
+
+---
 
 #### Microservices Decomposition
 
@@ -245,7 +160,7 @@ The system implements eventual consistency through:
 
 An Nginx reverse proxy serves as the central entry point:
 - Routes REST requests from the web interface to the monolith
-- Routes gRPC requests from the JavaFX application to the monolith  
+- Routes gRPC requests from the JavaFX application to the monolith
 - Handles SSL/TLS termination (if configured)
 - Provides load balancing capabilities for future scaling
 
@@ -375,14 +290,3 @@ tascaeats/
 ├── docker-compose.yml             # Service orchestration
 └── README.md
 ```
-
-### Testing and Validation
-
-Phase 3 validation focuses on:
-- **Architectural integrity:** Services communicate only through Kafka
-- **Database isolation:** Monolith cannot access delivery service database and vice versa
-- **Event reliability:** Messages processed reliably with no data loss
-- **User experience:** All interfaces function seamlessly despite distributed architecture
-- **Fault handling:** System recovers gracefully from transient failures
-
----
